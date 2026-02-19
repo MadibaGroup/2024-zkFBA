@@ -84,7 +84,7 @@ At every price tick $i$, either $\mathsf{P}_K(\omega^i) = 0$ or $\mathsf{P}_L(\o
 
 -----------------
 
-#### **3.1.2. Condition 2: Global Maximum Volume**
+#### **(Unnecessary? since if we can successfully prove the plateau drop off, this is also indirectly proven ) 3.1.2. Condition 2: Maximum Volume**
 
 The auctioneer opens $V_{max}$ in plain text which is a single value forming a plateau or just a point in our $\mathsf{Min}(x)$ column's histogram. Either way, our proof yields correctness. 
 **Constraint**: Prove $V_{max} - \mathsf{Min}(x) \geq 0$ for all $x$ in the domain. This proves no number bigger than $V_{max}$ exists in the column. 
@@ -116,16 +116,59 @@ If $v$ is the maximum, the division has no remainder, $Q(x)$ is a valid polynomi
 However, if $v$ is not the maximum, for some $x$, $v - P_{\mathsf {Min}}(x)$ will be negative; therefore, it is outside the range. Consequently, at some point, $R(v - P_{\mathsf {Min}}(x)) \neq 0$ and the proof will fail.
 
 ---------------
-#### **(NO NEED, HANDLED IN THE PREVIOUS CONDITION)3.1.3. Condition 3: Plateau and Boundary Drop-off**
+#### 3.1.3. (Unnecessary? since if we can successfully prove the max value, this is also indirectly proven) Condition 3: Plateau and Boundary Drop-off
 
-To prove the optimal clearing interval $[c,d]$:
- **Boundary Openings**: The auctioneer opens values immediately outside the plateau (e.g., 7 and 8?).
+To prove the optimal clearing interval $[c,d]$, we perform boundary openings,  where the auctioneer opens values immediately outside the plateau (e.g., 7 and 8?).
 **Constraint**: $\mathsf{Min}(\omega^{c-1}) < V_{max}$ and $\mathsf{Min}(\omega^{d+1}) < V_{max}$ with $\omega$ defined in the domain $H = \{1, \omega, \omega^2, \dots, \omega^{n-1}\}$, where $n$ is the number of price ticks in the order book.
 This demonstrates that $V_{max}$ is reached only within the plateau, and volume drops off elsewhere.
 
+Therefore, we set $V_{c-1}, V_{d+1}$ as plaintext volumes opened at the prices immediately outside the plateau (e.g., 7 and 8).
+$\mathsf{Mask}_{i}(X) = \frac{Z_H(X)}{X - \omega^i}$ is a public helper polynomial that is zero everywhere on $H$ except at price tick $i$.
+
+### **The Vanishing Polynomials for the Plateau**
+
+To prove the "drop-off," we must first prove that the asserted values at the boundaries are correct and then verify their relationship to $V_{max}$ in plain text.
+
+#### **Constraint: Plateau Ceiling (Global Maximum)**
+
+(?done in the next section?) To prove that nothing in the entire book is above $V_{max}$, we define a difference polynomial $\mathsf{P}_{pos}(X)$ and prove it is non-negative via bit-decomposition.
+
+$$\mathsf{V}_{ceiling}(X) := \mathsf{P}_{pos}(X) - \sum_{j=0}^{k-1} 2^j \cdot B_j(X) = 0$$
+
+where $\mathsf{P}_{pos}(X) = V_{max} - \mathsf{Min}(X)$. If this vanishes, then $\mathsf{Min}(X) \leq V_{max}$ for all $X \in H$.
+
+#### **Constraint: Left Drop-off Opening**
+This proves that the volume at price tick $c-1$ is exactly $V_{c-1}$.
+
+$$\mathsf{V}_{drop\_left}(X) := (\mathsf{Min}(X) - V_{c-1}) \cdot \mathsf{Mask}_{c-1}(X) = 0$$
+#### **Constraint: Right Drop-off Opening**
+This proves that the volume at price tick $d+1$ is exactly $V_{d+1}$.
+
+$$\mathsf{V}_{drop\_right}(X) := (\mathsf{Min}(X) - V_{d+1}) \cdot \mathsf{Mask}_{d+1}(X) = 0$$
+#### **Constraint: Plateau Confirmation**
+To ensure $V_{max}$ is reached at the edges of the interval, we may also prove the values at $c$ and $d$.
+
+$$\mathsf{V}_{plateau\_c}(X) := (\mathsf{Min}(X) - V_{max}) \cdot \mathsf{Mask}_{c}(X) = 0$$
+
+$$\mathsf{V}_{plateau\_d}(X) := (\mathsf{Min}(X) - V_{max}) \cdot \mathsf{Mask}_{d}(X) = 0$$
+
+### **Verification Logic**
+
+As per the Zeeperio "start to finish" check, the verifier performs the following:
+
+1. As we saw, there are many vanishing polynomials (constraints) that must all equal zero simultaneously. Instead of the verifier checking each of the $m$ constraints separately, which would be computationally expensive on-chain, the prover creates a random linear combination of all constraints using powers of $\alpha$. Here, $\alpha^i$ is the random weight assigned to the $i$-th constraint to ensure they don't cancel each other out maliciously.Again, to do the algebraic check, we use the random challenge $\zeta \notin H$ to check that the batched vanishing polynomials (multiplied by the quotient $Q(X)$) evaluate to zero.
+$$Batch(\alpha) = \sum_{i=1}^{m} \alpha^i (V_i(X) - Q_i(X)Z_H(X))$$
+$$\sum \alpha^i (\mathsf{V}_i(\zeta) - Q_i(\zeta) \cdot Z_H(\zeta)) = 0$$
+2. (???) For checking the plaintext inequality, once the openings confirm $V_{c-1}$ and $V_{d+1}$ are the correct values for those indices, the verifier checks the final condition in plain text:
+$$V_{c-1} < V_{max} \quad \text{and} \quad V_{d+1} < V_{max}$$
+
+This sequence proves that the interval $[c, d]$ is the true plateau of maximum volume and that volume strictly decreases outside of it, effectively locking the market-clearing price. 
+
+After successfully proving the three said conditions, the verifier is sure that the prover is truthful.
+
 --------------------
 
-### **(Do we even need to mention this check?)4. The Positive Check ZKP Equations**
+### **(Do we even need to mention this check? Because we have one for plateau check)4. The Positive Check ZKP Equations**
 
 To prove that a value $V_{max}$ is the maximum in $\mathsf {Min}(x)$, we must prove that for every price tick $i$, $V_{max} - \mathsf{Min}_i \geq 0$. Keeping in mind that $V_{max}$ will eventually be the clearing price $p^*$.
 Following the IZPR approach for range proofs, we construct a difference polynomial  $P(x)$, representing the excess capacity or the amount by which a specific price tick failed to reach the global maximum volume. If $P(x)$ is 0 at a certain point, that price tick is part of the clearing plateau. If $P(x)\geq 0$ is always holding, it proves that no volume in the entire order book is greater than our claimed $V_{max}$. we define the constraint system for a commitment to $P(x)$ such that values are non-negative: (i.e., $12-\mathsf{Min}$ pos. check?)

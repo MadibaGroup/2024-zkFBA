@@ -62,10 +62,14 @@ These identify the optimal clearing price $p^*$ within the plateau by minimizing
 $$V_{surp\_def}(X) = Surplus(X) - (Acc_A(X) - Acc_B(X)) = 0$$
 
 **Global Maximum Floor ($V_{floor}$):** Proves no volume in the book is lower than $V_{min_surp}$ using bit-decomposition.
+
 $${V}_{floor}(X) = {Mask}_{plateau}(X) \cdot \left( (P_{Surplus}(X) - V_{min\_surp}) - \sum_{j=0}^{k-1} 2^j \cdot B_{j, surp}(X) \right) = 0$$
+
 **Surplus Minimization ("Valley" Proof):** Proves the clearing price has the smallest absolute imbalance in the plateau.
 
 $$V_{surp}(X) = (|Surplus(X)| - V_{min\_surp} - Slack_{surp}) \cdot Mask_{plateau}(X) = 0$$
+
+
 ---
 
 ### **5. Foundational Integrity (Bit Checks)**

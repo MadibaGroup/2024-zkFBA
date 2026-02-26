@@ -84,7 +84,7 @@ At every price tick $i$, either $\mathsf{P}_K(\omega^i) = 0$ or $\mathsf{P}_L(\o
 
 -----------------
 
-#### **(Unnecessary? since if we can successfully prove the plateau drop off, this is also indirectly proven ) 3.1.2. Condition 2: Maximum Volume**
+#### **3.1.2. Condition 2: Maximum Volume**
 
 The auctioneer opens $V_{max}$ in plain text which is a single value forming a plateau or just a point in our $\mathsf{Min}(x)$ column's histogram. Either way, our proof yields correctness. 
 **Constraint**: Prove $V_{max} - \mathsf{Min}(x) \geq 0$ for all $x$ in the domain. This proves no number bigger than $V_{max}$ exists in the column. 
@@ -116,7 +116,7 @@ If $v$ is the maximum, the division has no remainder, $Q(x)$ is a valid polynomi
 However, if $v$ is not the maximum, for some $x$, $v - P_{\mathsf {Min}}(x)$ will be negative; therefore, it is outside the range. Consequently, at some point, $R(v - P_{\mathsf {Min}}(x)) \neq 0$ and the proof will fail.
 
 ---------------
-#### 3.1.3. (Unnecessary? since if we can successfully prove the max value, this is also indirectly proven) Condition 3: Plateau and Boundary Drop-off
+#### 3.1.3. Condition 3: Plateau and Boundary Drop-off
 
 To prove the optimal clearing interval $[c,d]$, we perform boundary openings,  where the auctioneer opens values immediately outside the plateau (e.g., 7 and 8?).
 **Constraint**: $\mathsf{Min}(\omega^{c-1}) < V_{max}$ and $\mathsf{Min}(\omega^{d+1}) < V_{max}$ with $\omega$ defined in the domain $H = \{1, \omega, \omega^2, \dots, \omega^{n-1}\}$, where $n$ is the number of price ticks in the order book.

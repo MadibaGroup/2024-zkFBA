@@ -51,6 +51,10 @@ $$V_{cliff\_R}(X) = (V_{max} - Min(X) - 1 - Slack_R) \cdot Mask_{d+1}(X) = 0$$
 **Plateau within a plateau?** In standard call markets, a plateau within a plateau (where the clearing volume drops and then rises again) is impossible. The reason being that $Acc_A$ is monotonic (non-decreasing) and $Acc_B$ is monotonic (non-increasing). The intersection of an increasing function and a decreasing function, which defines the cleared volume is always a single unimodal peak or a single contiguous plateau. 
 However, a Surplus Plateau can exist inside a Volume Plateau. This happens when multiple prices have the exact same maximum volume AND the same surplus (e.g., both supply and demand are flat across a tick).
 
+**NOTE**: 
+- Is it the case with تابع اکیدا صعودی or is it just the monotonic functions?
+- Doing the range check (and the three plonkbook range material) bid decomposition is not enough.
+
 
 ---
 
@@ -68,6 +72,11 @@ $${V}_{floor}(X) = {Mask}_{plateau}(X) \cdot \left( (P_{Surplus}(X) - V_{min\_su
 **Surplus Minimization ("Valley" Proof):** Proves the clearing price has the smallest absolute imbalance in the plateau.
 
 $$V_{surp}(X) = (|Surplus(X)| - V_{min\_surp} - Slack_{surp}) \cdot Mask_{plateau}(X) = 0$$
+
+**NOTE:** 
+- Is it enough to only have the valley (why are we even doing the plateau for?!)
+- Is the valley narrower than the plateau?
+- Do you need to check the exact range? (0000 and 0000, expensive)
 
 
 ---

@@ -54,7 +54,7 @@ However, a Surplus Plateau can exist inside a Volume Plateau. This happens when 
 **NOTE**: 
 - Is it the case with تابع اکیدا صعودی or is it just the monotonic functions?
 - Doing the range check (and the three plonkbook range material) bid decomposition is not enough.
-
+- Doing the openings for 4 points vs vanishing for the drop offs 
 
 ---
 

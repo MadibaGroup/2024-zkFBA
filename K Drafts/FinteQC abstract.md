@@ -2,6 +2,6 @@ In a market structure such as Frequent Batch Auctions (FBAs), bid and ask orders
 
 To ensure these auctions are executed with integrity and fairness, we use Zero-Knowledge SNARKs. These tools provide succinct, cryptographically verifiable proofs, showing computations were performed honestly without revealing the underlying data. 
 
-Unlike traditional continuous order books, FBAs often limit the amount of public data to prevent front-running. This reduces transparency, making it significantly harder for traders to verify if they are truly receiving a fair, market-clearing price. 
+Unlike traditional continuous order books, FBAs often limit the amount of public data to prevent front-running. This reduces transparency, making it significantly harder for traders to verify if they are truly receiving a fair market-clearing price. 
 
-We present Zeequent, an easily verified, a custom ZK-SNARK protocol designed specifically for private call auctions that can issue proofs for finding the clearing price in the market, while maintaining the complete privacy of all individual participant's competitive details of their bids.
+We present Zeequent, an easily verified, custom ZK-SNARK protocol designed specifically for private call auctions that can issue proofs for finding the clearing price in the market, while maintaining the complete privacy of all individual participant's competitive details of their bids.

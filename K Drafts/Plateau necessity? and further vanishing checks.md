@@ -106,3 +106,15 @@ Calculate Gap: They calculate how far that volume is from the "ceiling" ($V_{max
 Assign Value: $Slack_L = (V_{max} - 1) - Min(\omega^{c-1})$.
 Bit-Decomposition: To prove this $Slack$ is positive (and not a "fake" number caused by field wrap-around), the prover must decompose it into bits $B_j$:
 $$Slack(X) = \sum_{j=0}^{k-1} 2^j \cdot B_j(X)$$Each $B_j$ is then constrained to be only $0$ or $1$.
+-------------
+-------------
+
+Constraint: $(V_{max} - Min(X)) - \sum_{j=0}^{k-1} 2^j \cdot B_j(X) = 0$.
+This equation must vanish for every $X$ in the domain $H$. If there were a "main" plateau with a higher volume elsewhere, the term $(V_{max} - Min(X))$ would become negative at that point. Since the bit-decomposition ($\sum 2^j B_j$) can only represent positive numbers in the range, the equation would fail to vanish.
+
+The Constraint: $(Min(X) - V_{max}) \cdot Mask_{plateau}(X) = 0$.
+How it prevents cheating: This forces the volume at every point designated as the "plateau" to be exactly equal to that global maximum. The prover cannot pick a "lower" plateau because the $Mask$ would force those points to equal $V_{max}$, which they don't.
+
+The Constraint: $(V_{max} - Min(X) - 1 - Slack) \cdot L_{c-1}(X) = 0$.
+The Logic: This forces the point $c-1$ to be strictly less than $V_{max}$.
+The Trap: If the prover tries to start the plateau at index $c=10$ when the true global max starts at index $c=5$, the cliff check will look at index $9$. At index $9$, the volume is still $V_{max}$. The equation would then try to prove $V_{max} - V_{max} - 1 - Slack = 0$, which simplifies to $-1 - Slack = 0$. This is impossible for a positive slack, so the proof fails.

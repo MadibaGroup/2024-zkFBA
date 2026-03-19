@@ -50,4 +50,59 @@ Like selective exclusion where an auctioneer could ignore a high-volume peak tha
 
 Or artificial plateaus: in this example, the data shows sub-optimal "plateaus" at 4500. If Delta was the priority, the auctioneer could settle in these lower-volume ranges simply because the bid/ask spread happened to be narrower there, even if the overall market interest was much higher elsewhere.
 
+-----------------------------------------
+
 -----------------------------
+The prover proves these are the exact cliffs by demonstrating two contradictory states at adjacent points:
+
+1. At index $c$: The volume is exactly $V_{max}$.
+
+2. At index $c-1$: The volume is strictly less than $V_{max}$.    
+
+If the prover tried to claim $c$ was a "lower" value (meaning they shifted the plateau to the right), the constraint at the _real_ cliff would fail.
+
+### The "Squeeze" Mechanism
+
+Imagine the real plateau is at indices $[5, 10]$.
+
+If the prover lies and says $c=6$, the **Left Cliff** constraint will check index $5$.    
+
+At index $5$, the volume is actually $V_{max}$.    
+The equation for the cliff is: $(V_{max} - Min(X) - 1 - Slack) = 0$.    
+Plugging in $V_{max}$ at index 5: $(V_{max} - V_{max} - 1 - Slack) \Rightarrow (-1 - Slack) = 0$.    
+Since $Slack$ must be $\ge 0$ (enforced by bit-checks ), this equation can **never** be zero. The proof fails.
+
+
+---
+
+
+we do not necessarily need a separate vanishing polynomial for every single point, but we do need equations that target them. In PLONK, we use the property that a polynomial $f(X)$ vanishes over $H$ if it is a multiple of $Z_H(X) = X^n - 1$.
+
+To cover the whole range $[c, d]$, you use a **Plateau Mask**:
+
+$$V_{plateau}(X) = (Min(X) - V_{max}) \cdot Mask_{[c,d]}(X) = A(X) \cdot Z_H(X)$$
+**$Mask_{[c,d]}(X)$** is a polynomial that is $1$ for all $X \in \{\omega^c, \dots, \omega^d\}$ and $0$ elsewhere.
+
+
+The Cliff Vanishing Equations: for the exact boundaries, we use the Lagrange polynomials $L_{c-1}(X)$ and $L_{d+1}(X)$:
+1. **Left Cliff:** $(V_{max} - Min(X) - 1 - Slack_L(X)) \cdot L_{c-1}(X) = B(X) \cdot Z_H(X)$
+2. **Right Cliff:** $(V_{max} - Min(X) - 1 - Slack_R(X)) \cdot L_{d+1}(X) = C(X) \cdot Z_H(X)$
+
+https://blog.zksecurity.xyz/posts/bulletproofs-range-proofs/#:~:text=In%20many%20privacy%2Dpreserving%20systems,it%20makes%20the%20math%20cleaner.
+
+https://www.cs.yale.edu/homes/cpap/published/libra-crypto19.pdf
+
+https://eprint.iacr.org/2022/284.pdf
+
+
+
+-------------------------------
+The Plateau Mask ($Mask_{[c,d]}$) is a polynomial that is $1$ inside the interval and $0$ outside. You compute it by summing the individual Lagrange Basis Polynomials ($L_i$) for every index in the plateau:$$Mask_{[c,d]}(X) = \sum_{i=c}^{d} L_i(X)$$
+
+
+The Slack variables ($Slack_L, Slack_R$) are witnesses provided by the prover to satisfy the "strictly less than" requirement.
+Find the Difference: The prover looks at the actual volume at the cliff, say $Min(\omega^{c-1})$.
+Calculate Gap: They calculate how far that volume is from the "ceiling" ($V_{max} - 1$).
+Assign Value: $Slack_L = (V_{max} - 1) - Min(\omega^{c-1})$.
+Bit-Decomposition: To prove this $Slack$ is positive (and not a "fake" number caused by field wrap-around), the prover must decompose it into bits $B_j$:
+$$Slack(X) = \sum_{j=0}^{k-1} 2^j \cdot B_j(X)$$Each $B_j$ is then constrained to be only $0$ or $1$.

@@ -25,7 +25,7 @@ We first denote the parameters of a market. The Price Vector ($\mathsf {P}$), is
 
 To get the clearing price $p^*$, we must find the minimum between bid and ask volumes at every price. The largest volume value among these minimum volume values is our clearing price. We assume $V_{max}$ is the volume that sets the market's clearance price $p^*$.
 
-To prove the clearing state without revealing private order books, the auctioneer (prover) transforms the data into into cumulative distributions which are consequently interpolated into univariate polynomials, and sends succinct KZG commitments to the verifier (witness commitments). 
+To prove the clearing state without revealing private order books, the auctioneer (prover) transforms the data into cumulative distributions which are consequently interpolated into univariate polynomials, and sends succinct KZG commitments to the verifier (witness commitments). 
 $\mathsf{Acc}_A(X)$ is the Supply (Ask) Accumulator column. Built from the asked volumes at the lowest price to the highest, representing total supply at price $\mathsf {P}_i$ or lower. $\mathsf{Acc}_B(X)$ is the Demand (Bid) Accumulator column. Built from the bid volumes at the highest price to the lowest, representing total demand at price $P_i$ or higher. $\mathsf{Min}(X)$ is the asserted minimum volume column at each price tick. 
 To prove $\mathsf{Min}_i = \min(\mathsf{Acc}_{A,i}, \mathsf{Acc}_{B,i})$, we define the difference columns $K$ and $L$:
 $K(x) = \mathsf{Acc}_A(x) - \mathsf{Min}(x)$.   

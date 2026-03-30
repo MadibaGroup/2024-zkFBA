@@ -2,8 +2,8 @@
 
 (?Some notations areused twice and not defined very well?)
 ### **Abstract**
+Frequent batch auctions (FBAs) have been proposed as an alternative to traditional limit order books for trading securities. The motivation is to mitigate the predatory advantages of high-frequency traders (HFTs). With FBAs, a double-sided auction is held over a short interval (e.g., 1 second). All marketable orders submitted during the time window are executed at the same clearing price, and arrival time is not a factor. FBAs are significantly less transparent than continuous-time orderbooks and rely on fully trusted specialists or exchanges to execute orders at the fairest price.  In this research, we present a special-purpose zk-SNARK argument to develop a zk-FBA, which enables the specialist to prove trades are executed fairly with the correct clearing price, without revealing any of the orders directly.
 
-This protocol defines a Zero-Knowledge (ZK) framework for the verifiable execution of a call market auction. We address the critical challenge of proving a market-clearing price and volume without revealing individual participant bids or asks, which remain private. By utilizing indexed accumulators and a Positive Check range proof mechanism (derived from the ([IZPR](https://eprint.iacr.org/2024/430.pdf)) Instant Zero-Knowledge Proof of Range methodology), the auctioneer can prove that a clearing volume is the global maximum and exists as a plateau within a valid price interval.
 
 ### **1. Introduction**
 

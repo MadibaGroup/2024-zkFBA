@@ -129,11 +129,11 @@ We define a Grand Product polynomial $Z_{perm}(X)$ that accumulates the ratio of
 
 By enforcing this permutation argument, the protocol mathematically guarantees that:
 
-- **Contiguity**: There is exactly one "start" and one "end" to the clearing price range. The auctioneer cannot "cherry-pick" non-adjacent prices to manipulate the volume.
-    
-- **Unimodality Alignment**: This shape proof aligns with the economic theory that the **Trade Vol** function is unimodal. The SNARK proves the reported plateau is the unique, contiguous peak of that function.
-    
-- **Integrity of the Valley**: Because the plateau is proved to be a single block, the subsequent **Surplus Valley** check is guaranteed to be searching within the correct, high-liquidity interval rather than a fragmented set of prices.
+**Contiguity**: There is exactly one "start" and one "end" to the clearing price range. The auctioneer cannot "cherry-pick" non-adjacent prices to manipulate the volume.
+
+**Unimodality Alignment**: This shape proof aligns with the economic theory that the **Trade Vol** function is unimodal. The SNARK proves the reported plateau is the unique, contiguous peak of that function.
+
+**Integrity of the Valley**: Because the plateau is proved to be a single block, the subsequent **Surplus Valley** check is guaranteed to be searching within the correct, high-liquidity interval rather than a fragmented set of prices.
 
 
 

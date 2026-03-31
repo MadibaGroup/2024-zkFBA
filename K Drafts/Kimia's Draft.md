@@ -19,16 +19,52 @@ Frequent batch auctions (FBAs) have been proposed as an alternative to tradition
 **2.1. Frequent Batch Markets Security**
 
 
+**2.2. Succinct Proofs**
+
+
+**2.3. The Positive Check**
+
+
+
 #### **2.1. The Positive Check**
 The Positive Check is the cornerstone of this protocol, enabling verifiable inequalities in a SNARK circuit. Proving that a value is a maximum is important because it prevents malicious under-matching, as it ensures the auctioneer cannot pick a lower volume to favor certain participants. It also enforces economic validity by guaranteeing the cleared volume does not exceed available supply or demand at any tick. Plateau discovery prevention is another advantage of this check, as it proves the clearing price falls within the range where the highest number of trades can occur.
 
-#### 2.2. Succinct Proofs (from Zeeperio, will be changed)
-While zero-knowledge proofs/arguments (ZKPs) date back to the 1980s [20, 8], classic ZKPs produce proofs that are at least linear in the size of the proof statement. By contrast, succinct zero-knowledge arguments (SNARKs) are sublinear, with sizes typically logarithmic or constant. A Polynomial Interactive Oracle Proof (PIOP) is a framework shared by several SNARKs [30, 13, 9] where the prover specifies polynomials and is challenged to open them at random points. PIOP does not say how to make a SNARK; it is merely a generic framework. To realize a PIOP, the prover must send a succinct representation of each polynomial to the verifier, which commits the prover to those polynomials. When opening a polynomial, the verifier must be certain it is the opening of the same polynomial that was committed to. PIOPs rely on a cryptographic primitive called a polynomial commitment scheme (PCS) to handle this. The rest of a PIOP protocol does not use any cryptography. A number of PCSs have been proposed; the most prominent are KZG (very short, based on bilinear pairings, requires a trusted setup) and (DEEP-)FRI (longer, based on hash functions, conjectured to be post-quantum secure, no trusted setup).
 
 
-### **3. Protocol Specification: Clearing Price Verification**
+### **3. Zeequent: Protocol Specification**
 
 #### **Market Setup**
+
+Notation: $P_{Acc_{A}}$ is a polynomial and $Acc_A$ is the commitment to the polynomial.
+
+
+
+Parameters.
+Walkthrough of a constraint.
+
+
+3.1. Zeequent Constraints (Batch)
+
+3.2. Public Helper Polynomials
+
+3.3. Market Specific Polynomials (?)
+
+3.4. Market Setup Soundness Constraints
+
+3.5. Global Maximum Constrints (min and Finding GM)
+
+3.5. Global Max check Selector Constraints
+
+3.6. The "Plateau" Constraints (?)
+
+3.7. Global Min check Selector Constraints
+
+3.8. The Tie Breaker Surplus constraints
+
+
+
+
+
 
 We first denote the parameters of a market. The Price Vector ($\mathsf {P}$), is a public vector of price ticks. Order Book Vectors ($B, A$) are private vectors where $\mathsf B_i$ is the volume of bids and $\mathsf A_i$ is the volume of asks at price $\mathsf {P}_i$. 
 

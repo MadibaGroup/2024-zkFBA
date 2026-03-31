@@ -175,7 +175,11 @@ $$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X
 **$s(X)$**: A "Sorted" polynomial that interweaves the values of $f$ and $t$ in non-decreasing order to prove membership.
 **$\beta, \gamma$**: Random challenges provided by the verifier to ensure the prover cannot manipulate the entries.
 
-
+-----
+(For selector, two paths: Permutation and Shuffle)
+(Notation for PIOP)
+(Rust: Monte Carlo it?)
+(Data search?)
 
 
 

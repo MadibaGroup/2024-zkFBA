@@ -65,6 +65,81 @@ While not a transition relation, this constraint must hold for all $X \in H$ to 
 
 ------------------
 
+
+
+
+
+### **The Permutation Argument for Selector Contiguity**
+
+To prevent the prover from selecting "scattered" price ticks that do not represent a valid market interval, we enforce a constraint on the number of transitions (or "cliffs") in the selector polynomial $S(X)$.
+
+#### **1. The Difference Polynomial $D(X)$**
+
+We define a derived polynomial $D(X)$ that captures the step-changes between adjacent price ticks:
+
+$$D(X) = S(X) - S(\omega X)$$
+
+For a contiguous plateau $[c, d]$, the values of $D$ across the domain $H$ must be zero everywhere, except at the two boundaries:
+
+- **The "Jump Up"**: $D(\omega^{c-1}) = 0 - 1 = -1$
+    
+- **The "Jump Down"**: $D(\omega^d) = 1 - 0 = 1$
+    
+- **All other points**: $D(\omega^i) = 1-1$ or $0-0 = 0$
+    
+
+#### **2. The Target Multiset $M$**
+
+We define a public, fixed multiset $M$ that represents the "ideal" shape of a single plateau:
+
+$$M = \{ -1, 1, 0, 0, \dots, 0 \}$$
+
+The goal of the permutation argument is to prove that the set of values in our witness polynomial $D(X)$ is a **permutation** of the values in $M$.
+
+---
+
+### **3. The Grand Product Vanishing Equation**
+
+To prove this permutation in ZK without revealing where the "jumps" occur, we use the **PLONK Grand Product** logic. We introduce a random challenge $\gamma$ from the verifier to "lock" the multiset.
+
+The identity we must prove is that the product of all terms $(D_i + \gamma)$ equals the product of all terms $(M_i + \gamma)$:
+
+$$\prod_{i=0}^{n-1} (D(\omega^i) + \gamma) = \prod_{i=0}^{n-1} (M_i + \gamma)$$
+
+Because $M$ is mostly zeros, the target product is simplified to:
+
+$$\text{Target} = (-1 + \gamma) \cdot (1 + \gamma) \cdot (\gamma)^{n-2}$$
+
+#### **The Vanishing Transition Equation**
+
+We define a Grand Product polynomial $Z_{perm}(X)$ that accumulates the ratio of these products across the domain:
+
+1. **Start Condition**: $L_1(X)(Z_{perm}(X) - 1) = 0$
+    
+2. **Transition**:
+    
+    $$(X - \omega^{n-1}) \cdot [ Z_{perm}(\omega X) \cdot \gamma - Z_{perm}(X) \cdot (D(X) + \gamma) ] = 0$$
+    
+3. **End Condition**: $L_n(X)(Z_{perm}(X) - \text{Target}) = 0$
+    
+
+---
+
+### **4. Economic Significance: Proving the "One Plateau" Rule**
+
+By enforcing this permutation argument, the protocol mathematically guarantees that:
+
+- **Contiguity**: There is exactly one "start" and one "end" to the clearing price range. The auctioneer cannot "cherry-pick" non-adjacent prices to manipulate the volume.
+    
+- **Unimodality Alignment**: This shape proof aligns with the economic theory that the **Trade Vol** function is unimodal. The SNARK proves the reported plateau is the unique, contiguous peak of that function.
+    
+- **Integrity of the Valley**: Because the plateau is proved to be a single block, the subsequent **Surplus Valley** check is guaranteed to be searching within the correct, high-liquidity interval rather than a fragmented set of prices.
+
+
+
+---------------------------
+
+
 ### **Generalized "Middle of the Interval" Plookup for all of our positive checks**
 
 Because the auction operates in a finite field $\text{mod } q$, standard bit-decomposition is insufficient to prevent modular wrap-around.

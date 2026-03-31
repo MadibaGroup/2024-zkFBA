@@ -7,9 +7,18 @@ This protocol defines a Zero-Knowledge (ZK) framework for the verifiable executi
 
 ### **1. Introduction**
 
-Call markets are essential for price discovery, particularly during market opens or periods of high volatility. Traditional auctions require a central authority to view all order data, creating risks for front-running. This protocol allows an auctioneer to commit to an order book and prove the resulting clearing price is correct under the rules of supply and demand without leaking the competitive landscape of the participants.
 
-### **2. Background and Motivation**
+
+
+
+
+((Call markets are essential for price discovery, particularly during market opens or periods of high volatility. Traditional auctions require a central authority to view all order data, creating risks for front-running. This protocol allows an auctioneer to commit to an order book and prove the resulting clearing price is correct under the rules of supply and demand without leaking the competitive landscape of the participants.))
+
+### **2. Background and Related work**
+
+**2.1. Frequent Batch Markets Security**
+
+
 #### **2.1. The Positive Check**
 The Positive Check is the cornerstone of this protocol, enabling verifiable inequalities in a SNARK circuit. Proving that a value is a maximum is important because it prevents malicious under-matching, as it ensures the auctioneer cannot pick a lower volume to favor certain participants. It also enforces economic validity by guaranteeing the cleared volume does not exceed available supply or demand at any tick. Plateau discovery prevention is another advantage of this check, as it proves the clearing price falls within the range where the highest number of trades can occur.
 

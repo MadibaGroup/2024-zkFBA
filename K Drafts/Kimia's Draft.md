@@ -158,7 +158,7 @@ $$L_1(X)(Z(X) - 1) = 0$$
 
 $$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X)(\gamma(1+\beta) + f(X) + \beta t(X)) \right] = 0$$
 
-**$f(X)$**: The witness polynomial for the surplus column (either Bid Surplus or Ask Surplus).
+**$f(X)$**: The witness polynomial for the surplus column (either $P_{Surp_B}$ or $P_{Surp_A}$).
 **$t(X)$**: The public table polynomial containing the permitted range of positive integers (e.g., $0$ to $2^{16}-1$).
 **$s(X)$**: A "Sorted" polynomial that interweaves the values of $f$ and $t$ in non-decreasing order to prove membership.
 **$\beta, \gamma$**: Random challenges provided by the verifier to ensure the prover cannot manipulate the entries.
@@ -176,6 +176,13 @@ $$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X
 
 
 --------------------
+
+#### **Polynomial representing Volume of Bids at Price $\mathsf {P}_i$ ($Bid(X)$)**
+
+
+
+
+#### **Polynomial representing Volume of Asks at Price $\mathsf {P}_i$ ($Ask(X)$)**
 
 
 

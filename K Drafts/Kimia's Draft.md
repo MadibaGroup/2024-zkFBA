@@ -51,7 +51,7 @@ Walkthrough of a constraint.
 
 3.4. Market Setup Soundness Constraints
 
-3.5. Global Maximum Constrints (min and Finding GM)
+3.5. Global Maximum Constrints (min and Finding G Max)
 
 3.5. Global Max check Selector Constraints
 
@@ -61,6 +61,19 @@ Walkthrough of a constraint.
 
 3.8. The Tie Breaker Surplus constraints
 
+
+
+
+----------------------------
+To better convey how we go about the methodology, we'll use Table 1 as a an example (proceeds with the chart example.)
+The first two columns, Order Book Vectors, are private vectors where $\mathsf B_i$ is the volume of bids and $\mathsf A_i$ is the volume of asks at price $\mathsf {P}_i$. 
+Respectively, $\mathsf {Depth_B}$ and $\mathsf {Depth_A}$ columns are the cumulative demand from highest to lowest price and cumulative supply from lowest to highest price. 
+$\mathsf {Min}$ array is the minimum of $\mathsf {Depth_B}$ and $\mathsf {Depth_A}$ columns. 
+Selector vectors, $\mathsf {Selector_Min}$ and $\mathsf {Selector_Max}$, will later on limits the interval we are working with, help with our range checks, and reduce the computation complexity.  
+
+
+
+----------------------------------------------
 
 
 

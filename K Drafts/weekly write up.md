@@ -20,6 +20,10 @@ $L(x) = \mathsf{Acc}_B(x) - \mathsf{Min}(x)$.
 Subsequently, the respective polynomials are:
 $P_K(x) = P_{\mathsf{Acc}_A}(x) - P_{\mathsf{Min}}(x)$: The excess supply at price $X$.   
 $P_L(x) = P_{\mathsf{Acc}_B}(x) - P_{\mathsf{Min}}(x)$: The excess demand at price $X$.
+
+
+The Positive and Range Check**
+The Positive Check enables verifiable inequalities in a SNARK circuit. Proving that a value is a maximum is important because it prevents malicious under-matching, as it ensures the auctioneer cannot pick a lower volume to favor certain participants. It also enforces economic validity by guaranteeing the cleared volume does not exceed available supply or demand at any tick. Plateau discovery prevention is another advantage of this check, as it proves the clearing price falls within the range where the highest number of trades can occur.
   
 ___
 
@@ -42,21 +46,12 @@ $AskVol(X)$: Encodes the Ask quantity at price tick $\omega^i$.
 
 #### Demand Accumulator ($Acc_B$ / BidsDepth)
 
-Definition: Represents total cumulative demand—the quantity willing to buy at a given price or higher. As seen in the spreadsheet image, standard demand sums _down_ the price list (starting high at low prices and decreasing as prices rise).
 
-Polynomial: $Acc_B(X)$.
- 
-Vanishing Equation (Plookup Transition Logic): To ensure this decreasing backward sum is consistent, the recurrence is defined as $Acc_B(X) = Acc_B(\omega X) + BidVol(X)$ (Total Demand at index $i$ is total demand at next index $i+1$ plus current bids). We apply the supervisor’s template structure (transition template) that zeros the constraint at the very last point:
-$$V_{Acc_B} := (X - \omega^{n-1}) \cdot \left[ Acc_B(X) - (Acc_B(\omega X) + BidVol(X)) \right] = 0$$
 
 #### Supply Accumulator ($Acc_A$ / AsksDepth)
 
-Definition: Represents total cumulative supply—the quantity willing to sell at a given price or lower. This sums _forwards_ along the price list (starting low and increasing as prices rise).
 
-Polynomial: $Acc_A(X)$.
 
-Vanishing Equation (Plookup Transition Logic): The recurrence is defined as $Acc_A(\omega X) = Acc_A(X) + AskVol(X)$ (Total supply at next index $i+1$ equals current supply at index $i$ plus current asks).
-$$V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X) + AskVol(X)) \right] = 0$$
 --------------------------
 #### Trade Volume ($Min(Acc_A, Acc_B)$ / TradeVol)
 
@@ -150,38 +145,13 @@ By enforcing this permutation argument, the protocol mathematically guarantees t
 
 ### **Generalized "Middle of the Interval" Plookup for all of our positive checks**
 
-Because the auction operates in a finite field $\text{mod } q$, standard bit-decomposition is insufficient to prevent modular wrap-around.
 
 #### **The Modular Equator Logic**
 
-To define "positive" values in a modular field, we adopt a Half-Field Range Check. Any value $S(X)$ is considered valid if it lies in the first half of the interval $[0, \frac{q-1}{2}]$. This is critical for the Surplus Columns ($\mathbb{Z}_+$); if Trade Volume incorrectly exceeded available Depth, the resulting negative surplus would "jump" the equator to $q-1$, failing the range proof.
+
 
 #### **Plookup Vanishing Equations**
 
-Unlike bit-decomposition, which breaks a number into powers of two, this method proves that the surplus values ($f$) are contained within a public table of allowed positive values ($t$). This is achieved using a Grand Product Polynomial $Z(X)$ and a Sorted Polynomial $s(X)$ that combines the surplus data and the table.
-
-For each surplus column (Bid Surplus $S_B$ and Ask Surplus $S_A$), the following two vanishing equations must hold over the domain $H$:
-
-1. Boundary Constraint (Start Condition)
-
-This ensures the grand product calculation begins correctly at the first price tick.
-
-$$L_1(X)(Z(X) - 1) = 0$$
-
-**$L_1(X)$**: The Lagrange polynomial that is 1 at the first price tick ($\omega^0$) and 0 elsewhere.
-
-**$Z(X)$**: The Grand Product polynomial that tracks the cumulative relationship between the surplus and the valid range table.
-
-#### 2. Transition Constraint (The Range Proof)
-
-This equation enforces that every surplus value is "found" in the range table as we traverse the price ticks.
-
-$$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X)(\gamma(1+\beta) + f(X) + \beta t(X)) \right] = 0$$
-
-**$f(X)$**: The witness polynomial for the surplus column (either Bid Surplus or Ask Surplus).
-**$t(X)$**: The public table polynomial containing the permitted range of positive integers (e.g., $0$ to $2^{16}-1$).
-**$s(X)$**: A "Sorted" polynomial that interweaves the values of $f$ and $t$ in non-decreasing order to prove membership.
-**$\beta, \gamma$**: Random challenges provided by the verifier to ensure the prover cannot manipulate the entries.
 
 -----
 (For selector, two paths: Permutation and Shuffle)

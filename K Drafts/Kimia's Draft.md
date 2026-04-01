@@ -31,7 +31,7 @@ The Positive Check enables verifiable inequalities in a SNARK circuit. Proving t
 
 
 
-### **3. Zeequent: Protocol Specification**
+# **3. Zeequent: Protocol Specification**
 
 #### **Market Setup**
 
@@ -132,26 +132,67 @@ We had to do range checks for the corresponding polynomials to the arrays in Tab
 
 
 ----------------------------------------------
-### **Protocol Architecture & Mathematical Foundation**
+## **A. Protocol Architecture & Mathematical Foundation**
+#### **A.1. Transition Logic**
 
 The protocol is built on a Polynomial Interactive Oracle Proof (PIOP) framework using a multiplicative subgroup $H$ of size $n$.
-Evaluation domain is $H = \{1, \omega, \omega^2, \dots, \omega^{n-1}\}$, where $\omega$ is the generator of the subgroup in the finite field $\mathbb{F}_q$. Here, we have the vanishing polynomial $Z_H(X) = X^n - 1$, which equals zero for all $X \in H$.
-To enforce recurrence relations across price ticks, we utilize the transition constraint structure (Plonkbook reference):    $$(X - \omega^{n-1}) \cdot [ \text{Constraint Logic} ] = 0$$
+Evaluation domain is $H = \{1, \omega, \omega^2, \dots, \omega^{n-1}\}$, where $\omega$ is the generator of the subgroup in the finite field $\mathbb{F}_q$. Here, we have the vanishing polynomial $Z_H(X) = X^n - 1$, which equals zero for all $X \in H$. To enforce recurrence relations across price ticks, we utilize the transition constraint structure (Plonkbook transition logic reference) for our vanishing equations:    $$(X - \omega^{n-1}) \cdot [ \text{Constraint Logic} ] = 0$$
 This ensures the relation holds for all $i \in \{0, \dots, n-2\}$ while preventing an undefined "wrap-around" at the final domain point (enforcing recurrence relations (e.g., $A_{i+1} = A_i + B_i$) without causing a contradiction at the final domain point.).
 
-#### Demand Accumulator ($Acc_B$ / BidsDepth)
+-----------------------------------------
+#### **A.2. The Modular Equator Logic**
 
-Definition: Represents total cumulative demand—the quantity willing to buy at a given price or higher. As seen in the spreadsheet image, standard demand sums _down_ the price list (starting high at low prices and decreasing as prices rise).
+Because the auction operates in a finite field $\text{mod } q$, standard bit-decomposition is insufficient to prevent modular wrap-around. To define "positive" values in a modular field, we adopt a Half-Field Range Check. Any value $S(X)$ is considered valid if it lies in the first half of the interval $[0, \frac{q-1}{2}]$. This is critical for the Surplus Columns ($\mathbb{Z}_+$); if Trade Volume incorrectly exceeded available Depth, the resulting negative surplus would "jump" the equator to $q-1$, failing the range proof.
 
-Polynomial: $Acc_B(X)$.
+*Plookup Vanishing Equations*. Unlike bit-decomposition, which breaks a number into powers of two, this method proves that the surplus values ($f$) are contained within a public table of allowed positive values ($t$). This is achieved using a Grand Product Polynomial $Z(X)$ and a Sorted Polynomial $s(X)$ that combines the surplus data and the example table. For each surplus column ($\mathsf {surplus_{B}}$ and $\mathsf {surplus_{A}}$), the following two constraints or vanishing equations must hold over the domain $H$:
 
-Vanishing Equation (Plookup Transition Logic): To ensure this decreasing backward sum is consistent, the recurrence is defined as $Acc_B(X) = Acc_B(\omega X) + BidVol(X)$ (Total Demand at index $i$ is total demand at next index $i+1$ plus current bids). We apply the supervisor’s template structure (transition template) that zeros the constraint at the very last point:
-$$V_{Acc_B} := (X - \omega^{n-1}) \cdot \left[ Acc_B(X) - (Acc_B(\omega X) + BidVol(X)) \right] = 0$$
+*Boundary Constraint (Start Condition)*. This ensures the grand product calculation begins correctly at the first price tick.
 
-#### Supply Accumulator ($Acc_A$ / AsksDepth)
+$$L_1(X)(Z(X) - 1) = 0$$
+
+**$L_1(X)$**: The Lagrange polynomial that is 1 at the first price tick ($\omega^0$) and 0 elsewhere.
+
+**$Z(X)$**: The Grand Product polynomial that tracks the cumulative relationship between the surplus and the valid range table.
+
+*Transition Constraint (The Range Proof)*. This equation enforces that every surplus value is "found" in the range table as we traverse the price ticks.
+
+$$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X)(\gamma(1+\beta) + f(X) + \beta t(X)) \right] = 0$$
+
+**$f(X)$**: The witness polynomial for the surplus column (either Bid Surplus or Ask Surplus).
+**$t(X)$**: The public table polynomial containing the permitted range of positive integers (e.g., $0$ to $2^{16}-1$).
+**$s(X)$**: A "Sorted" polynomial that interweaves the values of $f$ and $t$ in non-decreasing order to prove membership.
+**$\beta, \gamma$**: Random challenges provided by the verifier to ensure the prover cannot manipulate the entries.
+
+----------------------------------
+
+#### **A.3. Bit-Decomposition Logic**
+
+
+
+
+
+
+
+
+
+--------------------
+
+
+
+--------------------------
+
+#### Demand Accumulator Polynomial $Acc_B(X)$
+
+Definition: Represents total cumulative demand, the quantity willing to buy at a given price or higher. As seen in the spreadsheet image, standard demand sums _down_ the price list (starting high at low prices and decreasing as prices rise).
+
+Vanishing Equation (Plookup Transition Logic): To ensure this decreasing backward sum is consistent, the recurrence is defined as $Acc_B(X) = Acc_B(\omega X) + BidVol(X)$ (Total Demand at index $i$ is total demand at next index $i+1$ plus current bids). We apply the template structure (transition template) that zeros the constraint at the very last point:
+$$V_{Acc_B} := (X - \omega^{n-1}) \cdot \left[ Acc_B(X) - (Acc_B(\omega X) + Bid(X)) \right] = 0$$
+
+
+
+#### Supply Accumulator Polynomial $Acc_A(X)$
 
 Definition: Represents total cumulative supply—the quantity willing to sell at a given price or lower. This sums _forwards_ along the price list (starting low and increasing as prices rise).
 
-Polynomial: $Acc_A(X)$.
-
 Vanishing Equation (Plookup Transition Logic): The recurrence is defined as $Acc_A(\omega X) = Acc_A(X) + AskVol(X)$ (Total supply at next index $i+1$ equals current supply at index $i$ plus current asks).
+$$V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X) + AskVol(X)) \right] = 0$$

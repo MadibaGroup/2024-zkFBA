@@ -68,8 +68,17 @@ Walkthrough of a constraint.
 To better convey how we go about the methodology, we'll use Table 1 as a an example (proceeds with the chart example.)
 The first two columns, Order Book Vectors, are private vectors where $\mathsf B_i$ is the volume of bids and $\mathsf A_i$ is the volume of asks at price $\mathsf {P}_i$. 
 Respectively, $\mathsf {Depth_B}$ and $\mathsf {Depth_A}$ columns are the cumulative demand from highest to lowest price and cumulative supply from lowest to highest price. 
-$\mathsf {Min}$ array is the minimum of $\mathsf {Depth_B}$ and $\mathsf {Depth_A}$ columns. 
+$\mathsf {Min}$ array is the minimum of $\mathsf {Depth_B}$ and $\mathsf {Depth_A}$ columns, from which we choose the Market Clearing Volume (price). 
 Selector vectors, $\mathsf {Selector_Min}$ and $\mathsf {Selector_Max}$, will later on limits the interval we are working with, help with our range checks, and reduce the computation complexity.  
+Vector $\mathsf {Bid_{surplus}}$ and $\mathsf {Ask_surplus}$ are:
+$\mathsf {Bid_{surplus}} = \mathsf {Depth_B} - \mathsf A$ 
+$\mathsf {Ask_{surplus}} = \mathsf {Depth_A} - \mathsf B$
+which denote the surplus of the market. 
+$\mathsf {Delta}$ is the absolute value of the difference between $\mathsf {Bid_{surplus}}$ and $\mathsf {Ask_{surplus}}$.
+$\mathsf {Clif}$ array will only carry the two values at each side of the "plateau" and consequently help with our tie-breaking "valley" identification. 
+$\mathsf {Slack}$ soaks up the difference in the clifs of the plateau.
+Market Clearing Volume is an array set to the identified, unified price at every index $i$.
+
 
 
 

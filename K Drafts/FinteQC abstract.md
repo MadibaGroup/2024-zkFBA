@@ -5,3 +5,7 @@ To ensure these auctions are executed with integrity and fairness, we use Zero-K
 Unlike traditional continuous order books, FBAs often limit the amount of public data to prevent front-running. This reduces transparency, making it significantly harder for traders to verify if they are truly receiving a fair market-clearing price. 
 
 We present Zeequent, an easily verified, custom ZK-SNARK protocol designed specifically for private call auctions that can issue proofs for finding the clearing price in the market, while maintaining the complete privacy of competitive details of all individual participants' bids.
+
+https://github.com/MadibaGroup/2024-Gadgets-Code/
+
+https://www.nyse.com/nyse-auction-data?symbol=AA&date=02-13-2026

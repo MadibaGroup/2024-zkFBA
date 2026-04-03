@@ -51,6 +51,16 @@ $$V_{cliff\_R}(X) = (V_{max} - Min(X) - 1 - Slack_R) \cdot Mask_{d+1}(X) = 0$$
 **Plateau within a plateau?** In standard call markets, a plateau within a plateau (where the clearing volume drops and then rises again) is impossible. The reason being that $Acc_A$ is monotonic (non-decreasing) and $Acc_B$ is monotonic (non-increasing). The intersection of an increasing function and a decreasing function, which defines the cleared volume is always a single unimodal peak or a single contiguous plateau. 
 However, a Surplus Plateau can exist inside a Volume Plateau. This happens when multiple prices have the exact same maximum volume AND the same surplus (e.g., both supply and demand are flat across a tick).
 
+
+---------------------
+
+
+For checking the plaintext inequality, once the openings confirm $V_{c-1}$ and $V_{d+1}$ are the correct values for those indices, the verifier checks the final condition in plain text:
+$$V_{c-1} < V_{max} \quad \text{and} \quad V_{d+1} < V_{max}$$
+
+This sequence proves that the interval $[c, d]$ is the true plateau of maximum volume and that volume strictly decreases outside of it, effectively locking the market-clearing price.  
+
+
 **NOTE**: 
 - Is it the case with تابع اکیدا صعودی or is it just the monotonic functions?
 - Doing the range check (and the three plonkbook range material) bid decomposition is not enough.

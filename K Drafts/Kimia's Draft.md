@@ -8,10 +8,6 @@ Frequent batch auctions (FBAs) have been proposed as an alternative to tradition
 ### **1. Introduction**
 
 
-
-
-
-
 ((Call markets are essential for price discovery, particularly during market opens or periods of high volatility. Traditional auctions require a central authority to view all order data, creating risks for front-running. This protocol allows an auctioneer to commit to an order book and prove the resulting clearing price is correct under the rules of supply and demand without leaking the competitive landscape of the participants.))
 
 ### **2. Background and Related work**
@@ -26,7 +22,7 @@ Frequent batch auctions (FBAs) have been proposed as an alternative to tradition
 
 
 
-#### **2.1. The Positive and Range Check**
+#### **The Positive and Range Check**
 The Positive Check enables verifiable inequalities in a SNARK circuit. Proving that a value is a maximum is important because it prevents malicious under-matching, as it ensures the auctioneer cannot pick a lower volume to favor certain participants. It also enforces economic validity by guaranteeing the cleared volume does not exceed available supply or demand at any tick. Plateau discovery prevention is another advantage of this check, as it proves the clearing price falls within the range where the highest number of trades can occur.
 
 
@@ -35,7 +31,8 @@ The Positive Check enables verifiable inequalities in a SNARK circuit. Proving t
 
 #### **Market Setup**
 
-
+####
+(**Comment:**
 
 Parameters.
 
@@ -61,7 +58,8 @@ Walkthrough of a constraint.
 3.8. The Tie Breaker Surplus constraints
 
 
-
+**Comment)**
+####
 
 ----------------------------
 To better convey how we go about the methodology, we'll use Table 1 as a an example:
@@ -112,18 +110,18 @@ Notation of arrays and the corresponding commitments to their polynomials are se
 
 | **Array**                | **Polynomial** | **Commitment to the polynomial** |
 | ------------------------ | -------------- | -------------------------------- |
-| $\mathsf {B}_i$          | $P_{Bid}$      | $Bid$                            |
-| $\mathsf {A}_i$          | $P_{Ask}$      | $Ask$                            |
-| $\mathsf {Depth_B}$      | $P_{Acc_B}$    | $Acc_B$                          |
-| $\mathsf {Depth_A}$      | $P_{Acc_A}$    | $Acc_A$                          |
-| $\mathsf {Min}$          | $P_{Min}$      | $Min$                            |
-| $\mathsf {surplus_{B}}$  | $P_{Surp_B}$   | $Surp_B$                         |
-| $\mathsf {surplus_{A}}$  | $P_{Surp_A}$   | $Surp_A$                         |
-| $\mathsf {Delta}$        | $P_{Delta}$    | $Delta$                          |
-| $\mathsf {Slack}$        | $P_{Slack}$    | $Slack$                          |
-| $\mathsf {Mask_Plateau}$ | $P_{Mask_{P}}$ | $Mask_P$                         |
-| $\mathsf {Mask_Plateau}$ | $P_{Mask_{V}}$ | $Mask_V$                         |
-| $\mathsf {Slack}$        | $P_{Slack}$    | $Slack$                          |
+| $\mathsf {B}_i$          | $P_{Bid}$      | $Bid(X)$                         |
+| $\mathsf {A}_i$          | $P_{Ask}$      | $Ask(X)$                         |
+| $\mathsf {Depth_B}$      | $P_{Acc_B}$    | $Acc_B(X)$                       |
+| $\mathsf {Depth_A}$      | $P_{Acc_A}$    | $Acc_A(X)$                       |
+| $\mathsf {Min}$          | $P_{Min}$      | $Min(X)$                         |
+| $\mathsf {surplus_{B}}$  | $P_{Surp_B}$   | $Surp_B(X)$                      |
+| $\mathsf {surplus_{A}}$  | $P_{Surp_A}$   | $Surp_A(X)$                      |
+| $\mathsf {Delta}$        | $P_{Delta}$    | $Delta(X)$                       |
+| $\mathsf {Slack}$        | $P_{Slack}$    | $Slack(X)$                       |
+| $\mathsf {Mask_Plateau}$ | $P_{Mask_{P}}$ | $Mask_P(X)$                      |
+| $\mathsf {Mask_Plateau}$ | $P_{Mask_{V}}$ | $Mask_V(X)$                      |
+| $\mathsf {Slack}$        | $P_{Slack}$    | $Slack(X)$                       |
 |                          |                |                                  |
 
 
@@ -133,7 +131,7 @@ We had to do range checks for the corresponding polynomials to the arrays in Tab
 
 ----------------------------------------------
 ## **A. Protocol Architecture & Mathematical Foundation: Introducing Tools**
-#### **A.1. Transition Logic of Vanishing equations**
+#### **A.1. Transition Logic for Vanishing equations**
 
 The protocol is built on a Polynomial Interactive Oracle Proof (PIOP) framework using a multiplicative subgroup $H$ of size $n$.
 Evaluation domain is $H = \{1, \omega, \omega^2, \dots, \omega^{n-1}\}$, where $\omega$ is the generator of the subgroup in the finite field $\mathbb{F}_q$. Here, we have the vanishing polynomial $Z_H(X) = X^n - 1$, which equals zero for all $X \in H$. To enforce recurrence relations across price ticks, we utilize the transition constraint structure (Plonkbook transition logic reference) for our vanishing equations:    $$(X - \omega^{n-1}) \cdot [ \text{Constraint Logic} ] = 0$$
@@ -144,7 +142,7 @@ This ensures the relation holds for all $i \in \{0, \dots, n-2\}$ while preventi
 
 Because the auction operates in a finite field $\text{mod } q$, standard bit-decomposition is insufficient to prevent modular wrap-around. To define "positive" values in a modular field, we adopt a Half-Field Range Check. Any value $S(X)$ is considered valid if it lies in the first half of the interval $[0, \frac{q-1}{2}]$. This is critical for the Surplus Columns ($\mathbb{Z}_+$); if Trade Volume incorrectly exceeded available Depth, the resulting negative surplus would "jump" the equator to $q-1$, failing the range proof.
 
-*Plookup Vanishing Equations*. Unlike bit-decomposition, which breaks a number into powers of two, this method proves that the surplus values ($f$) are contained within a public table of allowed positive values ($t$). This is achieved using a Grand Product Polynomial $Z(X)$ and a Sorted Polynomial $s(X)$ that combines the surplus data and the example table. For each surplus column ($\mathsf {surplus_{B}}$ and $\mathsf {surplus_{A}}$), the following two constraints or vanishing equations must hold over the domain $H$:
+*Plookup Vanishing Equations*. Unlike bit-decomposition, which breaks a number into powers of two, this method proves that the surplus values ($f$) are contained within a public table of allowed positive values ($t$). This is achieved using a Grand Product Polynomial $Z(X)$ and a Sorted Polynomial $s(X)$ that combines the data (e.g., surplus data) and the example table. For each surplus column, the following two constraints or vanishing equations must hold over the domain $H$:
 
 *Boundary Constraint (Start Condition)*. This ensures the grand product calculation begins correctly at the first price tick.
 
@@ -165,13 +163,12 @@ $$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X
 
 ----------------------------------
 
-#### **A.3. Bit-Decomposition Logic**
+#### **A.3. Bit-Decomposition Logic for Value Check** 
 
 For Finding the absolute extrema (e.g., finding global maximum), the goal is to prove that the assumed global maximum value is greater than or equal to another volume in the same array. To do so, we need to show the difference between the assumed max and other values in the array is greater or equal to zero. We achieve this by proving that the difference $D(X) = V_{max} - V(X)$ has a valid $k$-bit decomposition. If $D(X)$ can be represented as a sum of $k$ bits, it is mathematically forced to be in the range $[0, 2^k - 1]$, thus $V(X) \le V_{max}$. Same approach in reverse can be used for finding the global minimum.
 *The Recurrence Relation.* We define $k$ witness columns (or a single column across $k$ rows) for bits $B_0, \dots, B_{k-1}$. For a fixed price tick $i$, the state is:
 
 $$Acc_{j+1} = Acc_j + 2^j \cdot B_j$$
-
 Where $Acc_0 = 0$ and $Acc_k = D_i$.
 
 *Vanishing Equations for the "Ceiling".* Using our transition constraint structure to handle the $n$-sized subgroup $H$, the bit-Integrity (Booleanity), enforces that each decomposition component is a bit.$$B_j(X) \cdot (1 - B_j(X)) = 0 \pmod{Z_H(X)}, \quad \forall j \in \{0, \dots, k-1\}$$
@@ -179,14 +176,67 @@ So the tool for this check will be:
 $$S(X) = \sum_{j=0}^{k-1} 2^j \cdot B_j(X)$$
 
 --------------------
+#### **A.4. Verification Logic for Batching**
 
-#### **Polynomial representing Volume of Bids at Price $\mathsf {P}_i$ ($Bid(X)$)**
+As per the Zeeperio "start to finish" check, the verifier performs the following:
+
+As you will see, there will be many vanishing polynomials (constraints) that must all equal zero simultaneously. Instead of the verifier checking each of the constraints separately, which would be computationally expensive, the prover creates a random linear combination of all constraints using powers of $\alpha$. Here, $\alpha^i$ is the random weight assigned to the $i$-th constraint to ensure they don't cancel each other out maliciously.Again, to do the algebraic check, we use the random challenge $\zeta \notin H$ to check that the batched vanishing polynomials (multiplied by the quotient $Q(X)$) evaluate to zero.
+$$Batch(\alpha) = \sum_{i=1}^{m} \alpha^i (V_i(X) - Q_i(X)Z_H(X))$$
+$$\sum \alpha^i (\mathsf{V}_i(\zeta) - Q_i(\zeta) \cdot Z_H(\zeta)) = 0$$
 
 
+------------------------------------
+
+## **B. Constraints for the Market** 
+
+We should do a range check for Both $Bid$ and $Ask$ polynomials as seen in section A.2. (formatting of the sections and how to link them will be better handled in LaTeX code) to make sure the data is valid to use for our polynomial operations. 
+
+####
+(**Comment:** I can just mention we use the tool A.x. and not write the whole thing for each part, Idk if that'd be ok in an academic )
+####
+
+#### **Volume of Bids and Asks at Price $\mathsf {P}_i$ Polynomials ($Bid(X)$ and $Ask(X)$)**
+
+*Definition.* In a finite field $\mathbb{F}_q$, a negative order (e.g., "I want to sell $-10$ shares") is represented as $q-1$. Without a range check on the raw inputs, the accumulators ($Acc_A$ and $Acc_B$) would inherit these massive values, causing the trade volume calculations to produce nonsensical or malicious results. By forcing $Bid(X)$ and $Ask(X)$ into the Lower Half of the field, we mathematically guarantee that every individual order is a legitimate, positive quantity.
 
 
+### **The Input Equator Table ($t_{in}$)**
 
-#### **Polynomial representing Volume of Asks at Price $\mathsf {P}_i$ ($Ask(X)$)**
+We define a public table $t_{in}(X)$ that contains all allowed order sizes.
+
+**Safe Interval**: $\{0, 1, \dots, N_{max}\}$, where $N_{max}$ is the maximum possible size for a single order.    
+
+**Constraint**: $N_{max} < \frac{q-1}{2}$. This "Equator" boundary ensures that no order can be interpreted as a negative value by wrapping around $q$.
+
+
+### **3. Plookup Vanishing Equations for Raw Data**
+
+For both $BidVol(X)$ and $AskVol(X)$, the prover must generate a Grand Product polynomial $Z_{in}(X)$ and a sorted polynomial $s_{in}(X)$ that satisfy the following equations over $H$:
+
+#### **A. Initialization (Lagrange Start)**
+
+The product must begin at 1 at the first price tick ($\omega^0$).
+
+$$L_1(X) \cdot (Z_{in}(X) - 1) = 0$$
+
+#### **B. Transition (The "Equator" Range Check)**
+
+Using the Plonkbook transition template, we verify that every entry in the raw column exists in the "Safe Zone" table $t_{in}(X)$.
+
+$$(X - \omega^{n-1}) \cdot \left[ Z_{in}(\omega X)(\gamma + s_{in}(X) + \beta s_{in}(\omega X)) - Z_{in}(X)(\gamma(1+\beta) + f_{raw}(X) + \beta t_{in}(X)) \right] = 0$$
+
+- **$f_{raw}(X)$**: This is the polynomial for either **BidVol** or **AskVol**.
+    
+- **$\beta, \gamma$**: Verifier's random challenges.
+    
+- **$s_{in}(X)$**: The sorted polynomial proving $f_{raw} \subset t_{in}$.
+    
+
+#### **C. Termination (Final Consistency)**
+
+The final value of the grand product must match the expected permutation product of the multiset.
+
+$$L_n(X) \cdot (Z_{in}(X) - \text{Target}) = 0$$
 
 
 

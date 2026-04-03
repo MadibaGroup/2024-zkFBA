@@ -147,9 +147,7 @@ Because the auction operates in a finite field $\text{mod } q$, standard bit-dec
 
 $$L_1(X)(Z(X) - 1) = 0$$
 
-**$L_1(X)$**: The Lagrange polynomial that is 1 at the first price tick ($\omega^0$) and 0 elsewhere.
-
-**$Z(X)$**: The Grand Product polynomial that tracks the cumulative relationship between the surplus and the valid range table.
+$L_1(X)$ is the Lagrange polynomial that is 1 at the first price tick ($\omega^0$) and 0 elsewhere. $Z(X)$ is the Grand Product polynomial that tracks the cumulative relationship between the surplus and the valid range table.
 
 *Transition Constraint (The Range Proof)*. This equation enforces that every surplus value is "found" in the range table as we traverse the price ticks.
 

@@ -55,7 +55,7 @@ Walkthrough of a constraint.
 
 3.7. Global Min check Selector Constraints
 
-3.8. The Tie Breaker Surplus constraints
+3.8. The Tie Breaker Surplus and "Valley" constraints
 
 
 **Comment)**
@@ -186,9 +186,7 @@ $$\sum \alpha^i (\mathsf{V}_i(\zeta) - Q_i(\zeta) \cdot Z_H(\zeta)) = 0$$
 
 
 ------------------------------------
-
 ## **B. Constraints for the Market** 
-
 We should do a range check for Both $Bid$ and $Ask$ polynomials as seen in section A.2. to make sure the data is valid to use for our polynomial operations. 
 
 ####

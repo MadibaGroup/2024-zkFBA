@@ -189,57 +189,35 @@ $$\sum \alpha^i (\mathsf{V}_i(\zeta) - Q_i(\zeta) \cdot Z_H(\zeta)) = 0$$
 
 ## **B. Constraints for the Market** 
 
-We should do a range check for Both $Bid$ and $Ask$ polynomials as seen in section A.2. (formatting of the sections and how to link them will be better handled in LaTeX code) to make sure the data is valid to use for our polynomial operations. 
+We should do a range check for Both $Bid$ and $Ask$ polynomials as seen in section A.2. to make sure the data is valid to use for our polynomial operations. 
 
 ####
-(**Comment:** I can just mention we use the tool A.x. and not write the whole thing for each part, Idk if that'd be ok in an academic )
+(**Comment:** I can just mention "we use the tool A.x." and not write the whole thing for each part, Idk if that'd be ok in an academic. Also, formatting of the sections and how to link them will be better handled in LaTeX code.)
 ####
 
 #### **Volume of Bids and Asks at Price $\mathsf {P}_i$ Polynomials ($Bid(X)$ and $Ask(X)$)**
 
-*Definition.* In a finite field $\mathbb{F}_q$, a negative order (e.g., "I want to sell $-10$ shares") is represented as $q-1$. Without a range check on the raw inputs, the accumulators ($Acc_A$ and $Acc_B$) would inherit these massive values, causing the trade volume calculations to produce nonsensical or malicious results. By forcing $Bid(X)$ and $Ask(X)$ into the Lower Half of the field, we mathematically guarantee that every individual order is a legitimate, positive quantity.
+*Definition.* In a finite field $\mathbb{F}_q$, a negative order (e.g., "I want to sell $-10$ shares") is represented as $q-1$. Without a range check on the raw inputs, the accumulators ($Acc_A$ and $Acc_B$) would inherit these massive values, causing the trade volume calculations to produce nonsensical or malicious results. By forcing $Bid(X)$ and $Ask(X)$ into the Lower Half of the field, we mathematically guarantee that every individual order is a legitimate, positive quantity. We define a public table $t_{in}(X)$ that contains all allowed order sizes. The safe interval is $\{0, 1, \dots, N_{max}\}$, where $N_{max}$ is the maximum possible size for a single order.    
 
+*Constraint.*  $N_{max} < \frac{q-1}{2}$. This "equator" boundary ensures that no order can be interpreted as a negative value by wrapping around $q$. For both $Bid(X)$ and $Ask(X)$, the prover must generate a Grand Product polynomial $Z_{in}(X)$ and a sorted polynomial $s_{in}(X)$ that satisfy the following equations over $H$:
 
-### **The Input Equator Table ($t_{in}$)**
-
-We define a public table $t_{in}(X)$ that contains all allowed order sizes.
-
-**Safe Interval**: $\{0, 1, \dots, N_{max}\}$, where $N_{max}$ is the maximum possible size for a single order.    
-
-**Constraint**: $N_{max} < \frac{q-1}{2}$. This "Equator" boundary ensures that no order can be interpreted as a negative value by wrapping around $q$.
-
-
-### **3. Plookup Vanishing Equations for Raw Data**
-
-For both $BidVol(X)$ and $AskVol(X)$, the prover must generate a Grand Product polynomial $Z_{in}(X)$ and a sorted polynomial $s_{in}(X)$ that satisfy the following equations over $H$:
-
-#### **A. Initialization (Lagrange Start)**
-
-The product must begin at 1 at the first price tick ($\omega^0$).
+ *Initialization (Lagrange Start).* The product must begin at 1 at the first price tick ($\omega^0$).
 
 $$L_1(X) \cdot (Z_{in}(X) - 1) = 0$$
 
-#### **B. Transition (The "Equator" Range Check)**
-
-Using the Plonkbook transition template, we verify that every entry in the raw column exists in the "Safe Zone" table $t_{in}(X)$.
+*Transition (The "Equator" Range Check).* (Using the Plonkbook transition template) we verify that every entry in the raw column exists in the "Safe Zone" table $t_{in}(X)$.
 
 $$(X - \omega^{n-1}) \cdot \left[ Z_{in}(\omega X)(\gamma + s_{in}(X) + \beta s_{in}(\omega X)) - Z_{in}(X)(\gamma(1+\beta) + f_{raw}(X) + \beta t_{in}(X)) \right] = 0$$
+$f_{raw}(X)$ is the polynomial for either $Bid(X)$ or $Ask(X)$. $\beta, \gamma$ are verifier's random challenges.
+$s_{in}(X)$ is the sorted polynomial proving $f_{raw} \subset t_{in}$.
 
-- **$f_{raw}(X)$**: This is the polynomial for either **BidVol** or **AskVol**.
-    
-- **$\beta, \gamma$**: Verifier's random challenges.
-    
-- **$s_{in}(X)$**: The sorted polynomial proving $f_{raw} \subset t_{in}$.
-    
-
-#### **C. Termination (Final Consistency)**
-
-The final value of the grand product must match the expected permutation product of the multiset.
+####
+**(Comment:**
+*Termination (Final Consistency).* The final value of the grand product must match the expected permutation product of the multiset (not here but would probably come in handy for ).
 
 $$L_n(X) \cdot (Z_{in}(X) - \text{Target}) = 0$$
-
-
-
+**Comment)**
+####
 --------------------------
 
 #### Demand Accumulator Polynomial $Acc_B(X)$

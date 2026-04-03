@@ -2,13 +2,13 @@
 
 
 ### **Abstract**
-Frequent batch auctions (FBAs) have been proposed as an alternative to traditional limit order books for trading securities. The motivation is to mitigate the predatory advantages of high-frequency traders (HFTs). With FBAs, a double-sided auction is held over a short interval (e.g., 1 second). All marketable orders submitted during the time window are executed at the same clearing price, and arrival time is not a factor. FBAs are significantly less transparent than continuous-time orderbooks and rely on fully trusted specialists or exchanges to execute orders at the fairest price.  In this research, we present a special-purpose zk-SNARK argument to develop a zk-FBA, which enables the specialist to prove trades are executed fairly with the correct clearing price, without revealing any of the orders directly.
+Frequent batch auctions (FBAs) have been proposed as an alternative to traditional limit order books for trading securities. The motivation is to mitigate the predatory advantages of high-frequency traders (HFTs). With FBAs, a double-sided auction is held over a short interval (e.g., 1 second). All marketable orders submitted during the time window are executed at the same clearing price, and arrival time is not a factor. FBAs are significantly less transparent than continuous-time orderbooks and rely on fully trusted specialists or exchanges to execute orders at the fairest price. In this research, we present a special-purpose zk-SNARK argument to develop a zk-FBA, which enables the specialist to prove trades are executed fairly with the correct clearing price, yielded by truthful computations, without revealing any of the orders directly.
 
 
 ### **1. Introduction**
 
 
-((Call markets are essential for price discovery, particularly during market opens or periods of high volatility. Traditional auctions require a central authority to view all order data, creating risks for front-running. This protocol allows an auctioneer to commit to an order book and prove the resulting clearing price is correct under the rules of supply and demand without leaking the competitive landscape of the participants.))
+(((Later with citation) Call markets are essential for price discovery, particularly during market opens or periods of high volatility. Traditional auctions require a central authority to view all order data, creating risks for front-running. This protocol allows an auctioneer to commit to an order book and prove the resulting clearing price is correct under the rules of supply and demand without leaking the competitive landscape of the participants.))
 
 ### **2. Background and Related work**
 
@@ -133,8 +133,7 @@ We had to do range checks for the corresponding polynomials to the arrays in Tab
 ## **A. Protocol Architecture & Mathematical Foundation: Introducing Tools**
 #### **A.1. Transition Logic for Vanishing equations**
 
-The protocol is built on a Polynomial Interactive Oracle Proof (PIOP) framework using a multiplicative subgroup $H$ of size $n$.
-Evaluation domain is $H = \{1, \omega, \omega^2, \dots, \omega^{n-1}\}$, where $\omega$ is the generator of the subgroup in the finite field $\mathbb{F}_q$. Here, we have the vanishing polynomial $Z_H(X) = X^n - 1$, which equals zero for all $X \in H$. To enforce recurrence relations across price ticks, we utilize the transition constraint structure (Plonkbook transition logic reference) for our vanishing equations:    $$(X - \omega^{n-1}) \cdot [ \text{Constraint Logic} ] = 0$$
+The protocol is built on a Polynomial Interactive Oracle Proof (PIOP) framework using a multiplicative subgroup $H$ of size $n$. Evaluation domain is $H = \{1, \omega, \omega^2, \dots, \omega^{n-1}\}$, where $\omega$ is the generator of the subgroup in the finite field $\mathbb{F}_q$. Here, we have the vanishing polynomial $Z_H(X) = X^n - 1$, which equals zero for all $X \in H$. To enforce recurrence relations across price ticks, we utilize the transition constraint structure (Plonkbook transition logic reference) for our vanishing equations:    $$(X - \omega^{n-1}) \cdot [ \text{Constraint Logic} ] = 0$$
 This ensures the relation holds for all $i \in \{0, \dots, n-2\}$ while preventing an undefined "wrap-around" at the final domain point (enforcing recurrence relations (e.g., $A_{i+1} = A_i + B_i$) without causing a contradiction at the final domain point.).
 
 -----------------------------------------
@@ -156,10 +155,7 @@ $$L_1(X)(Z(X) - 1) = 0$$
 
 $$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X)(\gamma(1+\beta) + f(X) + \beta t(X)) \right] = 0$$
 
-**$f(X)$**: The witness polynomial to do range check for (e.g., the surplus columns).
-**$t(X)$**: The public table polynomial containing the permitted range of positive integers (e.g., $0$ to $2^{16}-1$).
-**$s(X)$**: A "Sorted" polynomial that interweaves the values of $f$ and $t$ in non-decreasing order to prove membership.
-**$\beta, \gamma$**: Random challenges provided by the verifier to ensure the prover cannot manipulate the entries.
+$f(X)$ is the witness polynomial to do range check for (e.g., the surplus columns). $t(X)$ is the public table polynomial containing the permitted range of positive integers (e.g., $0$ to $2^{16}-1$). $s(X)$ is a "Sorted" polynomial that interweaves the values of $f$ and $t$ in non-decreasing order to prove membership. $\beta, \gamma$ are random challenges provided by the verifier to ensure the prover cannot manipulate the entries.
 
 ----------------------------------
 
@@ -206,8 +202,7 @@ $$L_1(X) \cdot (Z_{in}(X) - 1) = 0$$
 *Transition (The "Equator" Range Check).* We verify that every entry in the raw column exists in the "Safe Zone" table $t_{in}(X)$.
 
 $$(X - \omega^{n-1}) \cdot \left[ Z_{in}(\omega X)(\gamma + s_{in}(X) + \beta s_{in}(\omega X)) - Z_{in}(X)(\gamma(1+\beta) + f_{raw}(X) + \beta t_{in}(X)) \right] = 0$$
-$f_{raw}(X)$ is the polynomial for either $Bid(X)$ or $Ask(X)$. $\beta, \gamma$ are verifier's random challenges.
-$s_{in}(X)$ is the sorted polynomial proving $f_{raw} \subset t_{in}$.
+$f_{raw}(X)$ is the polynomial for either $Bid(X)$ or $Ask(X)$. $\beta, \gamma$ are verifier's random challenges. $s_{in}(X)$ is the sorted polynomial proving $f_{raw} \subset t_{in}$.
 
 ####
 **(Comment:**

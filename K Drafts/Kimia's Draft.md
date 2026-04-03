@@ -64,7 +64,7 @@ Walkthrough of a constraint.
 ----------------------------
 To better convey how we go about the methodology, we'll use Table 1 as a an example:
 
-Table 1:
+**Table 1:**
 
 | **Price** | **Bids++** | **Asks++** | **Bid Depth** | **Ask Depth** | **MCV** | **Selector** | **In {0, MCV}** | **Bid Surplus** | **Ask Surplus** | **Abs(Delta)** | **Delta Check** | **Selector** | **S*Delta** | **Selector** | **MCV Ref** | **Cliff Value** | **1** | **Slack++** |
 | --------- | ---------- | ---------- | ------------- | ------------- | ------- | ------------ | --------------- | --------------- | --------------- | -------------- | --------------- | ------------ | ----------- | ------------ | ----------- | --------------- | ----- | ----------- |
@@ -122,6 +122,7 @@ Notation of arrays and the corresponding commitments to their polynomials are se
 | $\mathsf {Mask_Plateau}$ | $P_{Mask_{P}}$ | $Mask_P(X)$                      |
 | $\mathsf {Mask_Plateau}$ | $P_{Mask_{V}}$ | $Mask_V(X)$                      |
 | $\mathsf {Slack}$        | $P_{Slack}$    | $Slack(X)$                       |
+|                          |                |                                  |
 |                          |                |                                  |
 
 

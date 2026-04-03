@@ -96,7 +96,7 @@ Every column is an array, which will be interpolated into a polynomial, and even
 
 The first two columns, Order Book Vectors, are private vectors where $\mathsf {B}_i$ is the volume of bids and $\mathsf {A}_i$ is the volume of asks at price $\mathsf {P}_i$.
 Respectively, $\mathsf {Depth_B}$ and $\mathsf {Depth_A}$ columns work as accumulators, being the cumulative demand from highest to lowest price and cumulative supply from lowest to highest price.
-$\mathsf {Min}$ array is the minimum of $\mathsf {Depth_B}$ and $\mathsf {Depth_A}$ columns, from which we choose the Market Clearing Volume (price). 
+$\mathsf {Min}$ array is the minimum of $\mathsf {Depth_B}$ and $\mathsf {Depth_A}$ arrays, from which we choose the Market Clearing Volume (price). 
 Selector vectors, $\mathsf {Mask_Plateau}$ and $\mathsf {Mask_Valley}$, will later on limits the interval we are working with, help with our range checks, and reduce the computation complexity.  
 Vector $\mathsf {surplus_{B}}$ and $\mathsf {surplus_{A}}$ are:
 $\mathsf {surplus_{B}} = \mathsf {Depth_B} - \mathsf {Min}$ 
@@ -110,7 +110,7 @@ Notation of arrays and the corresponding commitments to their polynomials are se
 
 **Table 2:**
 
-| **Array**                | **Polynomial** | **Commitment ot the polynomial** |
+| **Array**                | **Polynomial** | **Commitment to the polynomial** |
 | ------------------------ | -------------- | -------------------------------- |
 | $\mathsf {B}_i$          | $P_{Bid}$      | $Bid$                            |
 | $\mathsf {A}_i$          | $P_{Ask}$      | $Ask$                            |
@@ -132,15 +132,15 @@ We had to do range checks for the corresponding polynomials to the arrays in Tab
 
 
 ----------------------------------------------
-## **A. Protocol Architecture & Mathematical Foundation**
-#### **A.1. Transition Logic**
+## **A. Protocol Architecture & Mathematical Foundation: Introducing Tools**
+#### **A.1. Transition Logic of Vanishing equations**
 
 The protocol is built on a Polynomial Interactive Oracle Proof (PIOP) framework using a multiplicative subgroup $H$ of size $n$.
 Evaluation domain is $H = \{1, \omega, \omega^2, \dots, \omega^{n-1}\}$, where $\omega$ is the generator of the subgroup in the finite field $\mathbb{F}_q$. Here, we have the vanishing polynomial $Z_H(X) = X^n - 1$, which equals zero for all $X \in H$. To enforce recurrence relations across price ticks, we utilize the transition constraint structure (Plonkbook transition logic reference) for our vanishing equations:    $$(X - \omega^{n-1}) \cdot [ \text{Constraint Logic} ] = 0$$
 This ensures the relation holds for all $i \in \{0, \dots, n-2\}$ while preventing an undefined "wrap-around" at the final domain point (enforcing recurrence relations (e.g., $A_{i+1} = A_i + B_i$) without causing a contradiction at the final domain point.).
 
 -----------------------------------------
-#### **A.2. The Modular Equator Logic**
+#### **A.2. The Modular Equator Logic for Range Check**
 
 Because the auction operates in a finite field $\text{mod } q$, standard bit-decomposition is insufficient to prevent modular wrap-around. To define "positive" values in a modular field, we adopt a Half-Field Range Check. Any value $S(X)$ is considered valid if it lies in the first half of the interval $[0, \frac{q-1}{2}]$. This is critical for the Surplus Columns ($\mathbb{Z}_+$); if Trade Volume incorrectly exceeded available Depth, the resulting negative surplus would "jump" the equator to $q-1$, failing the range proof.
 
@@ -158,7 +158,7 @@ $$L_1(X)(Z(X) - 1) = 0$$
 
 $$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X)(\gamma(1+\beta) + f(X) + \beta t(X)) \right] = 0$$
 
-**$f(X)$**: The witness polynomial for the surplus column (either $P_{Surp_B}$ or $P_{Surp_A}$).
+**$f(X)$**: The witness polynomial to do range check for (e.g., the surplus columns).
 **$t(X)$**: The public table polynomial containing the permitted range of positive integers (e.g., $0$ to $2^{16}-1$).
 **$s(X)$**: A "Sorted" polynomial that interweaves the values of $f$ and $t$ in non-decreasing order to prove membership.
 **$\beta, \gamma$**: Random challenges provided by the verifier to ensure the prover cannot manipulate the entries.
@@ -167,17 +167,21 @@ $$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X
 
 #### **A.3. Bit-Decomposition Logic**
 
+For Finding the absolute extrema (e.g., finding global maximum), the goal is to prove that the assumed global maximum value is greater than or equal to another volume in the same array. To do so, we need to show the difference between the assumed max and other values in the array is greater or equal to zero. We achieve this by proving that the difference $D(X) = V_{max} - V(X)$ has a valid $k$-bit decomposition. If $D(X)$ can be represented as a sum of $k$ bits, it is mathematically forced to be in the range $[0, 2^k - 1]$, thus $V(X) \le V_{max}$. Same approach in reverse can be used for finding the global minimum.
+*The Recurrence Relation.* We define $k$ witness columns (or a single column across $k$ rows) for bits $B_0, \dots, B_{k-1}$. For a fixed price tick $i$, the state is:
 
+$$Acc_{j+1} = Acc_j + 2^j \cdot B_j$$
 
+Where $Acc_0 = 0$ and $Acc_k = D_i$.
 
-
-
-
-
+*Vanishing Equations for the "Ceiling".* Using our transition constraint structure to handle the $n$-sized subgroup $H$, the bit-Integrity (Booleanity), enforces that each decomposition component is a bit.$$B_j(X) \cdot (1 - B_j(X)) = 0 \pmod{Z_H(X)}, \quad \forall j \in \{0, \dots, k-1\}$$
+So the tool for this check will be:
+$$S(X) = \sum_{j=0}^{k-1} 2^j \cdot B_j(X)$$
 
 --------------------
 
 #### **Polynomial representing Volume of Bids at Price $\mathsf {P}_i$ ($Bid(X)$)**
+
 
 
 
@@ -190,16 +194,22 @@ $$(X - \omega^{n-1}) \left[ Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) - Z(X
 
 #### Demand Accumulator Polynomial $Acc_B(X)$
 
-Definition: Represents total cumulative demand, the quantity willing to buy at a given price or higher. As seen in the spreadsheet image, standard demand sums _down_ the price list (starting high at low prices and decreasing as prices rise).
+*Definition.* Represents total cumulative demand, the quantity willing to buy at a given price or higher. As seen in the spreadsheet image, standard demand sums _down_ the price list (starting high at low prices and decreasing as prices rise).
 
-Vanishing Equation (Plookup Transition Logic): To ensure this decreasing backward sum is consistent, the recurrence is defined as $Acc_B(X) = Acc_B(\omega X) + BidVol(X)$ (Total Demand at index $i$ is total demand at next index $i+1$ plus current bids). We apply the template structure (transition template) that zeros the constraint at the very last point:
+*Demand Accumulator Initialization.* Enforces that the demand starts at the highest price tick.
+$$V_{Acc_B, I}(X) = (Acc_B(X) - Bid(X)) \cdot \frac{Z_H(X)}{X - \omega^0} = 0$$
+
+*Vanishing Equation (Plookup Transition Logic).* To ensure this decreasing backward sum is consistent, the recurrence is defined as $Acc_B(X) = Acc_B(\omega X) + Bid(X)$ (Total Demand at index $i$ is total demand at next index $i+1$ plus current bids). We apply the template structure (transition template) that zeros the constraint at the very last point:
 $$V_{Acc_B} := (X - \omega^{n-1}) \cdot \left[ Acc_B(X) - (Acc_B(\omega X) + Bid(X)) \right] = 0$$
 
 
 
 #### Supply Accumulator Polynomial $Acc_A(X)$
 
-Definition: Represents total cumulative supply—the quantity willing to sell at a given price or lower. This sums _forwards_ along the price list (starting low and increasing as prices rise).
+*Definition.* Represents total cumulative supply—the quantity willing to sell at a given price or lower. This sums _forwards_ along the price list (starting low and increasing as prices rise).
 
-Vanishing Equation (Plookup Transition Logic): The recurrence is defined as $Acc_A(\omega X) = Acc_A(X) + AskVol(X)$ (Total supply at next index $i+1$ equals current supply at index $i$ plus current asks).
-$$V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X) + AskVol(X)) \right] = 0$$
+*Supply Accumulator Initialization. Enforces that the supply starts at zero (or the first bid) at the lowest price tick. 
+$$V_{AccA, I}(X) = (Acc_A(X) - Ask(X)) \cdot \frac{Z_H(X)}{X - \omega^{n-1}} = 0$$
+
+*Vanishing Equation.* The recurrence is defined as $Acc_A(\omega X) = Acc_A(X) + Ask(X)$ (Total supply at next index $i+1$ equals current supply at index $i$ plus current asks).
+$$V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X) + Ask(X)) \right] = 0$$

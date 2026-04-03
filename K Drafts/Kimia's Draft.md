@@ -254,7 +254,12 @@ $$V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X) + Ask(
 ---------------------
 
 
+#### Selector Polynomials ($Mask(X)$)
 
+
+####
+(**comment:** ADV: two methods to explore: shuffling and permutation (code, line chart to show complexity as to which one is better in which situation)
+####
 
 -------------------------------
 

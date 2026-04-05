@@ -59,10 +59,11 @@ Walkthrough of a constraint.
 
 
 
-
+Chart 1:
 
 ![[Code_Generated_Image 1.png]]
 
+*How to find the Market Clearance Price (Value).*  We follow a simple algorithm to do so. Ideally, the first step would be to sort the data we have. In the auction ecosystem, we typically have prices, their corresponding bids and asks and the depth to these requests. These data form five distinguished arrays, sorted according to the price. An example of these "sorted arrays" can be found in Table 1. After this step, next step is to 
 **Comment)**
 ####
 
@@ -254,6 +255,11 @@ $$\mathsf V_{min}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 
 
 #### Selector Polynomials ($Mask(X)$)
+
+
+
+
+
 
 
 ####

@@ -98,8 +98,6 @@ https://eprint.iacr.org/2022/284.pdf
 
 -------------------------------
 The Plateau Mask ($Mask_{[c,d]}$) is a polynomial that is $1$ inside the interval and $0$ outside. You compute it by summing the individual Lagrange Basis Polynomials ($L_i$) for every index in the plateau:$$Mask_{[c,d]}(X) = \sum_{i=c}^{d} L_i(X)$$
-
-
 The Slack variables ($Slack_L, Slack_R$) are witnesses provided by the prover to satisfy the "strictly less than" requirement.
 Find the Difference: The prover looks at the actual volume at the cliff, say $Min(\omega^{c-1})$.
 Calculate Gap: They calculate how far that volume is from the "ceiling" ($V_{max} - 1$).

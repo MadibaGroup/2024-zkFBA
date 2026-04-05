@@ -217,10 +217,10 @@ $$L_n(X) \cdot (Z_{in}(X) - \text{Target}) = 0$$
 *Definition.* Represents total cumulative demand, the quantity willing to buy at a given price or higher. As seen in the spreadsheet image, standard demand sums _down_ the price list (starting high at low prices and decreasing as prices rise).
 
 *Demand Accumulator Initialization.* Enforces that the demand starts at the highest price tick.
-$$V_{Acc_B, I}(X) = (Acc_B(X) - Bid(X)) \cdot \frac{Z_H(X)}{X - \omega^0} = 0$$
+$$\mathsf V_{Acc_B, I}(X) = (Acc_B(X) - Bid(X)) \cdot \frac{Z_H(X)}{X - \omega^0} = 0$$
 
 *Vanishing Equation (Plookup Transition Logic).* To ensure this decreasing backward sum is consistent, the recurrence is defined as $Acc_B(X) = Acc_B(\omega X) + Bid(X)$ (Total Demand at index $i$ is total demand at next index $i+1$ plus current bids). We apply the template structure (transition template) that zeros the constraint at the very last point:
-$$V_{Acc_B} := (X - \omega^{n-1}) \cdot \left[ Acc_B(X) - (Acc_B(\omega X) + Bid(X)) \right] = 0$$
+$$\mathsf V_{Acc_B} := (X - \omega^{n-1}) \cdot \left[ Acc_B(X) - (Acc_B(\omega X) + Bid(X)) \right] = 0$$
 
 
 
@@ -229,17 +229,20 @@ $$V_{Acc_B} := (X - \omega^{n-1}) \cdot \left[ Acc_B(X) - (Acc_B(\omega X) + Bid
 *Definition.* Represents total cumulative supply—the quantity willing to sell at a given price or lower. This sums _forwards_ along the price list (starting low and increasing as prices rise).
 
 *Supply Accumulator Initialization. Enforces that the supply starts at zero (or the first bid) at the lowest price tick. 
-$$V_{AccA, I}(X) = (Acc_A(X) - Ask(X)) \cdot \frac{Z_H(X)}{X - \omega^{n-1}} = 0$$
+$$\mathsf V_{AccA, I}(X) = (Acc_A(X) - Ask(X)) \cdot \frac{Z_H(X)}{X - \omega^{n-1}} = 0$$
 
 *Vanishing Equation.* The recurrence is defined as $Acc_A(\omega X) = Acc_A(X) + Ask(X)$ (Total supply at next index $i+1$ equals current supply at index $i$ plus current asks).
-$$V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X) + Ask(X)) \right] = 0$$
+$$\mathsf V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X) + Ask(X)) \right] = 0$$
 
 
 ---------------
 #### 
 #### **Minimum polynomial ($Min(X)$)**
 
+*Definition.* The actual volume of shares that will execute at a price tick, which is always the lesser of cumulative supply or cumulative demand.
 
+*Vanishing Equation.* This column is the single most critical intermediate output. All subsequent market properties, including the $V_{max}$ Plateau Check, Cliffs Proof, and the Surplus Valley tie-breaking logic, are calculated from this column. Proving this column is strictly $\min(Acc_A, Acc_B)$ is essential for the security of the auction; without it, a malicious auctioneer could set a TradeVol higher than the available supply, effectively "inventing shares". To prove a $\min$ relationship in ZK, we use the constraint that requires the value to strictly equal one of its sources, combined with range checks. We enforce that the "Slack" (Surplus) on at least one side of the matching equation must be zero:
+$$\mathsf V_{KL}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 
 
 
@@ -252,6 +255,11 @@ $$V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X) + Ask(
 ####
 (**comment:** ADV: two methods to explore: shuffling and permutation (code, line chart to show complexity as to which one is better in which situation)
 ####
+
+
+
+
+
 
 -------------------------------
 

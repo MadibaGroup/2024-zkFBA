@@ -223,10 +223,9 @@ $$\mathsf V_{Acc_B, I}(X) = (Acc_B(X) - Bid(X)) \cdot \frac{Z_H(X)}{X - \omega^0
 $$\mathsf V_{Acc_B} := (X - \omega^{n-1}) \cdot \left[ Acc_B(X) - (Acc_B(\omega X) + Bid(X)) \right] = 0$$
 
 
-
 #### Supply Accumulator Polynomial $Acc_A(X)$
 
-*Definition.* Represents total cumulative supply—the quantity willing to sell at a given price or lower. This sums _forwards_ along the price list (starting low and increasing as prices rise).
+*Definition.* Represents total cumulative supply, the quantity willing to sell at a given price or lower. This sums _forwards_ along the price list (starting low and increasing as prices rise).
 
 *Supply Accumulator Initialization. Enforces that the supply starts at zero (or the first bid) at the lowest price tick. 
 $$\mathsf V_{AccA, I}(X) = (Acc_A(X) - Ask(X)) \cdot \frac{Z_H(X)}{X - \omega^{n-1}} = 0$$
@@ -236,14 +235,14 @@ $$\mathsf V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X
 
 
 ---------------
-#### 
+###### 
 #### **Minimum polynomial ($Min(X)$)**
 
 *Definition.* The actual volume of shares that will execute at a price tick, which is always the lesser of cumulative supply or cumulative demand.
 
-*Vanishing Equation.* This column is the single most critical intermediate output. All subsequent market properties, including the $V_{max}$ Plateau Check, Cliffs Proof, and the Surplus Valley tie-breaking logic, are calculated from this column. Proving this column is strictly $\min(Acc_A, Acc_B)$ is essential for the security of the auction; without it, a malicious auctioneer could set a TradeVol higher than the available supply, effectively "inventing shares". To prove a $\min$ relationship in ZK, we use the constraint that requires the value to strictly equal one of its sources, combined with range checks. We enforce that the "Slack" (Surplus) on at least one side of the matching equation must be zero:
+*Vanishing Equation.* This column is the single most critical intermediate output. All subsequent market properties, including the $V_{max}$ Plateau Check, Cliffs Proof, and the Surplus Valley tie-breaking logic, are calculated from this column. Proving this column is strictly $\min(Acc_A, Acc_B)$ is essential for the security of the auction; without it, a malicious auctioneer could set a trading volume higher than the available supply, effectively "inventing shares". 
+This ensures that eventually our $V_{max}$ is the maximum chosen from the true minimum column and there are no volume values smaller than $\mathsf{Min}_i$ at $i$, since the Market Clearing Volume is the global maximum value of the $\mathsf{Min}_i = \min(\mathsf{Acc}_{A,i}, \mathsf{Acc}_{B,i})$.  Hence, if $V_{max}$ is the maximum in this column, it is biggest number to choose as our clearing price. To prove a $\min$ relationship in ZK, we use the constraint that requires the value to strictly equal one of its sources, combined with range checks. We enforce that the "Slack" (Surplus) on at least one side of the matching equation must be zero:
 $$\mathsf V_{KL}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
-
 
 
 ---------------------

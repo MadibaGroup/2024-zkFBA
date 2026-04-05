@@ -58,6 +58,11 @@ Walkthrough of a constraint.
 3.8. The Tie Breaker Surplus and "Valley" constraints
 
 
+
+
+
+![[Code_Generated_Image 1.png]]
+
 **Comment)**
 ####
 
@@ -242,7 +247,7 @@ $$\mathsf V_{Acc_A} :=(X - \omega^{n-1}) \cdot \left[ Acc_A(\omega X) - (Acc_A(X
 
 *Vanishing Equation.* This column is the single most critical intermediate output. All subsequent market properties, including the $V_{max}$ Plateau Check, Cliffs Proof, and the Surplus Valley tie-breaking logic, are calculated from this column. Proving this column is strictly $\min(Acc_A, Acc_B)$ is essential for the security of the auction; without it, a malicious auctioneer could set a trading volume higher than the available supply, effectively "inventing shares". 
 This ensures that eventually our $V_{max}$ is the maximum chosen from the true minimum column and there are no volume values smaller than $\mathsf{Min}_i$ at $i$, since the Market Clearing Volume is the global maximum value of the $\mathsf{Min}_i = \min(\mathsf{Acc}_{A,i}, \mathsf{Acc}_{B,i})$.  Hence, if $V_{max}$ is the maximum in this column, it is biggest number to choose as our clearing price. To prove a $\min$ relationship in ZK, we use the constraint that requires the value to strictly equal one of its sources, combined with range checks. We enforce that the "Slack" (Surplus) on at least one side of the matching equation must be zero:
-$$\mathsf V_{KL}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
+$$\mathsf V_{min}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 
 
 ---------------------

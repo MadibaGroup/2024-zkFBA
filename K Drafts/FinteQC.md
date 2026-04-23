@@ -12,10 +12,25 @@ https://github.com/MadibaGroup/2024-Gadgets-Code/
 
 https://www.nyse.com/nyse-auction-data?symbol=AA&date=02-13-2026
 ----------------------------------------
-Points to consider for the finance-heavy approach:
+###### *Points to consider for the finance-heavy approach:*
+
+Current frequent batch auctions require traders to take the exchange's word for it that the clearing price was calculated correctly and that the auction wasn't front-run by the exchange operator (how ZKPs shift the burden of trust from people/institutions to mathematics). 
+
+Regulatory alignment (compliance by design): Financial regulators struggle to audit black-box algorithms inside high-frequency trading platforms (Regulatory Technology)?
+
+The Latency Budget (If a batch auction occurs every 100ms, how much of that is available for proof generation? Describing how our implementation allows for modularity or potential parallelization (the engineering story rather than the math).
+
+
+
+###### Outline:
+
+1. Introduction: defining the trust gap. Trust the operator’s clearing logic (!), institutional participation (?)
+2. System Model: visual diagram: participants -> order submission -> (black box ZK) -> public clearing Price.
+3. The Value Proposition (too far from the actual scope?): Market Fairness. Contrast with dark pool opaque clearing (?) processes
+4. Performance & Feasibility (would they even care?) Is this fast enough for real-time trading? (latency, throughput)
+5. Regulatory & Adoption: helping compliance? (Automated auditing, proof of fairness to regulators)
 
 
 
 
 
-Outline:

@@ -283,5 +283,5 @@ $$\mathsf V_{min}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 #### Market Clearing Volume ($MCV(X)$)
 
 *Definition.* Global Maximum Value
-
+plateau details
 

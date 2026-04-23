@@ -1,0 +1,21 @@
+
+### **Abstract**
+Frequent batch auctions (FBAs) have been proposed as an alternative to traditional limit order books for trading securities. The motivation is to mitigate the predatory advantages of high-frequency traders (HFTs). With FBAs, a double-sided auction is held over a short interval (e.g., 1 second). All marketable orders submitted during the time window are executed at the same price, and arrival time is not a factor. FBAs are significantly less transparent than continuous-time orderbooks and rely on fully trusted specialists or exchanges to execute orders at the fairest price. In this research, we apply the cryptographic concept of zero-knowledge proofs (ZKPs) to develop a zk-FBA which enables the specialist to prove trades are executed fairly without revealing any of the orders directly. Our zk-FBA is implemented using modern ZKP techniques: as a custom zk-SNARK.
+
+----------------------------------
+In a market structure such as Frequent Batch Auctions (FBAs), bid and ask orders are aggregated over short and discrete time intervals instead of being continuously processed. To match orders, they use a uniform price, which reduces the predatory advantages of high-frequency traders (HFT) for exploiting the system to get ahead of the rest of the market and causing maximum extractable value (MEV) attacks by front-running, as well as decreasing the arbitrage rents. This results in a more stable market with tighter bid-ask spreads and higher market quality, as well as an enhanced price discovery. 
+To ensure these auctions are executed with integrity and fairness, we use Zero-Knowledge SNARKs. These tools provide succinct, cryptographically verifiable proofs, showing computations were performed honestly without revealing the underlying data. 
+Unlike traditional continuous order books, FBAs often limit the amount of public data to prevent front-running. This reduces transparency, making it significantly harder for traders to verify if they are truly receiving a fair market-clearing price. 
+We present Zeequent, an easily verified, custom ZK-SNARK protocol designed specifically for private call auctions that can issue proofs for finding the clearing price in the market, while maintaining the complete privacy of competitive details of all individual participants' bids.
+
+https://github.com/MadibaGroup/2024-Gadgets-Code/
+
+https://www.nyse.com/nyse-auction-data?symbol=AA&date=02-13-2026
+----------------------------------------
+Points to consider for the finance-heavy approach:
+
+
+
+
+
+Outline:

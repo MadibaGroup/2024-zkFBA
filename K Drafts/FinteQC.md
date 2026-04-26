@@ -61,6 +61,31 @@ The Zeequent protocol leverages the PLONK (Permutations over Lagrange-bases for 
 ----------------------------
 **(just explained, needs citation for other methods)** 
 
+## 5. Protocol Specification: An Off-Chain Verifiable FBA
+
+Zeequent implements the FBA matching process **off-chain** to maintain the low-latency performance required for modern finance []. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. 2 The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$ []. 
+
+### 5.1 Accumulator and Range Constraints
+
+To prevent the specialist from "inventing" volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (reference to PLONKbook?), the protocol ensures all values lie in the first half of the modular interval $[0, (q-1)/2]$, mathematically guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations :
+
+**Supply Sum ($V_{Acc_A,2}$):** $Acc_A(\omega X) = Acc_A(X) + Ask(X)$.
+**Demand Sum ($V_{Acc_B,2}$):** $Acc_B(X) = Acc_B(\omega X) + Bid(X)$.
+
+### 5.2 Maximum Volume and Plateau Isolation
+
+The system proves the matched volume at any tick is the lesser of supply and demand using a mutual exclusivity constraint:
+
+$$V_{KL}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
+
+To prove that the matched volume $V_{max}$ is the global maximum, the protocol uses bit-decomposition to show the difference $(V_{max} - Min(X))$ is non-negative. The "Volume Plateau" $[c, d]$ is locked by proving the volume is exactly $V_{max}$ inside the range and strictly lower outside, enforced by "Cliff" proofs that require a drop of at least one unit at the boundaries.
+
+
+
+### 5.3 Verifiable Tie-Breaking via the Valley Proof
+
+Once the plateau is established, the protocol identifies the unique clearing price by minimizing market surplus. The surplus is formalized as the absolute difference between supply and demand. The "Valley Proof" demonstrates that the chosen price corresponds to the global minimum of this surplus within the plateau. This provides a verifiable, non-arbitrary tie-breaking mechanism that can be audited by any regulator or participant off-chain (??????).
+
 
 
 

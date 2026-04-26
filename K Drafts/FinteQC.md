@@ -13,9 +13,17 @@ https://github.com/MadibaGroup/2024-Gadgets-Code/
 
 https://www.nyse.com/nyse-auction-data?symbol=AA&date=02-13-2026
 ----------------------------------------
+## Introduction (The Mechanical Constant of the HFT Arms Race)
+
+
 The efficiency of modern financial markets is often characterized by the speed at which information is incorporated into prices. [1] However, the predominant market design, the continuous limit order book (CLOB), has introduced a structural flaw: the "sniping" of stale quotes [2]. In a CLOB, time is treated as a continuous variable, and orders are processed serially [1]. This creates a "socially wasteful arms race" where high-frequency traders (HFTs) compete to capture arbitrage rents from public information that is symmetrically observable to all participants [3].
 
+Empirical evidence suggests that these latency-arbitrage races occur approximately once per minute for many symbols and account for a remarkably large portion (up to 20%) of overall trading volume[1].  Because the continuous design rewards the first party to react to a signal, firms are compelled to invest heavily in microwave links and trans-oceanic cables[1].  Recent research estimates that the "size of the prize" in this arms race is approximately $5 billion per year in global equities [1].  This expenditure does not improve price discovery; it merely redistributes wealth from fundamental investors to the fastest intermediaries through wider spreads and reduced market depth [4].  Frequent batch auctions (FBAs) offer a structural remedy by moving from continuous to discrete time [2].
 
+## 2. Frequent Batch Auctions and Market Clearing
+
+
+An FBA is a uniform-price, sealed-bid double auction conducted at frequent but discrete intervals, such as every 100 milliseconds [5]. By batching orders that arrive within the same interval, the FBA eliminates the outsized importance of microsecond speed advantages. If multiple participants observe the same news, they must compete on price rather than arrival time, thereby restoring the focus to fundamental valuation [5]. (?check ref again?)
 
 
 
@@ -52,11 +60,12 @@ The Latency Budget (If a batch auction occurs every 100ms, how much of that is a
 ---------------------
 ## Refrences:
 intro:
-1 Quantifying the High-Frequency Trading “Arms Race”*
-2 The High-Frequency Trading Arms Race: Frequent Batch Auctions as a Market Design Response *
+1 Quantifying the High-Frequency Trading “Arms Race”
+
+2 The High-Frequency Trading Arms Race: Frequent Batch Auctions as a Market Design Response 
+
 3 Mechanism Design with Information Leakage
 
+4 A Theory of Stock Exchange Competition and Innovation Will the Market Fix the Market
 
-
-
-A Theory of Stock Exchange Competition and Innovation Will the Market Fix the Market
+5 The High-Frequency Trading Arms Race: Frequent Batch Auctions as a Market Design Response

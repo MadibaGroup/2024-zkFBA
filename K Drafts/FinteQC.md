@@ -23,7 +23,22 @@ Empirical evidence suggests that these latency-arbitrage races occur approximate
 ## 2. Frequent Batch Auctions and Market Clearing
 
 
-An FBA is a uniform-price, sealed-bid double auction conducted at frequent but discrete intervals, such as every 100 milliseconds [5]. By batching orders that arrive within the same interval, the FBA eliminates the outsized importance of microsecond speed advantages. If multiple participants observe the same news, they must compete on price rather than arrival time, thereby restoring the focus to fundamental valuation [5]. (?check ref again?)
+An FBA is a uniform-price, sealed-bid double auction conducted at frequent but discrete intervals, such as every 100 milliseconds [2]. By batching orders that arrive within the same interval, the FBA eliminates the outsized importance of microsecond speed advantages. If multiple participants observe the same news, they must compete on price rather than arrival time, thereby restoring the focus to fundamental valuation [2]. (?check ref again?)
+
+
+
+### 2.1 The Clearing Price Algorithm
+
+The objective of the auction is to identify the market-clearing price ($P^*$) that maximizes the volume of executed trades. The process involves aggregating bids and asks into cumulative demand and supply curves.
+
+**Demand Depth:** The total quantity participants are willing to buy at or above a given price.
+**Supply Depth:** The total quantity participants are willing to sell at or below a given price.
+
+At each price tick, the cleared volume is defined as the minimum of the cumulative supply and demand. The auctioneer identifies the global maximum of this "minimum array" to establish the clearing volume. (?check for ref?)
+
+
+
+
 
 
 
@@ -68,4 +83,4 @@ intro:
 
 4 A Theory of Stock Exchange Competition and Innovation Will the Market Fix the Market
 
-5 The High-Frequency Trading Arms Race: Frequent Batch Auctions as a Market Design Response
+5 

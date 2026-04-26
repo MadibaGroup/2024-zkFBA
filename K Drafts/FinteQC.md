@@ -46,7 +46,7 @@ The Zeequent protocol adopts the "Surplus Minimization" rule. This mechanism ide
 ----------------
 ## 3. The Research Gap: Verifiability in the Decentralization Era
 
-Despite the economic advantages of FBAs, a significant research gap exists regarding the **verifiability** of auction integrity in opaque environments. Early foundational work on decentralizing financial infrastructure, most notably by Clark et al. (2014), established the feasibility of utilizing distributed ledgers for maintaining order books and prediction market logs. While Clark et al. successfully addressed concerns regarding censorship resistance and availability, their model—and much of the subsequent literature on FBAs—assumed a fundamental trade-off between transparency and privacy.
+Despite the economic advantages of FBAs, a significant research gap exists regarding the verifiability of auction integrity in opaque environments. Early foundational work on decentralizing financial infrastructure, most notably by Clark et al. (2014) [7], established the feasibility of utilizing distributed ledgers for maintaining order books and prediction market logs. While Clark et al. successfully addressed concerns regarding censorship resistance and availability, their model, and much of the subsequent literature on FBAs, assumed a fundamental trade-off between transparency and privacy. (for anonymity reasons, is it ok to mention the paper explicitly? or is it a dead giveaway lol)
 
 In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a "Transparency Paradox". To prevent "last-look" arbitrage, orders must remain confidential until the auction clears. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated. There is a critical need for a protocol that provides **proactive, mathematical certainty** of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book.
 
@@ -97,7 +97,7 @@ intro:
 
 6 Existence of Equilibrium in Auctions and Discontinuous Bayesian Games
 
-
+7 On Decentralizing Prediction Markets and Order Books
 
 
 

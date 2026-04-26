@@ -105,12 +105,13 @@ The transition to an off-chain zk-FBA model represents a paradigm shift in finan
 
 
 ----------------------
+---------
 
 
 
+# notes to self:
 
-
-
+-------
 
 ----------------------------
 

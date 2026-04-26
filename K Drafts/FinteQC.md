@@ -47,7 +47,7 @@ Despite the economic advantages of FBAs, a significant research gap exists regar
 (for anonymity reasons, is it ok to mention the paper explicitly? or is it a dead giveaway lol)
 
 
-In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a "Transparency Paradox". To prevent "last-look" arbitrage, orders must remain confidential until the auction clears []. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price []. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated []. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book [].
+In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a Transparency Paradox. To prevent last-look arbitrage, orders must remain confidential until the auction clears []. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price []. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated []. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book [].
 
 
 
@@ -80,14 +80,10 @@ To prevent the specialist from "inventing" volume or entering negative orders, t
 
 The system proves the matched volume at any tick is the lesser of supply and demand using a mutual exclusivity constraint:
 
-$$V_{KL}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
+$$V_{Plateau}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 
 To prove that the matched volume $V_{max}$ is the global maximum, the protocol uses bit-decomposition to show the difference $(V_{max} - Min(X))$ is non-negative. The "Volume Plateau" $[c, d]$ is locked by proving the volume is exactly $V_{max}$ inside the range and strictly lower outside, enforced by "Cliff" proofs that require a drop of at least one unit at the boundaries.
 
-
-
-
-(?explaining the plateau and valley further by the data and demonstration of the chart?)
 
 
 ![[Screenshot from 2026-04-25 21-17-04.png]]
@@ -102,13 +98,11 @@ To prove that the matched volume $V_{max}$ is the global maximum, the protocol u
 
 ### 5.3 Verifiable Tie-Breaking via the Valley Proof
 
-Once the plateau is established, the protocol identifies the unique clearing price by minimizing market surplus. The surplus is formalized as the absolute difference between supply and demand. The "Valley Proof" demonstrates that the chosen price corresponds to the global minimum of this surplus within the plateau. This provides a verifiable, non-arbitrary tie-breaking mechanism that can be audited by any regulator or participant off-chain (??????).
+Once the plateau is established, the protocol identifies the unique clearing price by minimizing market surplus. The surplus is formalized as the absolute difference between supply and demand. The "Valley Proof" is obtained with the same method but the reverse process, demonstraing that the chosen price corresponds to the global minimum of this surplus valley within the plateau interval. This provides a verifiable, non-arbitrary tie-breaking mechanism that can be audited by any regulator or participant.
 
 ## 6. Economic and Regulatory Synthesis
 
-The transition to an off-chain zk-FBA model represents a paradigm shift in financial regulation from reactive, disclosure-based auditing to proactive, proof-based verification. In traditional markets, regulators detect abuse by analyzing historical records after the fact []. In the Zeequent model, the exchange provides a cryptographic certificate of correctness at the time of clearing.   
-
-This "rational privacy" allows institutions to trade large blocks without revealing their strategies to predatory algorithms, while simultaneously providing regulators with mathematical proof that the exchange acted as a neutral intermediary. By solving the transparency paradox, zk-FBAs restore the focus of financial markets to price discovery and fundamental valuation, effectively ending the microsecond arms race [2].
+The transition to an off-chain zk-FBA model represents a paradigm shift in financial regulation from reactive, disclosure-based auditing to proactive, proof-based verification. In traditional markets, regulators detect abuse by analyzing historical records after the fact []. In the Zeequent model, the exchange provides a cryptographic certificate of correctness at the time of clearing. This rational privacy allows institutions to trade large blocks without revealing their strategies to predatory algorithms, while simultaneously providing regulators with mathematical proof that the exchange acted as a neutral intermediary. By solving the transparency paradox, zk-FBAs restore the focus of financial markets to price discovery and fundamental valuation, effectively ending the microsecond arms race [2].
 
 
 

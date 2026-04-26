@@ -109,7 +109,7 @@ The transition to an off-chain zk-FBA model represents a paradigm shift in finan
 intro:
 1 Quantifying the High-Frequency Trading “Arms Race”
 
-2 The High-Frequency Trading Arms Race: Frequent Batch Auctions as a Market Design Response 
+2 The High-Frequency Trading Arms Race: Frequent Batch Auctions as a Market Design Response (OG)
 
 3 Mechanism Design with Information Leakage
 

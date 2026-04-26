@@ -91,6 +91,14 @@ To prove that the matched volume $V_{max}$ is the global maximum, the protocol u
 
 
 ![[Screenshot from 2026-04-25 21-17-04.png]]
+<img width="954" height="516" alt="market" src="https://github.com/user-attachments/assets/aebab79b-7ce4-46fe-b71f-d252814ca12f" />
+
+
+
+
+
+
+
 
 ### 5.3 Verifiable Tie-Breaking via the Valley Proof
 

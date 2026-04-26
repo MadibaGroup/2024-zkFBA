@@ -56,7 +56,7 @@ Zero-knowledge proofs (ZKPs), conceptualized by Goldwasser, Micali, and Rackoff 
 **Knowledge Soundness:** It is computationally impossible for a prover to generate a valid proof for a false statement [].
 
 
-Our protocol leverages the PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge), type of zk-SNARK proof system []. PLONK provides a "Universal Trusted Setup," allowing a single ceremony to generate parameters that support any circuit up to a certain size bound []. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently.
+Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge), type of zk-SNARK proof system []. PLONK provides a "Universal Trusted Setup," allowing a single ceremony to generate parameters that support any circuit up to a certain size bound []. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently.
 
 ----------------------------
 **(just explained, needs citation for other methods)** 

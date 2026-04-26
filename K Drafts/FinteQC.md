@@ -33,7 +33,7 @@ the global maximum of this Minimum Array to establish the clearing volume.
 
 In many liquid markets, the maximum execution volume exists across a range of prices rather than a single point, creating a Volume Plateau. Identifying a specific price within this range requires a tie-breaking rule. It is critical to recognize that tie-breaking is a design choice and is not uniquely dictated by economic theory [5]. Different rules, such as pro-rata allocation on the margin or random selection, reflect different market philosophies and can impact participant incentives [6].
 
-The Zeequent protocol adopts the Surplus Minimization rule. This mechanism identifies the price within the plateau where the absolute difference (imbalance) between supply and demand is at its global minimum, a point described as the Surplus Valley. The Plateau and the Valley can be seen in Fig. 1, made from synthetic market data. This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades. (?check for ref?)
+The Zeequent protocol adopts the Surplus Minimization rule [10]. This mechanism identifies the price within the plateau where the absolute difference (imbalance) between supply and demand is at its global minimum, a point described as the Surplus Valley. The Plateau and the Valley can be seen in Fig. 1, made from synthetic market data. This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades [9]. (?check for ref?)
 
 ----------------
 ## 3. The Research Gap: Verifiability in the Decentralization Era
@@ -43,31 +43,31 @@ Despite the economic advantages of FBAs, a significant research gap exists regar
 (for anonymity reasons, is it ok to mention the paper explicitly? or is it a dead giveaway lol)
 
 
-In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a Transparency Paradox. To prevent last-look arbitrage, orders must remain confidential until the auction clears []. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price []. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated []. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book [].
+In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a Transparency Paradox. To prevent last-look arbitrage, orders must remain confidential until the auction clears [12]. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price [12]. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book [8].
 
 
 
 ## 4. Zero-Knowledge Proofs: Practical Cryptographic Integrity
 
-Zero-knowledge proofs (ZKPs), conceptualized by Goldwasser, Micali, and Rackoff (1989), allow a "prover" to convince a "verifier" that a statement is true without revealing any secret inputs []. Modern iterations, known as zk-SNARKs (Succinct Non-Interactive Arguments of Knowledge), possess attributes essential for financial infrastructure []:
+Zero-knowledge proofs (ZKPs), conceptualized by Goldwasser, Micali, and Rackoff (1989), allow a "prover" to convince a "verifier" that a statement is true without revealing any secret inputs [11]. Modern iterations, known as zk-SNARKs (Succinct Non-Interactive Arguments of Knowledge), possess attributes essential for financial infrastructure [11]:
 
-**Zero-Knowledge:** No private input, such as an order price or size, is exposed during verification [].
-**Succinctness:** The proof is small (often $\approx 1$ KB) and can be verified near-instantaneously, regardless of the number of orders [].
-**Knowledge Soundness:** It is computationally impossible for a prover to generate a valid proof for a false statement [].
+**Zero-Knowledge:** No private input, such as an order price or size, is exposed during verification.
+**Succinctness:** The proof is small (often $\approx 1$ KB) and can be verified near-instantaneously, regardless of the number of orders.
+**Knowledge Soundness:** It is computationally impossible for a prover to generate a valid proof for a false statement [13].
 
 
-Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge), type of zk-SNARK proof system []. PLONK provides a "Universal Trusted Setup," allowing a single ceremony to generate parameters that support any circuit up to a certain size bound []. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently.
+Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge), a type of zk-SNARK proof system [14]. PLONK provides a "Universal Trusted Setup," allowing a single ceremony to generate parameters that support any circuit up to a certain size bound []. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently [14].
 
 ----------------------------
 **(just explained, needs citation for other methods)** 
 
 ## 5. Protocol Specification: An Off-Chain Verifiable FBA
 
-Zeequent implements the FBA matching process off-chain to maintain the low-latency performance required for modern finance []. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. 2 The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$ []. 
+Zeequent implements the FBA matching process off-chain to maintain the low-latency performance required for modern finance []. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. 2 The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$. 
 
 ### 5.1 Accumulator and Range Constraints
 
-To prevent the specialist from "inventing" volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (reference to PLONKbook?), the protocol ensures all values lie in the first half of the modular interval $[0, (q-1)/2]$, mathematically guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations :
+To prevent the specialist from "inventing" volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (reference to PLONKbook?), the protocol ensures all values lie in the first half of the modular interval $[0, (q-1)/2]$, mathematically guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations:
 
 **Supply Sum ($V_{Acc_A,2}$):** $Acc_A(\omega X) = Acc_A(X) + Ask(X)$.
 
@@ -150,6 +150,24 @@ intro:
 7 On Decentralizing Prediction Markets and Order Books
 
 8 Preserving Capital Markets Efficiency in the High-Frequency Trading Era
+
+9 Implementation Details for Frequent Batch Auctions:
+Slowing Down Markets to the Blink of an Eye†
+By Eric Budish, Peter Cramton, and John Shim*
+
+10 Optimal auction duration: A price formation viewpoint
+Paul Jusselin, Thibaut Mastrolia, Mathieu Rosenbaum
+
+11 THE KNOWLEDGE COMPLEXITY OF
+INTERACTIVE PROOF SYSTEMS*
+SHAFI GOLDWASSER+, SILVIO MICALI+, AND CHARLES RACKOFF
+
+12 Achieving Trust without Disclosure:
+Dark Pools and a Role for Secrecy-Preserving Verification
+
+13 Performance Evaluation of zk-SNARK Protocols for Privacy-Preserving Sensor Data Verification: A Systematic Benchmarking Study
+
+14 PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge
 
 
 

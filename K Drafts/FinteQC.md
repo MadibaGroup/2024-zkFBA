@@ -43,7 +43,7 @@ Despite the economic advantages of FBAs, a significant research gap exists regar
 (for anonymity reasons, is it ok to mention the paper explicitly? or is it a dead giveaway lol)
 
 
-In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a Transparency Paradox. To prevent last-look arbitrage, orders must remain confidential until the auction clears [12]. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price [12]. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book [8].
+In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a Transparency Paradox [15]. To prevent last-look arbitrage, orders must remain confidential until the auction clears [12]. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price [12]. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book [8].
 
 
 
@@ -63,11 +63,11 @@ Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical N
 
 ## 5. Protocol Specification: An Off-Chain Verifiable FBA
 
-Zeequent implements the FBA matching process off-chain to maintain the low-latency performance required for modern finance []. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. 2 The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$. 
+Zeequent implements the FBA matching process off-chain to maintain the low-latency performance required for modern finance. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$. 
 
 ### 5.1 Accumulator and Range Constraints
 
-To prevent the specialist from "inventing" volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (reference to PLONKbook?), the protocol ensures all values lie in the first half of the modular interval $[0, (q-1)/2]$, mathematically guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations:
+To prevent the specialist from inventing volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (reference to PLONKbook?), the protocol ensures all values lie in the first half of the modular interval $[0, (q-1)/2]$, mathematically guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations:
 
 **Supply Sum ($V_{Acc_A,2}$):** $Acc_A(\omega X) = Acc_A(X) + Ask(X)$.
 
@@ -95,11 +95,11 @@ To prove that the matched volume $V_{max}$ is the global maximum, the protocol u
 
 ### 5.3 Verifiable Tie-Breaking via the Valley Proof
 
-Once the plateau is established, the protocol identifies the unique clearing price by minimizing market surplus. The surplus is formalized as the absolute difference between supply and demand. The "Valley Proof" is obtained with the same method but the reverse process, demonstraing that the chosen price corresponds to the global minimum of this surplus valley within the plateau interval. This provides a verifiable, non-arbitrary tie-breaking mechanism that can be audited by any regulator or participant.
+Once the plateau is established, the protocol identifies the unique clearing price by minimizing market surplus. The surplus is formalized as the absolute difference between supply and demand. The Valley Proof is obtained with the same method but the reverse process, demonstraing that the chosen price corresponds to the global minimum of this surplus valley within the plateau interval. This provides a verifiable, non-arbitrary tie-breaking mechanism that can be audited by any regulator or participant.
 
 ## 6. Economic and Regulatory Synthesis
 
-The transition to an off-chain zk-FBA model represents a paradigm shift in financial regulation from reactive, disclosure-based auditing to proactive, proof-based verification. In traditional markets, regulators detect abuse by analyzing historical records after the fact []. In the Zeequent model, the exchange provides a cryptographic certificate of correctness at the time of clearing. This rational privacy allows institutions to trade large blocks without revealing their strategies to predatory algorithms, while simultaneously providing regulators with mathematical proof that the exchange acted as a neutral intermediary. By solving the transparency paradox, zk-FBAs restore the focus of financial markets to price discovery and fundamental valuation, effectively ending the microsecond arms race [2].
+The transition to an off-chain zk-FBA model represents a paradigm shift in financial regulation from reactive, disclosure-based auditing to proactive, proof-based verification. In traditional markets, regulators detect abuse by analyzing historical records after the fact [15]. In the Zeequent model, the exchange provides a cryptographic certificate of correctness at the time of clearing [16]. This rational privacy allows institutions to trade large blocks without revealing their strategies to predatory algorithms, while simultaneously providing regulators with mathematical proof that the exchange acted as a neutral intermediary. By solving the transparency paradox, zk-FBAs restore the focus of financial markets to price discovery and fundamental valuation, effectively ending the microsecond arms race [2].
 
 
 
@@ -132,15 +132,18 @@ Paul Jusselin, Thibaut Mastrolia, Mathieu Rosenbaum
 
 11 THE KNOWLEDGE COMPLEXITY OF
 INTERACTIVE PROOF SYSTEMS*
-SHAFI GOLDWASSER+, SILVIO MICALI+, AND CHARLES RACKOFF
+SHAFI GOLDWASSER+, SILVIO MICALI+, AND CHARLES RACKOFF (OG)
 
 12 Achieving Trust without Disclosure:
 Dark Pools and a Role for Secrecy-Preserving Verification
 
 13 Performance Evaluation of zk-SNARK Protocols for Privacy-Preserving Sensor Data Verification: A Systematic Benchmarking Study
 
-14 PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge
+14 PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge (OG)
 
+15 The Transparency Paradox: Why the EU AI Act Cannot Be Enforced Through Existing Supervisory Instruments
+
+16 The Knowledge Complexity of Interactive Proof Systems
 
 ----------------------
 ---------

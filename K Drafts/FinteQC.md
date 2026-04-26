@@ -3,11 +3,6 @@
 Frequent batch auctions (FBAs) have been proposed as an alternative to traditional limit order books for trading securities. The motivation is to mitigate the predatory advantages of high-frequency traders (HFTs). With FBAs, a double-sided auction is held over a short interval (e.g., 1 second). All marketable orders submitted during the time window are executed at the same price, and arrival time is not a factor. FBAs are significantly less transparent than continuous-time orderbooks and rely on fully trusted specialists or exchanges to execute orders at the fairest price. In this research, we apply the cryptographic concept of zero-knowledge proofs (ZKPs) to develop a zk-FBA which enables the specialist to prove trades are executed fairly without revealing any of the orders directly. Our zk-FBA is implemented using modern ZKP techniques: as a custom zk-SNARK.
 
 ----------------------------------
-(((((In a market structure such as Frequent Batch Auctions (FBAs), bid and ask orders are aggregated over short and discrete time intervals instead of being continuously processed. To match orders, they use a uniform price, which reduces the predatory advantages of high-frequency traders (HFT) for exploiting the system to get ahead of the rest of the market and causing maximum extractable value (MEV) attacks by front-running, as well as decreasing the arbitrage rents. This results in a more stable market with tighter bid-ask spreads and higher market quality, as well as an enhanced price discovery. 
-To ensure these auctions are executed with integrity and fairness, we use Zero-Knowledge SNARKs. These tools provide succinct, cryptographically verifiable proofs, showing computations were performed honestly without revealing the underlying data. 
-Unlike traditional continuous order books, FBAs often limit the amount of public data to prevent front-running. This reduces transparency, making it significantly harder for traders to verify if they are truly receiving a fair market-clearing price. 
-We present Zeequent, an easily verified, custom ZK-SNARK protocol designed specifically for private call auctions that can issue proofs for finding the clearing price in the market, while maintaining the complete privacy of competitive details of all individual participants' bids.
-(parts for intro? Also referencing check)))))))
 
 https://github.com/MadibaGroup/2024-Gadgets-Code/
 
@@ -56,12 +51,20 @@ In practice, the transition from a transparent CLOB to a sealed-bid FBA introduc
 
 Zero-knowledge proofs (ZKPs), conceptualized by Goldwasser, Micali, and Rackoff (1989), allow a "prover" to convince a "verifier" that a statement is true without revealing any secret inputs []. Modern iterations, known as zk-SNARKs (Succinct Non-Interactive Arguments of Knowledge), possess attributes essential for financial infrastructure []:
 
-**Zero-Knowledge:** No private input, such as an order price or size, is exposed during verification.
-**Succinctness:** The proof is small (often $\approx 1$ KB) and can be verified near-instantaneously, regardless of the number of orders.
-**Knowledge Soundness:** It is computationally impossible for a prover to generate a valid proof for a false statement.
+**Zero-Knowledge:** No private input, such as an order price or size, is exposed during verification [].
+**Succinctness:** The proof is small (often $\approx 1$ KB) and can be verified near-instantaneously, regardless of the number of orders [].
+**Knowledge Soundness:** It is computationally impossible for a prover to generate a valid proof for a false statement [].
 
 
-The Zeequent protocol leverages the PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge) proof system. PLONK provides a "Universal Trusted Setup," allowing a single ceremony to generate parameters that support any circuit up to a certain size bound. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently.
+The Zeequent protocol leverages the PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge) proof system []. PLONK provides a "Universal Trusted Setup," allowing a single ceremony to generate parameters that support any circuit up to a certain size bound []. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently.
+
+----------------------------
+**(just explained, needs citation for other methods)** 
+
+
+
+
+
 
 ----------------------
 

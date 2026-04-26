@@ -63,8 +63,8 @@ The Zeequent protocol leverages the PLONK (Permutations over Lagrange-bases for 
 
 ## 5. Protocol Specification: An Off-Chain Verifiable FBA
 
-Zeequent implements the FBA matching process **off-chain** to maintain the low-latency performance required for modern finance []. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. 2 The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$ []. 
-
+Zeequent implements the FBA matching process off-chain to maintain the low-latency performance required for modern finance []. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. 2 The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$ []. 
+![[Screenshot from 2026-04-25 21-17-04.png]]
 ### 5.1 Accumulator and Range Constraints
 
 To prevent the specialist from "inventing" volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (reference to PLONKbook?), the protocol ensures all values lie in the first half of the modular interval $[0, (q-1)/2]$, mathematically guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations :
@@ -82,11 +82,21 @@ To prove that the matched volume $V_{max}$ is the global maximum, the protocol u
 
 
 
+
+(?explaining the plateau and valley further by the data and demonstration of the chart?)
+
+
+![[Screenshot from 2026-04-25 21-17-04.png]]
+
 ### 5.3 Verifiable Tie-Breaking via the Valley Proof
 
 Once the plateau is established, the protocol identifies the unique clearing price by minimizing market surplus. The surplus is formalized as the absolute difference between supply and demand. The "Valley Proof" demonstrates that the chosen price corresponds to the global minimum of this surplus within the plateau. This provides a verifiable, non-arbitrary tie-breaking mechanism that can be audited by any regulator or participant off-chain (??????).
 
+## 6. Economic and Regulatory Synthesis
 
+The transition to an off-chain zk-FBA model represents a paradigm shift in financial regulation from reactive, disclosure-based auditing to proactive, proof-based verification. In traditional markets, regulators detect abuse by analyzing historical records after the fact []. In the Zeequent model, the exchange provides a cryptographic certificate of correctness at the time of clearing.   
+
+This "rational privacy" allows institutions to trade large blocks without revealing their strategies to predatory algorithms, while simultaneously providing regulators with mathematical proof that the exchange acted as a neutral intermediary. By solving the transparency paradox, zk-FBAs restore the focus of financial markets to price discovery and fundamental valuation, effectively ending the microsecond arms race [2].
 
 
 
@@ -94,7 +104,7 @@ Once the plateau is established, the protocol identifies the unique clearing pri
 ----------------------
 
 
-![[Screenshot from 2026-04-25 21-17-04.png]]
+
 
 
 

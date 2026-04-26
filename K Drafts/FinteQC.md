@@ -7,9 +7,7 @@ Frequent batch auctions (FBAs) have been proposed as an alternative to tradition
 ## Introduction (The Mechanical Constant of the HFT Arms Race)
 
 
-The efficiency of modern financial markets is often characterized by the speed at which information is incorporated into prices. [1] However, the predominant market design, the continuous limit order book (CLOB), has introduced a structural flaw: the "sniping" of stale quotes [2]. In a CLOB, time is treated as a continuous variable, and orders are processed serially [1]. This creates a "socially wasteful arms race" where high-frequency traders (HFTs) compete to capture arbitrage rents from public information that is symmetrically observable to all participants [3].
-
-Empirical evidence suggests that these latency-arbitrage races occur approximately once per minute for many symbols and account for a remarkably large portion (up to 20%) of overall trading volume[1].  Because the continuous design rewards the first party to react to a signal, firms are compelled to invest heavily in microwave links and trans-oceanic cables[1].  Recent research estimates that the "size of the prize" in this arms race is approximately $5 billion per year in global equities [1].  This expenditure does not improve price discovery; it merely redistributes wealth from fundamental investors to the fastest intermediaries through wider spreads and reduced market depth [4].  Frequent batch auctions (FBAs) offer a structural remedy by moving from continuous to discrete time [2].
+The efficiency of modern financial markets is often characterized by the speed at which information is incorporated into prices. [1] However, the predominant market design, the continuous limit order book (CLOB), has introduced a structural flaw: the "sniping" of stale quotes [2]. In a CLOB, time is treated as a continuous variable, and orders are processed serially [1]. This creates a socially wasteful arms race where high-frequency traders (HFTs) compete to capture arbitrage rents from public information that is symmetrically observable to all participants [3]. Empirical evidence suggests that these latency-arbitrage races occur approximately once per minute for many symbols and account for a remarkably large portion (up to 20%) of overall trading volume[1].  Because the continuous design rewards the first party to react to a signal, firms are compelled to invest heavily in microwave links and trans-oceanic cables[1].  Recent research estimates that the size of the prize in this arms race is approximately $5 billion per year in global equities [1].  This expenditure does not improve price discovery; it merely redistributes wealth from fundamental investors to the fastest intermediaries through wider spreads and reduced market depth [4].  Frequent batch auctions (FBAs) offer a structural remedy by moving from continuous to discrete time [2].
 
 ## 2. Frequent Batch Auctions and Market Clearing
 
@@ -24,20 +22,18 @@ An FBA is a uniform-price, sealed-bid double auction conducted at frequent but d
 
 ### 2.1 The Clearing Price Algorithm *(CHECK for literature)*
 
-The objective of the auction is to identify the market-clearing price ($P^*$) that maximizes the volume of executed trades. The process involves aggregating bids and asks into cumulative demand and supply curves.
+The objective of the auction is to identify the market-clearing price ($P^*$) that maximizes the volume of executed trades. The process involves aggregating bids and asks into Cumulative Demand and Supply Arrays. Demand Depth is the total quantity participants are willing to buy at or above a given price and Supply Depth is the total quantity participants are willing to sell at or below a given price.
 
-**Demand Depth:** The total quantity participants are willing to buy at or above a given price.
-**Supply Depth:** The total quantity participants are willing to sell at or below a given price.
-
-At each price tick, the cleared volume is defined as the minimum of the cumulative supply and demand. The auctioneer identifies the global maximum of this "minimum array" to establish the clearing volume. 
+At each price tick, the cleared volume is defined as the minimum of the cumulative supply and demand, forming a Minimum Array. The auctioneer identifies
+the global maximum of this Minimum Array to establish the clearing volume. 
 
 (?check for ref? explain the algorithm in detail)
 
 ### 2.2 Tie-Breaking: A Design Choice
 
-In many liquid markets, the maximum execution volume exists across a range of prices rather than a single point, creating a "Volume Plateau". Identifying a specific price within this range requires a tie-breaking rule. It is critical to recognize that tie-breaking is a design choice and is not uniquely dictated by economic theory [5]. Different rules, such as pro-rata allocation on the margin or random selection, reflect different market philosophies and can impact participant incentives [6].
+In many liquid markets, the maximum execution volume exists across a range of prices rather than a single point, creating a Volume Plateau. Identifying a specific price within this range requires a tie-breaking rule. It is critical to recognize that tie-breaking is a design choice and is not uniquely dictated by economic theory [5]. Different rules, such as pro-rata allocation on the margin or random selection, reflect different market philosophies and can impact participant incentives [6].
 
-The Zeequent protocol adopts the "Surplus Minimization" rule. This mechanism identifies the price within the plateau where the absolute difference (imbalance) between supply and demand is at its global minimum, a point described as the "Surplus Valley". This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades.  (?check for ref?)
+The Zeequent protocol adopts the Surplus Minimization rule. This mechanism identifies the price within the plateau where the absolute difference (imbalance) between supply and demand is at its global minimum, a point described as the Surplus Valley. The Plateau and the Valley can be seen in Fig. 1, made from synthetic market data. This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades. (?check for ref?)
 
 ----------------
 ## 3. The Research Gap: Verifiability in the Decentralization Era

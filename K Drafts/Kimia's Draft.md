@@ -1,6 +1,9 @@
 # **Secure Market Clearing via ZK-SNARKs: A Protocol for Private Call Auctions**
 
 
+https://github.com/MadibaGroup/2024-Gadgets-Code/
+
+https://www.nyse.com/nyse-auction-data?symbol=AA&date=02-13-2026
 ### **Abstract**
 Frequent batch auctions (FBAs) have been proposed as an alternative to traditional limit order books for trading securities. The motivation is to mitigate the predatory advantages of high-frequency traders (HFTs). With FBAs, a double-sided auction is held over a short interval (e.g., 1 second). All marketable orders submitted during the time window are executed at the same clearing price, and arrival time is not a factor. FBAs are significantly less transparent than continuous-time orderbooks and rely on fully trusted specialists or exchanges to execute orders at the fairest price. In this research, we present a special-purpose zk-SNARK argument to develop a zk-FBA, which enables the specialist to prove trades are executed fairly with the correct clearing price, yielded by truthful computations, without revealing any of the orders directly.
 

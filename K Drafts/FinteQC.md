@@ -4,10 +4,6 @@ Frequent batch auctions (FBAs) have been proposed as an alternative to tradition
 
 ----------------------------------
 
-https://github.com/MadibaGroup/2024-Gadgets-Code/
-
-https://www.nyse.com/nyse-auction-data?symbol=AA&date=02-13-2026
-----------------------------------------
 ## Introduction (The Mechanical Constant of the HFT Arms Race)
 
 

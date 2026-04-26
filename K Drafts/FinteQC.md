@@ -36,7 +36,11 @@ The objective of the auction is to identify the market-clearing price ($P^*$) th
 
 At each price tick, the cleared volume is defined as the minimum of the cumulative supply and demand. The auctioneer identifies the global maximum of this "minimum array" to establish the clearing volume. (?check for ref?)
 
+### 2.2 Tie-Breaking: A Design Choice
 
+In many liquid markets, the maximum execution volume exists across a range of prices rather than a single point, creating a "Volume Plateau". Identifying a specific price within this range requires a tie-breaking rule. It is critical to recognize that tie-breaking is a design choice and is not uniquely dictated by economic theory. Different rules, such as pro-rata allocation on the margin or random selection, reflect different market philosophies and can impact participant incentives.
+
+The Zeequent protocol adopts the "Surplus Minimization" rule. This mechanism identifies the price within the plateau where the absolute difference (imbalance) between supply and demand is at its global minimum—a point described as the "Surplus Valley". This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades. 1
 
 
 

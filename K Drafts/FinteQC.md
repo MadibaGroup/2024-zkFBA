@@ -23,12 +23,12 @@ Empirical evidence suggests that these latency-arbitrage races occur approximate
 ## 2. Frequent Batch Auctions and Market Clearing
 
 
-An FBA is a uniform-price, sealed-bid double auction conducted at frequent but discrete intervals, such as every 100 milliseconds [2]. By batching orders that arrive within the same interval, the FBA eliminates the outsized importance of microsecond speed advantages. If multiple participants observe the same news, they must compete on price rather than arrival time, thereby restoring the focus to fundamental valuation [2]. (?check ref again?)
+An FBA is a uniform-price, sealed-bid double auction conducted at frequent but discrete intervals, such as every 100 milliseconds [2]. By batching orders that arrive within the same interval, the FBA eliminates the outsized importance of microsecond speed advantages. If multiple participants observe the same news, they must compete on price rather than arrival time, thereby restoring the focus to fundamental valuation [2]. (?check ref again? should i just ref to the OG Budish paper or should I ref to the "derived" papers directly?)
 
 
 -------------------------
 
-### 2.1 The Clearing Price Algorithm
+### 2.1 The Clearing Price Algorithm *(CHECK for literature)*
 
 The objective of the auction is to identify the market-clearing price ($P^*$) that maximizes the volume of executed trades. The process involves aggregating bids and asks into cumulative demand and supply curves.
 
@@ -46,13 +46,22 @@ The Zeequent protocol adopts the "Surplus Minimization" rule. This mechanism ide
 ----------------
 ## 3. The Research Gap: Verifiability in the Decentralization Era
 
-Despite the economic advantages of FBAs, a significant research gap exists regarding the verifiability of auction integrity in opaque environments. Early foundational work on decentralizing financial infrastructure, most notably by Clark et al. (2014) [7], established the feasibility of utilizing distributed ledgers for maintaining order books and prediction market logs. While Clark et al. successfully addressed concerns regarding censorship resistance and availability, their model, and much of the subsequent literature on FBAs, assumed a fundamental trade-off between transparency and privacy. (for anonymity reasons, is it ok to mention the paper explicitly? or is it a dead giveaway lol)
+Despite the economic advantages of FBAs, a significant research gap exists regarding the verifiability of auction integrity in opaque environments. Early foundational work on decentralizing financial infrastructure, most notably by Clark et al. (2014) [7], established the feasibility of utilizing distributed ledgers for maintaining order books and prediction market logs. While Clark et al. successfully addressed concerns regarding censorship resistance and availability, their model, and much of the subsequent literature on FBAs [8], assumed a fundamental trade-off between transparency and privacy. (for anonymity reasons, is it ok to mention the paper explicitly? or is it a dead giveaway lol)
 
-In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a "Transparency Paradox". To prevent "last-look" arbitrage, orders must remain confidential until the auction clears. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book.
-
-
+In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a "Transparency Paradox". To prevent "last-look" arbitrage, orders must remain confidential until the auction clears []. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price []. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated []. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book [].
 
 
+
+## 4. Zero-Knowledge Proofs: Practical Cryptographic Integrity
+
+Zero-knowledge proofs (ZKPs), conceptualized by Goldwasser, Micali, and Rackoff (1989), allow a "prover" to convince a "verifier" that a statement is true without revealing any secret inputs []. Modern iterations, known as zk-SNARKs (Succinct Non-Interactive Arguments of Knowledge), possess attributes essential for financial infrastructure []:
+
+**Zero-Knowledge:** No private input, such as an order price or size, is exposed during verification.
+**Succinctness:** The proof is small (often $\approx 1$ KB) and can be verified near-instantaneously, regardless of the number of orders.
+**Knowledge Soundness:** It is computationally impossible for a prover to generate a valid proof for a false statement.
+
+
+The Zeequent protocol leverages the PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge) proof system. PLONK provides a "Universal Trusted Setup," allowing a single ceremony to generate parameters that support any circuit up to a certain size bound. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently.
 
 ----------------------
 
@@ -98,6 +107,8 @@ intro:
 6 Existence of Equilibrium in Auctions and Discontinuous Bayesian Games
 
 7 On Decentralizing Prediction Markets and Order Books
+
+8 Preserving Capital Markets Efficiency in the High-Frequency Trading Era
 
 
 

@@ -18,10 +18,7 @@ An FBA is a uniform-price, sealed-bid double auction conducted at frequent but d
 
 ### 2.1 The Clearing Price Algorithm
 
-The objective of the auction is to identify the market-clearing price ($P^*$) that maximizes the volume of executed trades. The process involves aggregating bids and asks into Cumulative Demand and Supply Arrays. Demand Depth is the total quantity participants are willing to buy at or above a given price, and Supply Depth is the total quantity participants are willing to sell at or below a given price. At each price tick, the cleared volume is defined as the minimum of the cumulative supply and demand, forming a Minimum Array. The auctioneer identifies
-the global maximum of this Minimum Array to establish the clearing volume. 
-
-(?check for ref? explain the algorithm in detail)
+The objective of the auction is to identify the market-clearing price ($P^*$) that maximizes the volume of executed trades. The process involves aggregating bids and asks into Cumulative Demand and Supply Arrays. Demand Depth is the total quantity participants are willing to buy at or above a given price, and Supply Depth is the total quantity participants are willing to sell at or below a given price. At each price tick, the cleared volume is defined as the minimum of the cumulative supply and demand, forming a Minimum Array. The auctioneer identifies the global maximum of this Minimum Array to establish the clearing volume. 
 
 ### 2.2 Tie-Breaking: A Design Choice
 
@@ -36,10 +33,12 @@ Despite the economic advantages of FBAs, a significant research gap exists regar
 
 ## 4. Zero-Knowledge Proofs: Practical Cryptographic Integrity
 
-Zero-knowledge proofs (ZKPs), conceptualized by Goldwasser, Micali, and Rackoff (1989), allow a "prover" to convince a "verifier" that a statement is true without revealing any secret inputs [11]. Modern iterations, known as zk-SNARKs (Succinct Non-Interactive Arguments of Knowledge), possess attributes essential for financial infrastructure [11]:
+Zero-knowledge proofs (ZKPs), allow a "prover" to convince a "verifier" that a statement is true without revealing any secret inputs [11]. Modern iterations, known as zk-SNARKs (Succinct Non-Interactive Arguments of Knowledge), possess attributes essential for financial infrastructure [13]:
 
 *Zero-Knowledge:* No private input, such as an order price or size, is exposed during verification.
+
 *Succinctness:* The proof is small (often $\approx 1$ KB) and can be verified near-instantaneously, regardless of the number of orders.
+
 *Knowledge Soundness:* It is computationally impossible for a prover to generate a valid proof for a false statement [13].
 
 
@@ -49,7 +48,7 @@ Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical N
 
 ## 5. Protocol Specification: An Off-Chain Verifiable FBA
 
-Zeequent implements the FBA matching process off-chain to maintain the required low-latency performance. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$. 
+Zeequent implements the off-chain FBA matching process to maintain the required low-latency performance. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$. 
 
 ### 5.1 Accumulator and Range Constraints
 

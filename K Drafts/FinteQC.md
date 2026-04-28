@@ -155,7 +155,7 @@ $V_{Plateau}(X)=(Acc_{A}(X)-Min(X))\cdot(Acc_{B}(X)-Min(X))=0$.
 The tie-breaker logic identifies the optimal clearing price within the volume plateau by minimizing market imbalance. The protocol defines the surplus polynomial as the absolute difference between cumulative supply and demand:
 $V_{surp}(X)=Surplus(X)-(Acc_{A}(X)-Acc_{B}(X))=0$.
 
-The Valley Proof then demonstrates that the clearing price corresponds to the global minimum (the floor) of this surplus vector within the plateau. This ensures a verifiable, non-arbitrary clearing point that can be audited off-chain.
+The Valley Proof then demonstrates that the clearing price corresponds to the global minimum (the floor) of this surplus vector within the plateau. This ensures a verifiable, non-arbitrary clearing point.
 
 
 **Constraint Batching and Probabilistic Verification**

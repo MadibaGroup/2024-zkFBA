@@ -16,18 +16,18 @@ An FBA is a uniform-price, sealed-bid double auction conducted at frequent but d
 
 -------------------------
 
-### 2.1 The Clearing Price Algorithm
+*Algorithm for Finding The Clearing Price:*
 
 The objective of the auction is to identify the market-clearing price ($P^*$) that maximizes the volume of executed trades. The process involves aggregating bids and asks into Cumulative Demand and Supply Arrays. Demand Depth is the total quantity participants are willing to buy at or above a given price, and Supply Depth is the total quantity participants are willing to sell at or below a given price. At each price tick, the cleared volume is defined as the minimum of the cumulative supply and demand, forming a Minimum Array. The auctioneer identifies the global maximum of this Minimum Array to establish the clearing volume. 
 
-### 2.2 Tie-Breaking: A Design Choice
+*Tie-Breaking: A Design Choice:*
 
-In many liquid markets, the maximum execution volume occurs across a range of prices rather than at a single price, creating a Volume Plateau. Identifying a specific price within this range requires a tie-breaking rule. It is critical to recognize that tie-breaking is a design choice, not uniquely dictated by economic theory [5]. Different rules, such as pro-rata allocation on the margin or random selection, reflect different market philosophies and can impact participant incentives [6]. The Zeequent protocol adopts the Surplus Minimization rule [10]. This mechanism identifies the price within the plateau at which the absolute difference (imbalance) between supply and demand is at its global minimum, a point known as the Surplus Valley. The Plateau and the Valley can be seen in Fig. 1, which is based on synthetic market data. This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades [9]. (?check for ref?)
+In many liquid markets, the maximum execution volume occurs across a range of prices rather than at a single price, creating a Volume Plateau. Identifying a specific price within this range requires a tie-breaking rule. It is critical to recognize that tie-breaking is a design choice, not uniquely dictated by economic theory [5]. Different rules, such as pro-rata allocation on the margin or random selection, reflect different market philosophies and can impact participant incentives [6]. Our research adopts the Surplus Minimization rule [10]. This mechanism identifies the price within the plateau at which the absolute difference (imbalance) between supply and demand is at its global minimum, a point known as the Surplus Valley. The Plateau and the Valley are shown in Fig. 1, which is based on synthetic market data. This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades [9].
 
 ----------------
 ## 3. The Research Gap: Verifiability in the Decentralization Era
 
-Despite the economic advantages of FBAs, a significant research gap exists regarding the verifiability of auction integrity in opaque environments. Early foundational work on decentralizing financial infrastructure, most notably by Clark et al. (2014) [7], established the feasibility of using distributed ledgers to maintain order books and prediction market logs. While Clark et al. successfully addressed concerns regarding censorship resistance and availability, their model, and much of the subsequent literature on FBAs [8], assumed a fundamental trade-off between transparency and privacy. In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a Transparency Paradox [15]. To prevent last-look arbitrage, orders must remain confidential until the auction clears [12]. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price [12]. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated. There is a critical need for a protocol that provides proactive, mathematically guaranteed fair play without requiring the disclosure of sensitive order data [8].
+Despite the economic advantages of FBAs, a significant research gap exists regarding the verifiability of auction integrity in opaque environments. Early foundational work on decentralizing financial infrastructure, most notably by Clark et al. (2014) [7], established the feasibility of using distributed ledgers to maintain order books and prediction market logs. While they successfully addressed concerns regarding censorship resistance and availability, their model, and much of the subsequent literature on FBAs [8], assumed a fundamental trade-off between transparency and privacy. In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a Transparency Paradox [15]. To prevent last-look arbitrage, orders must remain confidential until the auction clears [12]. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price [12]. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated. There is a critical need for a protocol that provides proactive, mathematically guaranteed fair play without requiring the disclosure of sensitive order data [8].
 
 
 
@@ -42,13 +42,13 @@ Zero-knowledge proofs (ZKPs), allow a "prover" to convince a "verifier" that a s
 *Knowledge Soundness:* It is computationally impossible for a prover to generate a valid proof for a false statement [13].
 
 
-Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge), a type of zk-SNARK proof system [14]. PLONK provides a Universal Trusted Setup, allowing a single ceremony to generate parameters that support any circuit up to a certain size bound []. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently [14].
+Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge), a type of zk-SNARK proof system [14]. PLONK provides a Universal Trusted Setup, allowing a single ceremony to generate parameters that support any circuit up to a certain size bound. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently [14].
 
 ----------------------------
 
 ## 5. Protocol Specification: An Off-Chain Verifiable FBA
 
-Zeequent implements the off-chain FBA matching process to maintain the required low-latency performance. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$. 
+Zeequent implements the FBA matching process to maintain the required low-latency performance. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$. 
 
 ### 5.1 Accumulator and Range Constraints
 

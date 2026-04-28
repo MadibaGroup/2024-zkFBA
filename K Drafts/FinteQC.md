@@ -61,7 +61,8 @@ $$V_{Plateau}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 To prove that the matched volume $V_{max}$ is the global maximum, the protocol uses bit-decomposition to show that $(V_{max} - Min(X)) \geqslant 0$. The Volume Plateau $[c, d]$ is locked by proving the volume is exactly $V_{max}$ inside this range and strictly lower outside, enforced by Cliff Proofs that require a drop of at least one unit at the boundaries.
 
 
-<img width="954" height="516" alt="market" src="https://github.com/user-attachments/assets/aebab79b-7ce4-46fe-b71f-d252814ca12f" />
+<img width="963" height="437" alt="Screenshot 2026-04-27 at 10 11 56 PM" src="https://github.com/user-attachments/assets/fecc9876-2c9f-4a37-81a6-48a319dcf376" />
+
 
 
 

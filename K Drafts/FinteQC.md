@@ -146,7 +146,7 @@ $V_{Acc_{B}}:=(X-\omega^{n-1})\cdot=0$.
 
 The protocol proves that the clearing volume $V_{max}$ is the global maximum of the executable volume (the minimum of supply and demand at each tick).Mutual Exclusivity: The system proves that the cleared volume $Min(X)$ at any price tick is exactly equal to either the supply or the demand using the constraint:
 
-$V_{KL}(X)=(Acc_{A}(X)-Min(X))\cdot(Acc_{B}(X)-Min(X))=0$.
+$V_{Plateau}(X)=(Acc_{A}(X)-Min(X))\cdot(Acc_{B}(X)-Min(X))=0$.
 
 **Plateau Isolation:** To "lock" the interval $[c, d]$ where the maximum volume occurs, the prover uses "Cliff" vanishing equations. These prove that at $c-1$ and $d+1$, the volume is strictly less than $V_{max}$ by at least 1 unit, using bit-decomposition and slack variables to verify the inequality in zero-knowledge.
 
@@ -154,7 +154,7 @@ $V_{KL}(X)=(Acc_{A}(X)-Min(X))\cdot(Acc_{B}(X)-Min(X))=0$.
 **The Valley Proof and Tie-Breaking**
 
 The tie-breaker logic identifies the optimal clearing price within the volume plateau by minimizing market imbalance. The protocol defines the surplus polynomial as the absolute difference between cumulative supply and demand:
-$V_{surp\_def}(X)=Surplus(X)-(Acc_{A}(X)-Acc_{B}(X))=0$.
+$V_{surp}(X)=Surplus(X)-(Acc_{A}(X)-Acc_{B}(X))=0$.
 
 The "Valley Proof" then demonstrates that the clearing price corresponds to the global minimum (the floor) of this surplus vector within the plateau. This ensures a verifiable, non-arbitrary clearing point that can be audited off-chain.
 

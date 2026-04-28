@@ -2,7 +2,6 @@
 ### **Abstract**
 Frequent batch auctions (FBAs) have been proposed as an alternative to traditional limit order books for trading securities. The motivation is to mitigate the predatory advantages of high-frequency traders (HFTs). With FBAs, a double-sided auction is held over a short interval (e.g., 1 second). All marketable orders submitted during the time window are executed at the same price, and arrival time is not a factor. FBAs are significantly less transparent than continuous-time orderbooks and rely on fully trusted specialists or exchanges to execute orders at the fairest price. In this research, we apply the cryptographic concept of zero-knowledge proofs (ZKPs) to develop a zk-FBA which enables the specialist to prove trades are executed fairly without revealing any of the orders directly. Our zk-FBA is implemented using modern ZKP techniques: as a custom zk-SNARK.
 
-----------------------------------
 
 ## Introduction (The Mechanical Constant of the HFT Arms Race)
 
@@ -14,7 +13,7 @@ The efficiency of modern financial markets is often characterized by the speed a
 
 An FBA is a uniform-price, sealed-bid double auction conducted at frequent but discrete intervals, such as every 100 milliseconds [2]. By batching orders that arrive within the same interval, the FBA eliminates the outsized importance of microsecond speed advantages. If multiple participants observe the same news, they must compete on price rather than arrival time, thereby restoring the focus to fundamental valuation [2]. 
 
--------------------------
+
 
 *Algorithm for Finding The Clearing Price:*
 
@@ -24,7 +23,7 @@ The objective of the auction is to identify the market-clearing price ($P^*$) th
 
 In many liquid markets, the maximum execution volume occurs across a range of prices rather than at a single price, creating a Volume Plateau. Identifying a specific price within this range requires a tie-breaking rule. It is critical to recognize that tie-breaking is a design choice, not uniquely dictated by economic theory [5]. Different rules, such as pro-rata allocation on the margin or random selection, reflect different market philosophies and can impact participant incentives [6]. Our research adopts the Surplus Minimization rule [10]. This mechanism identifies the price within the plateau at which the absolute difference (imbalance) between supply and demand is at its global minimum, a point known as the Surplus Valley. The Plateau and the Valley are shown in Fig. 1, which is based on synthetic market data. This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades [9].
 
-----------------
+
 ## 3. The Research Gap: Verifiability in the Decentralization Era
 
 Despite the economic advantages of FBAs, a significant research gap exists regarding the verifiability of auction integrity in opaque environments. Early foundational work on decentralizing financial infrastructure, most notably by Clark et al. (2014) [7], established the feasibility of using distributed ledgers to maintain order books and prediction market logs. While they successfully addressed concerns regarding censorship resistance and availability, their model, and much of the subsequent literature on FBAs [8], assumed a fundamental trade-off between transparency and privacy. In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a Transparency Paradox [15]. To prevent last-look arbitrage, orders must remain confidential until the auction clears [12]. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price [12]. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated. There is a critical need for a protocol that provides proactive, mathematically guaranteed fair play without requiring the disclosure of sensitive order data [8].
@@ -44,13 +43,12 @@ Zero-knowledge proofs (ZKPs), allow a "prover" to convince a "verifier" that a s
 
 Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge), a type of zk-SNARK proof system [14]. PLONK provides a Universal Trusted Setup, allowing a single ceremony to generate parameters that support any circuit up to a certain size bound. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently [14].
 
-----------------------------
 
 ## 5. Protocol Specification: An Off-Chain Verifiable FBA
 
 Zeequent implements the FBA matching process to maintain the required low-latency performance. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness. The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = \{1, \omega, \dots, \omega^{n-1}\}$. 
 
-### 5.1 Accumulator and Range Constraints
+*Accumulator and Range Constraints:*
 
 To prevent the specialist from inventing volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (see PLONKbook?), the protocol ensures that all values lie in the first half of the modular interval $[0, (q-1)/2]$, thereby guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations:
 
@@ -58,13 +56,13 @@ To prevent the specialist from inventing volume or entering negative orders, the
 
 **Demand Sum ($V_{Acc_B,2}$):** $Acc_B(X) = Acc_B(\omega X) + Bid(X)$.
 
-### 5.2 Maximum Volume and Plateau Isolation
+*Maximum Volume and Plateau Isolation:*
 
 The system proves the matched volume at any tick is the lesser of supply and demand using a mutual exclusivity constraint:
 
 $$V_{Plateau}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 
-To prove that the matched volume $V_{max}$ is the global maximum, the protocol uses bit-decomposition to show the difference $(V_{max} - Min(X))$ is non-negative. The Volume Plateau $[c, d]$ is locked by proving the volume is exactly $V_{max}$ inside the range and strictly lower outside, enforced by Cliff Proofs that require a drop of at least one unit at the boundaries.
+To prove that the matched volume $V_{max}$ is the global maximum, the protocol uses bit-decomposition to show that $(V_{max} - Min(X)) \geqslant 0$. The Volume Plateau $[c, d]$ is locked by proving the volume is exactly $V_{max}$ inside the range and strictly lower outside, enforced by Cliff Proofs that require a drop of at least one unit at the boundaries.
 
 
 
@@ -78,13 +76,13 @@ To prove that the matched volume $V_{max}$ is the global maximum, the protocol u
 
 
 
-### 5.3 Verifiable Tie-Breaking via the Valley Proof
+*Verifiable Tie-Breaking via the Valley Proof:*
 
 Once the plateau is established, the protocol identifies the unique clearing price by minimizing market surplus. The surplus is the absolute difference between supply and demand. The Valley Proof is obtained using the same method but in reverse, demonstrating that the chosen price corresponds to the global minimum of this surplus valley within the plateau interval. This provides a verifiable, non-arbitrary tie-breaking mechanism, auditable by any regulator or participant.
 
 ## 6. Economic and Regulatory Synthesis
 
-The transition to a zk-FBA model represents a paradigm shift in financial regulation from reactive, disclosure-based auditing to proactive, proof-based verification. In traditional markets, regulators detect abuse by analyzing historical records after the fact [15]. In the Zeequent model, the exchange provides a cryptographic certificate of correctness at the time of clearing [16]. This rational privacy allows institutions to trade large blocks without revealing their strategies to predatory algorithms, while simultaneously providing regulators with mathematical proof that the exchange acted as a neutral intermediary. By solving the transparency paradox, zk-FBAs restore financial markets' focus to price discovery and fundamental valuation, effectively ending the microsecond arms race [2].
+The transition to a zk-FBA model represents a paradigm shift in financial regulation from reactive, disclosure-based auditing to proactive, proof-based verification. In traditional markets, regulators detect abuse by analyzing historical records after the fact [15]. In the Zeequent model, the exchange provides a cryptographic proof of correctness at the time of clearing [16]. This rational privacy allows institutions to trade large blocks without revealing their strategies to predatory algorithms, while providing regulators with a mathematical guarantee that the exchange acted as a neutral intermediary. By solving the transparency paradox, zk-FBAs restore financial markets' focus to price discovery, effectively ending the microsecond arms race [2].
 
 
 
@@ -122,7 +120,7 @@ SHAFI GOLDWASSER+, SILVIO MICALI+, AND CHARLES RACKOFF (OG)
 12 Achieving Trust without Disclosure:
 Dark Pools and a Role for Secrecy-Preserving Verification
 
-13 Performance Evaluation of zk-SNARK Protocols for Privacy-Preserving Sensor Data Verification: A Systematic Benchmarking Study
+13 Performance E of zk-SNARK Protocols for Privacy-Preserving Sensor Data Verification: A Systematic Benchmarking Study
 
 14 PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge (OG)
 
@@ -141,7 +139,7 @@ Dark Pools and a Role for Secrecy-Preserving Verification
 
 ----------------------------
 
-###### *Points to consider for the finance-heavy approach:*
+###### *Points to consider for the finance-heavy approach:???????There is no space laft*
 
 Current frequent batch auctions require traders to take the exchange's word for it that the clearing price was calculated correctly and that the auction wasn't front-run by the exchange operator (how ZKPs shift the burden of trust from people/institutions to mathematics). 
 
@@ -151,7 +149,7 @@ The Latency Budget (If a batch auction occurs every 100ms, how much of that is a
 
 
 
-###### Outline:
+###### Outline (too much?):
 
 1. Introduction: defining the trust gap. Trust the operator’s clearing logic (!), institutional participation (?)
 2. System Model: visual diagram: participants -> order submission -> (black box ZK) -> public clearing Price.

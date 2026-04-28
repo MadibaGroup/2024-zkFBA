@@ -162,7 +162,7 @@ The Valley Proof then demonstrates that the clearing price corresponds to the gl
 
 **Constraint Batching and Probabilistic Verification**
 
-To maintain efficiency, the numerous vanishing equations ($V_{i}$) are batched into a single provable statement. The prover creates a random linear combination of all constraints using powers of a verifier-provided challenge $\alpha$:
+To maintain efficiency, the numerous vanishing equations ($V_{i}$) are batched into a single provable statement. The prover creates a combination of all constraints using powers of a verifier-provided challenge $\alpha$:
 $Batch(\alpha)=\sum_{i=1}^{m}\alpha^{i}(V_{i}(X)-Q_{i}(X)Z_{H}(X))$.
 
 The verifier then performs an algebraic check at a random evaluation point $\zeta \notin H$ to confirm that the entire system evaluates to zero, providing a high-probability guarantee that all auction rules were followed.

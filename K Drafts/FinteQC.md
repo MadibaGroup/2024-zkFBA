@@ -171,9 +171,6 @@ The verifier then performs an algebraic check at a random evaluation point $\zet
 -------
 ------
 
-----------------------
----------
-
 
 
 # notes to self:

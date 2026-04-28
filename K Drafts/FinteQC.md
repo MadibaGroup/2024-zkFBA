@@ -143,11 +143,13 @@ Recursive Summations: Proves that the cumulative depth is the sum of previous vo
 
 **Volume Plateau and Cliff Proofs:**
 
-The protocol proves that the clearing volume $V_{max}$ is the global maximum of the executable volume (the minimum of supply and demand at each tick).Mutual Exclusivity: The system proves that the cleared volume $Min(X)$ at any price tick is exactly equal to either the supply or the demand using the constraint:
+The protocol proves that the clearing volume $V_{max}$ is the global maximum of the executable volume (the minimum of supply and demand at each tick).
+
+Mutual Exclusivity: The system proves that the cleared volume $Min(X)$ at any price tick is exactly equal to either the supply or the demand using the constraint:
 
 $V_{Plateau}(X)=(Acc_{A}(X)-Min(X))\cdot(Acc_{B}(X)-Min(X))=0$.
 
-**Plateau Isolation:** To lock the interval $[c, d]$ where the maximum volume occurs, the prover uses Cliff vanishing equations. These prove that at $c-1$ and $d+1$, the volume is strictly less than $V_{max}$ by at least 1 unit, using bit-decomposition and slack variables to verify the inequality in zero-knowledge.
+Plateau Isolation: To lock the interval $[c, d]$ where the maximum volume occurs, the prover uses Cliff vanishing equations. These prove that at $c-1$ and $d+1$, the volume is strictly less than $V_{max}$ by at least 1 unit, using bit-decomposition and slack variables to verify the inequality in zero-knowledge.
 
 
 **The Valley Proof and Tie-Breaking**

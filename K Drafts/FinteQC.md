@@ -50,11 +50,7 @@ Zeequent implements the FBA matching process to maintain the required low-latenc
 
 *Accumulator and Range Constraints:*
 
-To prevent the specialist from inventing volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (see PLONKbook?), the protocol ensures that all values lie in the first half of the modular interval $[0, (q-1)/2]$, thereby guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations:
-
-**Supply Sum ($V_{Acc_A,2}$):** $Acc_A(\omega X) = Acc_A(X) + Ask(X)$.
-
-**Demand Sum ($V_{Acc_B,2}$):** $Acc_B(X) = Acc_B(\omega X) + Bid(X)$.
+To prevent the specialist from inventing volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (see PLONKbook?), the protocol ensures that all values lie in the first half of the modular interval $[0, (q-1)/2]$, thereby guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations, where Supply Sum ($V_{Acc_A,2}$) is $Acc_A(\omega X) = Acc_A(X) + Ask(X)$ and Demand Sum ($V_{Acc_B,2}$) is $Acc_B(X) = Acc_B(\omega X) + Bid(X)$.
 
 *Maximum Volume and Plateau Isolation:*
 

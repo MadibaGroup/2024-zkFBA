@@ -62,7 +62,7 @@ The system proves the matched volume at any tick is the lesser of supply and dem
 
 $$V_{Plateau}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 
-To prove that the matched volume $V_{max}$ is the global maximum, the protocol uses bit-decomposition to show that $(V_{max} - Min(X)) \geqslant 0$. The Volume Plateau $[c, d]$ is locked by proving the volume is exactly $V_{max}$ inside the range and strictly lower outside, enforced by Cliff Proofs that require a drop of at least one unit at the boundaries.
+To prove that the matched volume $V_{max}$ is the global maximum, the protocol uses bit-decomposition to show that $(V_{max} - Min(X)) \geqslant 0$. The Volume Plateau $[c, d]$ is locked by proving the volume is exactly $V_{max}$ inside this range and strictly lower outside, enforced by Cliff Proofs that require a drop of at least one unit at the boundaries.
 
 
 

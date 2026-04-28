@@ -124,7 +124,7 @@ Dark Pools and a Role for Secrecy-Preserving Verification
 
 --------
 -------
-# backup for methodology:
+# backup material for methodology:
 
 The Zeequent algorithm formalizes the auction matching process into an arithmetic circuit compatible with modern Polynomial Interactive Oracle Proof (PIOP) frameworks. By representing the auction state as a system of polynomials, the protocol enables the off-chain specialist to prove that the clearing outcome is mathematically correct without revealing individual bids.
 

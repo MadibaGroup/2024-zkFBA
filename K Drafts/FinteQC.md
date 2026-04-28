@@ -138,8 +138,7 @@ To enforce the economic laws of supply and demand, Zeequent utilizes transition 
 
 Accumulator Initialization: Enforces that the supply starts at the first bid at the lowest price tick and demand starts at the highest price tick. For the supply accumulator $Acc_{A}$, initialization is verified via: $V_{Acc\_A,1}(X)=(Acc_{A}(X)-Arr_{A}(X))\cdot\frac{Z_{H}(X)}{X-\omega^{n-1}}=0$.
 
-Recursive Summations: Proves that the cumulative depth is the sum of previous volumes and current orders. The demand sum recurrence, $Acc_{B}(X)=Acc_{B}(\omega X)+Bid(X)$, is enforced as a vanishing equation over the truncated domain:
-$V_{Acc_{B}}:=(X-\omega^{n-1})\cdot=0$.
+Recursive Summations: Proves that the cumulative depth is the sum of previous volumes and current orders. The demand sum recurrence, $Acc_{B}(X)=Acc_{B}(\omega X)+Bid(X)$, is enforced as a vanishing equation over the truncated domain.
 
 
 **Volume Plateau and Cliff Proofs:**

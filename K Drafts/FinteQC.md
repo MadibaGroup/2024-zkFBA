@@ -124,10 +124,13 @@ Dark Pools and a Role for Secrecy-Preserving Verification
 
 --------
 -------
+# backup for methodology:
 
 The Zeequent algorithm formalizes the auction matching process into an arithmetic circuit compatible with modern Polynomial Interactive Oracle Proof (PIOP) frameworks. By representing the auction state as a system of polynomials, the protocol enables the off-chain specialist to prove that the clearing outcome is mathematically correct without revealing individual bids.
 
-**Algebraic Representation:** Interpolation over the Domain $H$The system represents the auction ecosystem as five distinguished private arrays: prices, bid volumes, ask volumes, demand depth, and supply depth. These arrays are interpolated into polynomials defined over the evaluation domain $H=\{\omega^{0},...,\omega^{n-1}\}$, where $\omega$ is the generator of a multiplicative subgroup in a finite field $\mathbb{F}_{q}$. The backbone of the verification logic is the vanishing polynomial $Z_{H}(X)=X^{n}-1$, which ensures that all enforced constraints evaluate to zero at every point in the domain $H$.
+**Algebraic Representation: Interpolation over the Domain $H$**
+
+The system represents the auction ecosystem as five distinguished private arrays: prices, bid volumes, ask volumes, demand depth, and supply depth. These arrays are interpolated into polynomials defined over the evaluation domain $H=\{\omega^{0},...,\omega^{n-1}\}$, where $\omega$ is the generator of a multiplicative subgroup in a finite field $\mathbb{F}_{q}$. The backbone of the verification logic is the vanishing polynomial $Z_{H}(X)=X^{n}-1$, which ensures that all enforced constraints evaluate to zero at every point in the domain $H$.
 
 **Transition Logic and Recursive Summations:**
 
@@ -162,6 +165,8 @@ To maintain efficiency, the numerous vanishing equations ($V_{i}$) are batched i
 $Batch(\alpha)=\sum_{i=1}^{m}\alpha^{i}(V_{i}(X)-Q_{i}(X)Z_{H}(X))$.
 
 The verifier then performs an algebraic check at a random evaluation point $\zeta \notin H$ to confirm that the entire system evaluates to zero, providing a high-probability guarantee that all auction rules were followed.
+
+
 -------
 ------
 

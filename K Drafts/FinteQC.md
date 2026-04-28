@@ -122,6 +122,49 @@ Dark Pools and a Role for Secrecy-Preserving Verification
 
 16 The Knowledge Complexity of Interactive Proof Systems
 
+--------
+-------
+
+The Zeequent algorithm formalizes the auction matching process into an arithmetic circuit compatible with modern Polynomial Interactive Oracle Proof (PIOP) frameworks. By representing the auction state as a system of polynomials, the protocol enables the off-chain specialist to prove that the clearing outcome is mathematically correct without revealing individual bids.
+
+**Algebraic Representation:** Interpolation over the Domain $H$The system represents the auction ecosystem as five distinguished private arrays: prices, bid volumes, ask volumes, demand depth, and supply depth. These arrays are interpolated into polynomials defined over the evaluation domain $H=\{\omega^{0},...,\omega^{n-1}\}$, where $\omega$ is the generator of a multiplicative subgroup in a finite field $\mathbb{F}_{q}$. The backbone of the verification logic is the vanishing polynomial $Z_{H}(X)=X^{n}-1$, which ensures that all enforced constraints evaluate to zero at every point in the domain $H$.
+
+**Transition Logic and Recursive Summations:**
+
+To enforce the economic laws of supply and demand, Zeequent utilizes transition constraints to handle recurrence relations across price ticks without "wrap-around" contradictions.
+
+Accumulator Initialization: Enforces that the supply starts at the first bid at the lowest price tick and demand starts at the highest price tick. For the supply accumulator $Acc_{A}$, initialization is verified via: $V_{Acc\_A,1}(X)=(Acc_{A}(X)-Arr_{A}(X))\cdot\frac{Z_{H}(X)}{X-\omega^{n-1}}=0$.
+
+Recursive Summations: Proves that the cumulative depth is the sum of previous volumes and current orders. The demand sum recurrence, $Acc_{B}(X)=Acc_{B}(\omega X)+Bid(X)$, is enforced as a vanishing equation over the truncated domain:
+$V_{Acc_{B}}:=(X-\omega^{n-1})\cdot=0$.
+
+
+**Volume Plateau and Cliff Proofs:**
+
+The protocol proves that the clearing volume $V_{max}$ is the global maximum of the executable volume (the minimum of supply and demand at each tick).Mutual Exclusivity: The system proves that the cleared volume $Min(X)$ at any price tick is exactly equal to either the supply or the demand using the constraint:
+
+$V_{KL}(X)=(Acc_{A}(X)-Min(X))\cdot(Acc_{B}(X)-Min(X))=0$.
+
+**Plateau Isolation:** To "lock" the interval $[c, d]$ where the maximum volume occurs, the prover uses "Cliff" vanishing equations. These prove that at $c-1$ and $d+1$, the volume is strictly less than $V_{max}$ by at least 1 unit, using bit-decomposition and slack variables to verify the inequality in zero-knowledge.
+
+
+**The Valley Proof and Tie-Breaking**
+
+The tie-breaker logic identifies the optimal clearing price within the volume plateau by minimizing market imbalance. The protocol defines the surplus polynomial as the absolute difference between cumulative supply and demand:
+$V_{surp\_def}(X)=Surplus(X)-(Acc_{A}(X)-Acc_{B}(X))=0$.
+
+The "Valley Proof" then demonstrates that the clearing price corresponds to the global minimum (the floor) of this surplus vector within the plateau. This ensures a verifiable, non-arbitrary clearing point that can be audited off-chain.
+
+
+**Constraint Batching and Probabilistic Verification**
+
+To maintain efficiency, the numerous vanishing equations ($V_{i}$) are batched into a single provable statement. The prover creates a random linear combination of all constraints using powers of a verifier-provided challenge $\alpha$:
+$Batch(\alpha)=\sum_{i=1}^{m}\alpha^{i}(V_{i}(X)-Q_{i}(X)Z_{H}(X))$.
+
+The verifier then performs an algebraic check at a random evaluation point $\zeta \notin H$ to confirm that the entire system evaluates to zero, providing a high-probability guarantee that all auction rules were followed.
+-------
+------
+
 ----------------------
 ---------
 

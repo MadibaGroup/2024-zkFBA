@@ -65,7 +65,7 @@ To prove that the matched volume $V_{max}$ is the global maximum, the protocol u
 
 
 
-fig. 1.
+fig. 1. Visualization of supply and demand depths in a market.
 
 
 

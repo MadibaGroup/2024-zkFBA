@@ -134,7 +134,7 @@ The system represents the auction ecosystem as five distinguished private arrays
 
 **Transition Logic and Recursive Summations:**
 
-To enforce the economic laws of supply and demand, Zeequent utilizes transition constraints to handle recurrence relations across price ticks without "wrap-around" contradictions.
+To enforce the economic laws of supply and demand, Zeequent utilizes transition constraints to handle recurrence relations across price ticks without wrap-around contradictions.
 
 Accumulator Initialization: Enforces that the supply starts at the first bid at the lowest price tick and demand starts at the highest price tick. For the supply accumulator $Acc_{A}$, initialization is verified via: $V_{Acc\_A,1}(X)=(Acc_{A}(X)-Arr_{A}(X))\cdot\frac{Z_{H}(X)}{X-\omega^{n-1}}=0$.
 
@@ -148,7 +148,7 @@ The protocol proves that the clearing volume $V_{max}$ is the global maximum of 
 
 $V_{Plateau}(X)=(Acc_{A}(X)-Min(X))\cdot(Acc_{B}(X)-Min(X))=0$.
 
-**Plateau Isolation:** To "lock" the interval $[c, d]$ where the maximum volume occurs, the prover uses "Cliff" vanishing equations. These prove that at $c-1$ and $d+1$, the volume is strictly less than $V_{max}$ by at least 1 unit, using bit-decomposition and slack variables to verify the inequality in zero-knowledge.
+**Plateau Isolation:** To lock the interval $[c, d]$ where the maximum volume occurs, the prover uses Cliff vanishing equations. These prove that at $c-1$ and $d+1$, the volume is strictly less than $V_{max}$ by at least 1 unit, using bit-decomposition and slack variables to verify the inequality in zero-knowledge.
 
 
 **The Valley Proof and Tie-Breaking**
@@ -156,7 +156,7 @@ $V_{Plateau}(X)=(Acc_{A}(X)-Min(X))\cdot(Acc_{B}(X)-Min(X))=0$.
 The tie-breaker logic identifies the optimal clearing price within the volume plateau by minimizing market imbalance. The protocol defines the surplus polynomial as the absolute difference between cumulative supply and demand:
 $V_{surp}(X)=Surplus(X)-(Acc_{A}(X)-Acc_{B}(X))=0$.
 
-The "Valley Proof" then demonstrates that the clearing price corresponds to the global minimum (the floor) of this surplus vector within the plateau. This ensures a verifiable, non-arbitrary clearing point that can be audited off-chain.
+The Valley Proof then demonstrates that the clearing price corresponds to the global minimum (the floor) of this surplus vector within the plateau. This ensures a verifiable, non-arbitrary clearing point that can be audited off-chain.
 
 
 **Constraint Batching and Probabilistic Verification**

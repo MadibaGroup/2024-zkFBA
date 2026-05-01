@@ -37,7 +37,7 @@ For most of the trading day, most market activity occurs in the CLOB. Because CL
 
 Scheduled auctions provide a useful contrast. In an opening or closing auction, orders are collected over time and executed together at a single price. Since trades are not matched one-by-one as orders arrive, being faster by a few microseconds provides little direct advantage. A trader may still benefit from better information or a better strategy, but not simply from reaching the exchange first.
 
-This observation motivates frequent batch auctions (FBAs), proposed by Budish, Cramton, and Shim~\cite{}. An FBA takes the basic idea of an opening or closing auction and applies it repeatedly throughout the trading day. Instead of matching orders continuously, the exchange collects orders over short intervals—for example, one second—and then clears each batch in a double-sided auction at a single price.
+This observation motivates frequent batch auctions (FBAs), proposed by Budish, Cramton, and Shim~\cite{bud}. An FBA takes the basic idea of an opening or closing auction and applies it repeatedly throughout the trading day. Instead of matching orders continuously, the exchange collects orders over short intervals—for example, one second—and then clears each batch in a double-sided auction at a single price.
 
 The goal is not to remove competition from markets, but to change what traders compete over. In a continuous market, traders may compete to be faster by milliseconds or microseconds. In an FBA, orders submitted within the same batch are treated as arriving at the same time, so speed within the batch no longer determines priority. This reduces the payoff from latency races while preserving regular opportunities to trade.
 

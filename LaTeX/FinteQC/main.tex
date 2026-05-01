@@ -1,0 +1,120 @@
+\documentclass[runningheads]{llncs}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\input{setup/macros.tex}
+
+\begin{document}
+
+\title{Zeequent Batch Auctions: An Overview}
+
+\author{Kimia Esmaili\inst{1} \and Elizabeth van Oorschot\inst{2} \and Jeremy Clark\inst{1}}
+
+\institute{
+Concordia University, Montreal, Canada \\
+\email{kimia.esmaili@mail.concordia.ca}\\
+\email{j.clark@concordia.ca} \and
+McGill University, Montreal, Canada}
+
+\maketitle  
+
+\begin{abstract}
+
+Frequent batch auctions (FBAs) are an alternative market structure to continuous limit order books (CLOBs), replacing immediate trade execution with periodic clearing over short time intervals. By clearing orders together at a uniform price, FBAs reduce the value of sub-second latency advantages, which are exploited by high-frequency traders (HFTs). This paper gives an overview of a zero-knowledge approach to batch auctions, in which the operator commits to the order batch and proves with a custom zk-SNARK that the published clearing price and allocation satisfy the auction rule without revealing the underlying orders.
+
+\keywords{frequent batch auctions, call markets, zero-knowledge proofs, SNARKs}
+\end{abstract}
+
+\section{Introductory Remarks}
+
+Modern equity markets (\eg NASDAQ and NYSE) use two main trading systems. During regular trading hours, traders can submit orders to a continuous limit order book (CLOB), where compatible buy and sell orders can execute as soon as they meet. They can also submit orders to a scheduled auction, where orders are held until a fixed time---the end of the trading day---and then executed together. Near the end of the day, this auction becomes the only way to trade and then at market close, it clears as many trades as possible at a single price, which becomes the closing price of the stock. The same auction mechanism is used before the market opens to establish an opening price.
+
+Closing auctions play an important role because the closing price is widely used as a reference point: funds value their portfolios against it, indexes are calculated from it, and many institutional investors are measured against end-of-day benchmarks. By aggregating many orders and clearing them together at a single price, the closing auction also makes the official closing price less dependent on any single last-minute trade, which can reduce simple forms of manipulation. For large institutional investors, it can also provide a cleaner execution venue: a public, exchange-run auction at the official closing price, rather than a routing process where intermediaries may earn small fees or spreads.
+
+For most of the trading day, most market activity occurs in the CLOB. Because CLOB orders are processed as they arrive, small differences in speed can determine who trades first. High-frequency traders (HFTs) use fast computers, private data links, and automated strategies to exploit these differences, sometimes investing heavily to shave milliseconds from communication times between markets. This has led to concerns that continuous markets reward speed too heavily. The counterpoint is that HFTs can also narrow spreads, add liquidity, and help prices adjust quickly to new information. But even if HFTs narrow spreads, the resulting liquidity may not be beneficial when it can be withdrawn faster than other traders can respond.
+
+\subsection{Frequent Batch Auctions (FBAs)}
+
+Scheduled auctions provide a useful contrast. In an opening or closing auction, orders are collected over time and executed together at a single price. Since trades are not matched one-by-one as orders arrive, being faster by a few microseconds provides little direct advantage. A trader may still benefit from better information or a better strategy, but not simply from reaching the exchange first.
+
+This observation motivates frequent batch auctions (FBAs), proposed by Budish, Cramton, and Shim~\cite{}. An FBA takes the basic idea of an opening or closing auction and applies it repeatedly throughout the trading day. Instead of matching orders continuously, the exchange collects orders over short intervals—for example, one second—and then clears each batch in a double-sided auction at a single price.
+
+The goal is not to remove competition from markets, but to change what traders compete over. In a continuous market, traders may compete to be faster by milliseconds or microseconds. In an FBA, orders submitted within the same batch are treated as arriving at the same time, so speed within the batch no longer determines priority. This reduces the payoff from latency races while preserving regular opportunities to trade.
+
+\subsection{Transparency} 
+
+FBAs come with a transparency tradeoff compared to CLOBs. In a CLOB, the order book is visible. A trader who submits an order may not know what other orders will arrive first, or how the book will change during the delay between submission and execution, but once the order reaches execution time, there is no uncertainty about why it executed, did not execute, or executed at a particular price.
+
+Batch auctions are different. Orders are collected over a time window and cleared only after the window closes. During that interval, no participant can see the full set of orders that will determine the clearing price, and after the auction closes, participants typically see only the final outcome, not the complete input used to compute it. This makes the auction less transparent: a trader can observe whether their own order executed and at what price, but cannot independently verify that the exchange included all eligible orders, excluded ineligible ones, chose the correct clearing price, or allocated trades according to stated tie-breaking rules.
+
+\subsection{Zero-Knowledge Proofs}
+
+Cryptography offers a way to separate correctness from transparency. Any computation can, in principle, be accompanied by a proof that it was performed correctly; with a zero-knowledge proof (ZKP), this can be done without revealing the private inputs to the computation. Applied to batch auctions, this means an exchange could prove that the published clearing price and allocation follow from the submitted orders, without revealing the orders themselves.
+
+In this research, we develop a zero-knowledge frequent batch auction (zk-FBA) protocol: a batch auction in which the exchange publishes the auction outcome together with a cryptographic proof that the clearing price and allocation were computed correctly. We use zk-SNARKs, which are modern zero-knowledge proofs designed to be compact and fast to verify. In designing the protocol, we do not rely on general-purpose tools for developing zk-SNARKs which are computationally expensive for the exchange which needs to produce a proof at the end of each batch auction (\eg one a second). Instead we design a leaner, custom mathematical representation of the clearing rule; in cryptographic terms, this is a custom arithmetization for a polynomial interactive oracle proof (PIOP).
+
+\section{zk-FBAs}
+An FBA is a uniform-price, sealed-bid double auction conducted at frequent but discrete intervals, such as every 100 milliseconds [2]. By batching orders that arrive within the same interval, the FBA eliminates the outsized importance of microsecond speed advantages. If multiple participants observe the same news, they must compete on price rather than arrival time, thereby restoring the focus to fundamental valuation [2].
+
+\subsection{The Clearing Price Algorithm}
+The objective of the auction is to identify the uniform market-clearing price ($P^*$) that maximizes the volume of executed trades. The process involves aggregating bids and asks into Cumulative Demand and Supply Arrays. Demand Depth is the total quantity participants are willing to buy at or above a given price and Supply Depth is the total quantity participants are willing to sell at or below a given price. At each price tick, the cleared volume is defined as the minimum of the cumulative supply and demand, forming a Minimum Array. The auctioneer identifies the global maximum of this Minimum Array to establish the clearing volume.
+
+ \subsection{Tie-Breaking}
+ In many liquid markets, the maximum execution volume occurs across a range of prices rather than at a single point, creating a Volume Plateau. Identifying a specific price within this range requires a tie-breaking rule. It is critical to recognize that tie-breaking is a design choice and is not uniquely dictated by economic theory [5]. Different rules, such as pro-rata allocation on the margin or random selection, reflect different market philosophies and can impact participant incentives [6]. The Zeequent protocol adopts the Surplus Minimization rule. This mechanism identifies the price within the plateau where the absolute difference (imbalance) between supply and demand is at its global minimum, a point described as the Surplus Valley. The Plateau and the Valley can be seen in Fig. \ref{fig:Chart1}, made from synthetic market data. This approach provides an economically intuitive clearing point that minimizes unfulfilled interest while maximizing trades.
+ 
+ \section{The Research Gap: Verifiability in the Decentralization Era}
+ Despite the economic advantages of FBAs, a significant research gap exists regarding the verifiability of auction integrity in opaque environments. Early foundational work on decentralizing financial infrastructure, most notably by Clark et al. (2014) [7], established the feasibility of utilizing distributed ledgers for maintaining order books and prediction market logs. While Clark et al. successfully addressed concerns regarding censorship resistance and availability, their model, and much of the subsequent literature on FBAs [8], assumed a fundamental trade-off between transparency and privacy.
+
+
+
+\begin{figure}[t]
+    \centering
+        \caption{Visualization of supply and demand depths in a market.}
+    \label{fig:Chart1}
+    \includegraphics[width=0.8\textwidth]{figures/market.png}
+\end{figure}
+
+
+
+In practice, the transition from a transparent CLOB to a sealed-bid FBA introduces a "Transparency Paradox". To prevent "last-look" arbitrage, orders must remain confidential until the auction clears []. This opacity creates a vulnerability where a malicious auctioneer could under-match orders to favor certain participants or manipulate the clearing price []. Current regulatory frameworks rely on reactive, disclosure-based auditing, which is often insufficient for high-frequency environments where historical records can be obfuscated []. There is a critical need for a protocol that provides proactive, mathematical certainty of fair play without requiring the disclosure of sensitive order data or the public exposure of the underlying order book [].
+
+\section{Zero-Knowledge Proofs: Practical Cryptographic Integrity}
+Zero-knowledge proofs (ZKPs), conceptualized by Goldwasser, Micali, and Rackoff (1989), allow a "prover" to convince a "verifier" that a statement is true without revealing any secret inputs []. Modern iterations, known as zk-SNARKs (Succinct Non-Interactive Arguments of Knowledge), possess attributes essential for financial infrastructure []:
+
+Zero-Knowledge: No private input, such as an order price or size, is exposed during verification []. 
+
+Succinctness: The proof is small (often $\approx$ 1 KB) and can be verified near-instantaneously, regardless of the number of orders []. 
+
+Knowledge Soundness: It is computationally impossible for a prover to generate a valid proof for a false statement [].
+
+
+Our protocol leverages PLONK (Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge), a type of zk-SNARK proof system []. PLONK provides a "Universal Trusted Setup," allowing a single ceremony to generate parameters that support any circuit up to a certain size bound []. This flexibility is vital for dynamic financial markets where auction parameters and asset classes may change frequently.
+
+\section{Protocol Specification: An Off-Chain Verifiable FBA}
+Zeequent implements the FBA matching process off-chain to maintain the low-latency performance required for modern finance []. The specialist computes the clearing price on private infrastructure and then generates a zk-SNARK proof of correctness []. The protocol represents the order book as arrays (prices, bids, asks, and depths) interpolated into polynomials over an evaluation domain $H = {1, \omega, ..., \omega^{n-1}}$ [].
+
+\subsection{Accumulator and Range Constraints}
+To prevent the specialist from "inventing" volume or entering negative orders, the protocol first performs range checks. Using a Half-Field Range Check (reference to PLONKbook?), the protocol ensures all values lie in the first half of the modular interval $[0, \frac{q-1}{2}]$, mathematically guaranteeing that all inputs are positive. Supply and demand accumulators are verified via recursive summation vanishing equations:
+
+%%insert V s
+\subsection{Maximum Volume and Plateau Isolation}
+The system proves the matched volume at any tick is the lesser of supply and demand using a mutual exclusivity constraint:
+
+%%insert V KL
+
+To prove that the matched volume $V_{Max}$is the global maximum, the protocol uses bit-decomposition to show the difference
+
+
+ 5.3 Verifiable Tie-Breaking via the Valley Proof
+ Once the plateau is established, the protocol identifies the unique clearing price by minimizing market surplus. The surplus is formalized as the absolute difference between supply and demand. The "Valley Proof" demonstrates that the chosen price corresponds to the global minimum of this surplus within the plateau. This provides a verifiable, non-arbitrary tie-breaking mechanism that can be audited by any regulator or participant off-chain.
+
+ \section{Economic and Regulatory Synthesis}
+ The transition to an off-chain zk-FBA model represents a paradigm shift in financial regulation from reactive, disclosure-based auditing to proactive, proof-based verification. In traditional markets, regulators detect abuse by analyzing historical records after the fact []. In the Zeequent model, the exchange provides a cryptographic certificate of correctness at the time of clearing. This "rational privacy" allows institutions to trade large blocks without revealing their strategies to predatory algorithms, while simultaneously providing regulators with mathematical proof that the exchange acted as a neutral intermediary. By solving the transparency paradox, zk-FBAs restore the focus of financial markets to price discovery and fundamental valuation, effectively ending the microsecond arms race [2].
+
+% = = = = = Bibliography = = = = = %
+
+\bibliographystyle{splncs04}
+\bibliography{bib/pulp.bib}
+%\nocite{*}
+
+\end{document}

@@ -1,6 +1,46 @@
-\begin{thebibliography}{}
+\begin{thebibliography}{1}
 \providecommand{\url}[1]{\texttt{#1}}
 \providecommand{\urlprefix}{URL }
 \providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{BCC88}
+Brassard, G., Chaum, D., Cr\'{e}peau, C.: Minimum disclosure proofs of
+  knowledge. J. Comput. Syst. Sci.  \textbf{37}(2),  156--189 (1988)
+
+\bibitem{BCS15}
+Budish, E., Cramton, P., Shim, J.: The high-frequency trading arms race:
+  Frequent batch auctions as a market design response. The Quarterly Journal of
+  Economics  \textbf{130}(4),  1547--1621 (2015)
+
+\bibitem{BFS20}
+B{\"u}nz, B., Fisch, B., Szepieniec, A.: Transparent snarks from dark
+  compilers. In: EUROCRYPT (2020)
+
+\bibitem{GWC19}
+Gabizon, A., Williamson, Z.J., Ciobotaru, O.: Plonk: Permutations over
+  lagrange-bases for oecumenical noninteractive arguments of knowledge.
+  Cryptology ePrint Archive  (2019)
+
+\bibitem{GMW86}
+Goldreich, O., Micali, S., Wigderson, A.: How to prove all np statements in
+  zero-knowledge and a methodology of cryptographic protocol design. In: CRYPTO
+  (1986)
+
+\bibitem{Har03}
+Harris, L.: Trading and exchanges: market microstructure for practitioners.
+  Oxford (2003)
+
+\bibitem{KZG10}
+Kate, A., Zaverucha, G.M., Goldberg, I.: Constant-size commitments to
+  polynomials and their applications. In: ASIACRYPT. pp. 177--194. Springer
+  (2010)
+
+\bibitem{NRB+24}
+Nikolaenko, V., Ragsdale, S., Bonneau, J., Boneh, D.: Powers-of-tau to the
+  people: Decentralizing setup ceremonies. In: ACNS (2024)
+
+\bibitem{vODC24}
+van Oorschot, E., Deng, Y., Clark, J.: Plonkbook: A handbook for poly-iop
+  gadgets. GitHub Pages (2024), \url{https://www.plonkbook.org}
 
 \end{thebibliography}

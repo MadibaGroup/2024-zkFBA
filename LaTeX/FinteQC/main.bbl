@@ -3,9 +3,10 @@
 \providecommand{\urlprefix}{URL }
 \providecommand{\doi}[1]{https://doi.org/#1}
 
-\bibitem{BCC88}
-Brassard, G., Chaum, D., Cr\'{e}peau, C.: Minimum disclosure proofs of
-  knowledge. J. Comput. Syst. Sci.  \textbf{37}(2),  156--189 (1988)
+\bibitem{BCS14}
+Budish, E., Cramton, P., Shim, J.: Implementation details for frequent batch
+  auctions: Slowing down markets to the blink of an eye. American Economic
+  Review  \textbf{104}(5) (2014)
 
 \bibitem{BCS15}
 Budish, E., Cramton, P., Shim, J.: The high-frequency trading arms race:
@@ -34,10 +35,6 @@ Harris, L.: Trading and exchanges: market microstructure for practitioners.
 Kate, A., Zaverucha, G.M., Goldberg, I.: Constant-size commitments to
   polynomials and their applications. In: ASIACRYPT. pp. 177--194. Springer
   (2010)
-
-\bibitem{NRB+24}
-Nikolaenko, V., Ragsdale, S., Bonneau, J., Boneh, D.: Powers-of-tau to the
-  people: Decentralizing setup ceremonies. In: ACNS (2024)
 
 \bibitem{vODC24}
 van Oorschot, E., Deng, Y., Clark, J.: Plonkbook: A handbook for poly-iop

@@ -288,3 +288,41 @@ $$\mathsf V_{min}(X) = (Acc_A(X) - Min(X)) \cdot (Acc_B(X) - Min(X)) = 0$$
 *Definition.* Global Maximum Value
 plateau details
 
+
+
+
+
+------
+
+note to self: including Jeremy's FinteQC pdf points as well
+
+------
+​I. Introduction
+​Problem Statement: The conflict between transparency and privacy in decentralized finance (DeFi). Public blockchains expose order books, leading to Miner Extractable Value (MEV) and front-running.
+​The Solution: Using Zero-Knowledge Proofs (ZKPs) to verify auction results without revealing individual bid/ask data.
+​Key Contribution: A PLONK-based framework for verifying unimodal volume plateaus and price ceilings in standard call markets.
+​II. Market Model: The Call Market Dynamics
+​Order Accumulation: Formal definitions of AccA (non-decreasing) and AccB (non-increasing).
+​The Clearing Mechanism: Defining V(p) = \min(AccA, AccB) (?)
+​The Plateau-Valley Duality:
+​Mathematically defining the Volume Plateau.
+​Defining the Abs(Delta) Valley as the indicator of market equilibrium.
+​III. Cryptographic Framework (PIOP)
+​Subgroup Construction: Definition of the multiplicative subgroup H of size n and the generator \omega.
+​Transition Logic:
+​Enforcing recurrence relations for accumulated orders: A_{i+1} = A_i + \text{Order}_i.
+​Utilization of the vanishing polynomial Z_H(X) = X^n - 1 and the gate (X - \omega^{n-1}) to prevent wrap-around.
+​Range Checks via Bit Decomposition and mid point:
+​V-Ceiling Proof: Formal logic for ensuring V(X) \le V_{max} using k-bit reconstruction. (​Booleanity Constraints) ensuring witness bits B_j(X) \in \{0, 1\}.
+​IV. Proposed Architecture:
+
+(for high-frequency price ticks?)
+
+​Witness Generation: Structuring the execution trace to align row indices with price steps
+​V. Security Analysis & Performance
+​Soundness: How constraints prevent malicious auctioneers from "dipping" the volume.
+​Completeness: Ensuring the "Surplus Plateau" (the valley floor) always yields a valid proof for the honest auctioneer.
+​Benchmarks: Expected proof generation time (T_{prove}) and verification cost (T_{verify}) for a market with N price ticks.
+​VI. Conclusion & Future Work
+​Scaling to cross-chain liquidity (?)
+​Extending the model to multi-asset batch auctions.

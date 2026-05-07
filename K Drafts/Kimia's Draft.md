@@ -308,7 +308,8 @@ note to self: including Jeremy's FinteQC pdf points as well
 ​II. Market Model: 
 
 The Call Market Dynamics
-​Order Accumulation: Formal definitions of AccA (non-decreasing) and AccB (non-increasing).
+​
+Order Accumulation: Formal definitions of AccA (non-decreasing) and AccB (non-increasing).
 
 ​The Clearing Mechanism: Defining V(p) = \min(AccA, AccB) (?)
 

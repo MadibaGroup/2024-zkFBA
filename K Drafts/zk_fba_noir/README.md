@@ -1,7 +1,7 @@
 # ZK-FBA Noir — Zero-Knowledge Proof of Frequent Batch Auction Arithmetic
 
 A Noir circuit implementation of the same **Frequent Batch Auction (FBA)**
-proof system as `../zk_fba`, targeting the Barretenberg UltraHonk proof
+proof system, targeting the Barretenberg UltraHonk proof
 system over the BN254 elliptic curve.
 
 Where the Rust implementation builds every cryptographic layer by hand

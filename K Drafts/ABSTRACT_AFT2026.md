@@ -32,7 +32,7 @@ hand-specialized prover in Rust using the arkworks cryptographic library,
 and a compiled circuit in Noir targeting the Barretenberg UltraHonk backend.
 The specialized Rust prover achieves an end-to-end prove-plus-verify latency
 of 27.5 ms on commodity hardware (Apple M4 Max), while the Noir circuit
-requires 93.4 ms -- a 3.4x overhead attributable to UltraHonk's general
+requires 93.4 ms, a 3.4x overhead attributable to UltraHonk's general
 constraint system operating over a 128x larger polynomial domain (4,096 vs
 32 evaluation points). Proof generation alone is 7.7x slower in Noir (81.1
 ms vs 10.6 ms), whereas pairing verification is 1.3x faster (12.3 ms vs

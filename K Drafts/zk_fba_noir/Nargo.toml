@@ -1,0 +1,3 @@
+[workspace]
+members         = ["zk_fba_full", "acc_circuit", "mcv_circuit"]
+default-package = "zk_fba_full"

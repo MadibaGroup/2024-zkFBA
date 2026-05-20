@@ -1,0 +1,29 @@
+[package]
+name    = "zk_fba"
+version = "0.1.0"
+edition = "2021"
+
+# -- Runtime dependencies -----------------------------------------------------
+[dependencies]
+ark-ff        = "0.4"
+ark-poly      = "0.4"
+ark-bn254     = "0.4"
+ark-ec        = "0.4"
+ark-std       = "0.4"
+ark-serialize = "0.4"
+sha2          = "0.10"
+
+# -- Benchmark-only dependencies ----------------------------------------------
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name    = "kzg_bench"
+harness = false          # criterion brings its own harness
+
+# -- Build profiles -----------------------------------------------------------
+[profile.release]
+opt-level = 3
+
+[profile.bench]
+opt-level = 3

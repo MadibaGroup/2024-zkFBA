@@ -1,8 +1,6 @@
 # Noir vs Rust for FBA Zero-Knowledge Proofs
 ## Pros, Cons, and Recommendation
 
-**Author:** Kimia Esmaili, Concordia University
-
 This document compares the two ZK proof implementations of the Frequent Batch
 Auction (FBA) protocol in this repository:
 

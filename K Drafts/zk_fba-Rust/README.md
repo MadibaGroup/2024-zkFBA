@@ -10,7 +10,7 @@ Rust using the `arkworks` cryptographic library suite.
 ## Overview
 
 A Frequent Batch Auction clears a double-sided market at a single uniform
-price — the **Market Clearing Volume (MCV)** — computed from cumulative bid
+price, the **Market Clearing Volume (MCV)**, computed from cumulative bid
 and ask depth curves. This project proves that computation was done correctly
 using zero-knowledge polynomial commitments, without revealing the individual
 order data.
@@ -383,25 +383,6 @@ The implementation is a complete, externally-verifiable non-interactive proof:
 A third party who receives only the 10 commitments, the 13 evaluation claims,
 the 13 opening proof points, and the public domain parameters can verify the
 entire proof without access to the polynomial coefficients or the toxic waste τ.
-
----
-
-## Known Document Corrections
-
-Two reference documents (provided separately) contain errors that were
-identified and corrected during this implementation:
-
-1. **V_AccA_rec** — both documents write `Ask(X)` in the recurrence; the
-   correct form is `Ask(ω·X)` (the *next* ask value, not the current one).
-
-2. **Skip points** — both documents use ω^{n−1} as the skip point for both
-   accumulators. The correct skip points are asymmetric:
-   - V_AccA_rec skips ω²⁰ (last data point, forward accumulator)
-   - V_AccB_rec skips ω³¹ (last domain point, backward accumulator with cyclic wrap)
-
-3. **V_AccB_init** — both documents place the initialisation at ω⁰; the
-   correct point is ω²⁰ (the highest price tick, where the backward
-   accumulator starts).
 
 ---
 

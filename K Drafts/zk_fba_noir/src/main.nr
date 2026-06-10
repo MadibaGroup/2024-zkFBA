@@ -1,18 +1,14 @@
 // ZK-FBA  --  Noir circuit for Frequent Batch Auction arithmetic
-// Author  :  Kimia Esmaili, Concordia University
-//
-// Noir translation of the hand-rolled arkworks/BN254 KZG polynomial proof
-// in ../zk_fba.  This file is a thin orchestration shell: the two
-// constraint families live in separate modules that can also be compiled
+// The two constraint families live in separate modules that can also be compiled
 // and timed in isolation via acc_circuit/ and mcv_circuit/.
 //
 //   fba_accumulators.nr  --  C1-C4: ask/bid depth correctness
 //   fba_mcv.nr           --  C5 + MCV: min-exclusivity + global maximum
 //
-// The Barretenberg backend (bb) handles automatically:
+// The Barretenberg backend handles automatically:
 //   * ACIR -> UltraHonk constraint system compilation
-//   * KZG polynomial commitments  (Ignition ceremony SRS)
-//   * Fiat-Shamir transcript hashing  (Poseidon-based)
+//   * KZG polynomial commitments 
+//   * Fiat-Shamir transcript hashing  
 //   * KZG opening proofs
 //   * Pairing verification
 //

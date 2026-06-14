@@ -1,24 +1,3 @@
-#!/usr/bin/env python3
-"""
-Synthetic Batch Auction Data Generator for zk-FBA Research.
-
-Generates individual limit orders and the full order book with all columns
-needed for zk-FBA circuit benchmarking, as described in:
-  "Zeequent Batch Auctions: An Overview" (Esmaili, van Oorschot, Clark)
-
-Usage:
-    python generate_auction.py
-
-Outputs (for each of n=100 and n=1000 trades):
-    trades_<n>.csv       — individual limit orders
-    order_book_<n>.csv   — aggregated order book with all computed columns
-
-The generated order book has:
-  - Realistic supply/demand curves (bid depth ↓ as price ↑, ask depth ↑)
-  - A contiguous MCV tie region (highlighted PINK in paper screenshots)
-  - Within the tie: at least one price where |Delta|=0 (highlighted GREEN)
-"""
-
 import numpy as np
 import pandas as pd
 import sys

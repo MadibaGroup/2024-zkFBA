@@ -13,7 +13,7 @@ A Frequent Batch Auction clears a double-sided market at a single uniform
 price, the **Market Clearing Volume (MCV)**, computed from cumulative bid
 and ask depth curves. This project proves that computation was done correctly
 using zero-knowledge polynomial commitments, without revealing the individual
-order data.
+order data. (Notes: as the number of trades goes up, it is easier to "circuit" stuff in Noir, as you have to do it by hand in Rust. There is a limit for the sub circuits that come across as the powers of 2 are reached.)
 
 The implementation is structured as a sequential pipeline of layers, each
 building on the last:

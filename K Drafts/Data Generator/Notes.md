@@ -14,4 +14,6 @@ Timestamp
 
 BatchID
 
+Null Bid/ask?
+
 Add?

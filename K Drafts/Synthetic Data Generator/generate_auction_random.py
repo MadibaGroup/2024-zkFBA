@@ -19,10 +19,10 @@ from generate_auction import (   # noqa: E402
 
 def max_reasonable_tie_length(n_ticks: int, cap: int = 8) -> int:
   
-    #Reasonable upper bound on tie-plateau length, as a fraction of the
+#    Reasonable upper bound on tie-plateau length, as a fraction of the
     #price grid: ~8% of all ticks, capped at "cap".
 
-    #There's no published market-microstructure ratio for this: a tie
+    #There's no published market-microstructure ratio for this(?): a tie
     #at the exact maximum executable volume is already a deliberately
     #engineered, measure-zero event. This heuristic just keeps the
     #plateau wide enough to demonstrate a multi-way tie-break,
@@ -41,14 +41,14 @@ def design_order_book_random_tie(n_trades: int, prices: np.ndarray,
 
 #    Generalized MCV-tie mechanism with a RANDOMIZED tie length k >= 2.
 
-    #Depths only need to be monotonic, not strictly monotonic -- D(p) (and
+    #Depths only need to be monotonic, not strictly monotonic, D(p) (and
     #S(p)) are allowed to plateau (flat run). Per the latest relaxation,
-    #a price tick may have Bids++ zero, Asks++ zero, or BOTH zero -- a
+    #a price tick may have Bids++ zero, Asks++ zero, or BOTH zero, a
     #fully dead tick is fine; nothing in the math requires either side
     #to stay positive.
 
     #Construction for a plateau of length k starting at tick c:
-    #    mcv := S(c)                         (ask depth baseline at c --
+    #    mcv := S(c)                         (ask depth baseline at c,
     #                                          NEVER touched after this,
     #                                          so mcv stays valid)
     #    Want D(p) = mcv for p = c .. c+k-1   (flat bid-depth plateau)
@@ -56,7 +56,7 @@ def design_order_book_random_tie(n_trades: int, prices: np.ndarray,
     #    => bids_vol[c+k-1] = mcv - D(c+k)    (transitional, baseline tail)
     #Since S(p) = mcv + sum(asks_vol[c+1 .. p]) and every term in that sum
     #is >= 0 (zero allowed), S(p) >= mcv automatically for all p in
-    #[c, c+k-1] -- this holds NO MATTER which of asks_vol[c+1 .. c+k-2]
+    #[c, c+k-1], this holds NO MATTER which of asks_vol[c+1 .. c+k-2]
     #are zeroed. So those interior ticks' Asks++ can ALSO be randomly
     #zeroed (independently of the bid-side zeroing) without breaking the
     #tie: min(D, S) = mcv throughout the plateau either way. This is what
@@ -105,7 +105,7 @@ def design_order_book_random_tie(n_trades: int, prices: np.ndarray,
             cross = i
             break
 
-    # Randomize the tie anchor within a small window around the natural
+#     Randomize the tie anchor within a small window around the natural
     # crossing, so the tie still sits where the market actually clears.
     lo = max(1, cross - position_jitter)
     hi = min(n - 3, cross + position_jitter)
@@ -114,7 +114,7 @@ def design_order_book_random_tie(n_trades: int, prices: np.ndarray,
     if bid_d[c] <= ask_d[c] and c > 0:
         c -= 1
 
-    # Randomize the tie length k in [2, max_tie_len], bounded by the
+#     Randomize the tie length k in [2, max_tie_len], bounded by the
     # room actually available before the price grid runs out.
     room = max(2, n - 1 - c)
     k = int(rng.integers(2, max(3, min(max_tie_len, room) + 1)))
@@ -133,7 +133,7 @@ def design_order_book_random_tie(n_trades: int, prices: np.ndarray,
             d_tail = int(np.cumsum(bids_vol[::-1])[::-1][c + k])
         needed = max(floor, mcv - d_tail)
 
-    # k-1 interior ticks of the plateau get zero NEW bid volume (their
+#     k-1 interior ticks of the plateau get zero NEW bid volume (their
     # cumulative bid depth stays at mcv, carried through). The final
     # tick of the plateau is the transitional, strictly positive tick
     # that ties D back down to mcv exactly.
@@ -141,8 +141,8 @@ def design_order_book_random_tie(n_trades: int, prices: np.ndarray,
         bids_vol[c:c + k - 1] = 0
     bids_vol[c + k - 1] = needed
 
-    # Independently and randomly ALSO zero some interior ticks' Asks++
-    # (any of c+1 .. c+k-2 -- never c itself, since S(c) defines mcv).
+#     Independently and randomly ALSO zero some interior ticks' Asks++
+    # (any of c+1 .. c+k-2, never c itself, since S(c) defines mcv).
     # As shown in the docstring this can never break S(p) >= mcv, so it's
     # safe; it just means some plateau ticks end up fully dead (both
     # sides zero), which is now an allowed market shape, not a bug.
@@ -151,10 +151,10 @@ def design_order_book_random_tie(n_trades: int, prices: np.ndarray,
         if rng.random() < double_zero_prob:
             asks_vol[i] = 0
 
-    # Randomize surplus magnitude WITHOUT breaking the tie: mcv = S(c) is
+#     Randomize surplus magnitude WITHOUT breaking the tie: mcv = S(c) is
     # independent of bids_vol[c-1] (the baseline-surplus tick just before
     # the plateau), and the ask surplus growth across the plateau is
-    # already controlled by asks_vol[c+1 .. c+k-1] -- jitter those a bit
+    # already controlled by asks_vol[c+1 .. c+k-1], jitter those a bit
     # for variety in how close/far the Phase-2 tie-break looks (only the
     # ticks that weren't just zeroed out above).
     max_jitter = max(floor, int(surplus_jitter_factor * floor))
@@ -171,13 +171,13 @@ def generate_auction_random_tie(n_trades: int, seed: int = None,
                                  price_min: int = 70, price_max: int = 180,
                                  position_jitter: int = 3,
                                  surplus_jitter_factor: float = 2.0):
-    #Like generate_auction.generate_auction(), but with a randomized tie.
+#   Like generate_auction.generate_auction(), but with a randomized tie.
     rng = np.random.default_rng(seed)  # seed=None -> different tie every run
 
-    # One price tick per trade requested, so the order book file ends up
+#     One price tick per trade requested, so the order book file ends up
     # with exactly n_trades rows. The parent script's compute_order_book /
     # explode_volumes both int-cast prices (book['prices'].astype(int),
-    # trade['limit_price'] = int(p)), so ticks must be distinct integers --
+    # trade['limit_price'] = int(p)), so ticks must be distinct integers,
     # a fine float linspace over the fixed [70, 180] span would collapse
     # under that cast once n_trades exceeds the span. Instead, step by 1
     # starting at price_min for exactly n_trades consecutive integer
@@ -208,8 +208,8 @@ def validate_market(trades, book) -> bool:
     print(f"  Ask depth non-decreasing in price    : {'PASS' if ad_mono else 'FAIL'}")
     ok &= bd_mono and ad_mono
 
-    # Fully dead ticks (both sides zero) are now an allowed market shape
-    # (plateau in both D and S simultaneously) -- informational, not a
+#     Fully dead ticks (both sides zero) are now an allowed market shape
+    # (plateau in both D and S simultaneously), informational, not a
     # failure condition.
     both_zero = int(((book['bids_vol'] == 0) & (book['asks_vol'] == 0)).sum())
     n_zero_bid_ticks = int((book['bids_vol'] == 0).sum())

@@ -56,18 +56,18 @@ The bit-decomposition logic is sound and matches the `range` gadget reasoning di
 
 ## 4. Plateau Boundaries (Cliffs)
 
-### 4.1 Endpoint-only plateau pinning: valid, but state the dependency explicitly
+### 4.1 Endpoint-only plateau pinning
 
 Only *because* `Min(X)` is provably unimodal: since `Ask(X)` is range-checked non-negative and `AccA` only ever adds it, `AccA` is forced non-decreasing; symmetrically `AccB` is forced non-increasing. The min of a non-decreasing and a non-increasing curve is single-peaked, so endpoints at $V_{max}$ plus a global ceiling (3) forces the entire interior to also equal $V_{max}$, no dip is possible.
 
 Someone who doesn't reconstruct the unimodality argument will read the endpoint-only check as an unjustified shortcut rather than the (correct) consequence of 1's accumulator monotonicity.
 
-### 4.2 🆕 Missing: explicit decomposition equations for the cliff slacks
+### 4.2 explicit decomposition equations for the cliff slacks
 
 The cliff equations:
 $$V_{cliff,L}(X) = (V_{max}-Min(X)-1-Slack_L(X))\cdot Mask_{c-1}(X) = 0$$
 $$V_{cliff,R}(X) = (V_{max}-Min(X)-1-Slack_R(X))\cdot Mask_{d+1}(X) = 0$$
-"Since Slack must be ≥0 (enforced by bit-checks)", and that bit-check is never actually written down for `Slack_L`/`Slack_R` specifically; only the generic Booleanity constraint ($B_j\cdot(B_j-1)=0$) is listed, with no equation connecting it to these two particular slack variables. Without the *decomposition* equation (not just Booleanity of generic bits), a malicious prover could set $Slack_L$ to a field element that "wraps around" to look non-negative, defeating the entire cliff argument.
+"Since Slack must be ≥0 (enforced by bit-checks)", and that bit-check is not mentioned for `Slack_L`/`Slack_R` specifically; only the generic Booleanity constraint ($B_j\cdot(B_j-1)=0$) is listed, with no equation connecting it to these two particular slack variables. Without the *decomposition* equation (not just Booleanity of generic bits), a malicious prover could set $Slack_L$ to a field element that "wraps around" to look non-negative, defeating the entire cliff argument.
 
 **so (mirroring 3's pattern):**
 $$Slack_L(X) - \sum_{j=0}^{k-1}2^j B^{Slack_L}_j(X) = 0, \qquad Slack_R(X) - \sum_{j=0}^{k-1}2^j B^{Slack_R}_j(X) = 0$$

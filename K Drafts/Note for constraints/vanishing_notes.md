@@ -1,6 +1,6 @@
 
 
-## 1. Accumulator Polynomials — `AccA(X)`, `AccB(X)`
+## 1. Accumulator Polynomials: `AccA(X)`, `AccB(X)`
 
 ### 1.1 Initialization constraints have their target points swapped
 
@@ -20,7 +20,7 @@ This matches PLONKbook's `rotate` gadget pattern directly ($\mathsf{Poly}_{Arr'}
 
 Introducing $\omega^{-1}$ and ends up with a sign error:
 $$V_{Acc\_A,2}(X) = \big(AccA(X) - Ask(X) + AccA(\omega X)\big)\cdot(X-\omega^{n-1}) = 0$$
-Expanding: $AccA(\omega X) = Ask(X) - AccA(X)$, i.e. the supply accumulator would *alternate sign* every tick instead of accumulating. The `AccB` version has the same problem, plus it evaluates `ArrB` at the wrong index. Neither reproduces the data (e.g. `AccA` going $0\to20\to50\to100$ as Ask volumes $0,20,30,50$ are added — a strictly additive recurrence, never alternating).
+Expanding: $AccA(\omega X) = Ask(X) - AccA(X)$, i.e. the supply accumulator would *alternate sign* every tick instead of accumulating. The `AccB` version has the same problem, plus it evaluates `ArrB` at the wrong index. Neither reproduces the data (e.g. `AccA` going $0\to20\to50\to100$ as Ask volumes $0,20,30,50$ are added, a strictly additive recurrence, never alternating).
 
 **so:** dropping the $\omega^{-1}$ re-indexing.
 
@@ -67,7 +67,7 @@ Someone who doesn't reconstruct the unimodality argument will read the endpoint-
 The cliff equations:
 $$V_{cliff,L}(X) = (V_{max}-Min(X)-1-Slack_L(X))\cdot Mask_{c-1}(X) = 0$$
 $$V_{cliff,R}(X) = (V_{max}-Min(X)-1-Slack_R(X))\cdot Mask_{d+1}(X) = 0$$
-"Since Slack must be ≥0 (enforced by bit-checks)", and that bit-check is never actually written down for `Slack_L`/`Slack_R` specifically; only the generic Booleanity constraint ($B_j\cdot(B_j-1)=0$) is listed, with no equation connecting it to these two particular slack variables. Without the *decomposition* equation (not just Booleanity of generic bits), a malicious prover could set $Slack_L$ to a field element that "wraps around" to look non-negative — defeating the entire cliff argument.
+"Since Slack must be ≥0 (enforced by bit-checks)", and that bit-check is never actually written down for `Slack_L`/`Slack_R` specifically; only the generic Booleanity constraint ($B_j\cdot(B_j-1)=0$) is listed, with no equation connecting it to these two particular slack variables. Without the *decomposition* equation (not just Booleanity of generic bits), a malicious prover could set $Slack_L$ to a field element that "wraps around" to look non-negative, defeating the entire cliff argument.
 
 **so (mirroring 3's pattern):**
 $$Slack_L(X) - \sum_{j=0}^{k-1}2^j B^{Slack_L}_j(X) = 0, \qquad Slack_R(X) - \sum_{j=0}^{k-1}2^j B^{Slack_R}_j(X) = 0$$
@@ -76,24 +76,21 @@ each paired with Booleanity on $B^{Slack_L}_j$, $B^{Slack_R}_j$.
 ---
 
 ## 5. Surplus and Tie-Breaking
-### 5.1 Naming collision: two different things are both called "Surplus"
 
-- 'surplusB = DepthB − Min', 'surplusA = DepthA − Min' — these are the **leftover volume on each side at the clearing price**, used for Phase-3 pro-rata rationing of the long side. These are exactly $K(X), L(X)$ from 2.1 above.
-- `Surplus(X) := AccA(X) − AccB(X)` — the **net imbalance between the two sides**, used for the Phase-2 tie-break.
+- 'surplusB = DepthB − Min', 'surplusA = DepthA − Min', these are the **leftover volume on each side at the clearing price**, used for Phase-3 pro-rata rationing of the long side. These are exactly $K(X), L(X)$ from 2.1 above.
+- `Surplus(X) := AccA(X) − AccB(X)`, the **net imbalance between the two sides**, used for the Phase-2 tie-break.
 
-These are conceptually different quantities reused under the same name. Renaming for clarity: keeping **`SurpA(X)`/`SurpB(X)`** exclusively for the pro-rata leftover quantities ($K$/$L$), and using **`Delta(X)`** exclusively for the tie-break imbalance — which also matches the literal `Delta (Δ)` column header already used in the example table.
-
-### 5.2 Sign convention
+These are conceptually different quantities reused under the same name. Renaming for clarity: keeping **`SurpA(X)`/`SurpB(X)`** exclusively for the pro-rata leftover quantities ($K$/$L$), and using **`Delta(X)`** exclusively for the tie-break imbalance, which also matches the literal `Delta (Δ)` column header already used in the example table.
 
 The *sign* of the imbalance is what Phase 3 uses to decide which side is short and which is long (and therefore which side's IO orders are eligible). If this feeds into IO-eligibility logic downstream, the flipped sign would route IO orders to the wrong side. ($Delta(X) := AccB(X) - AccA(X)$).
 
 ### 5.3 The signed imbalance can't be bit-decomposed directly
 
-Both `Vflr` and the "Valley Proof" (`Vsurp`) bit-decompose `Surplus(X)` directly. But `Surplus(X) = AccA(X)-AccB(X)` is a **signed** quantity — within the plateau it's typically positive on one side of the true clearing price and negative on the other (it crosses zero exactly where the tie-break should land). Bit-decomposition only proves a value is non-negative and bounded; applying it directly to a value that's legitimately negative at some valid points will make the proof **fail at those points even though the auctioneer is being honest**, the same modular-wraparound problem the "Half-Field Equator" logic was built to avoid for the raw order columns, just re-introduced here for the tie-break column.
+Both `Vflr` and the "Valley Proof" (`Vsurp`) bit-decompose `Surplus(X)` directly. But `Surplus(X) = AccA(X)-AccB(X)` is a **signed** quantity, within the plateau it's typically positive on one side of the true clearing price and negative on the other (it crosses zero exactly where the tie-break should land). Bit-decomposition only proves a value is non-negative and bounded; applying it directly to a value that's legitimately negative at some valid points will make the proof **fail at those points even though the auctioneer is being honest**, the same modular-wraparound problem the "Half-Field Equator" logic was built to avoid for the raw order columns, just re-introduced here for the tie-break column.
 
 So: In example tables, the column `Delta` is **not** `AccA − AccB`, it's `Bid Surplus + Ask Surplus`. Checking the numbers (`Plateau necessity...md`, price 90: $SurpB=300, SurpA=0$, Delta listed = $300$; price 100: $SurpB=0,SurpA=700$, Delta listed = $700$) confirms:
 $$Delta(X) = SurpB(X) + SurpA(X) = K(X)+L(X) = |AccA(X)-AccB(X)|$$
-This is automatically non-negative — because exactly one of $K,L$ is zero at every tick (proven already by $V_{KL}$ in 2) and the other equals the true absolute gap, with **no extra sign-bit or range-check machinery needed beyond what 2.1 already adds.**
+This is automatically non-negative, because exactly one of $K,L$ is zero at every tick (proven already by $V_{KL}$ in 2) and the other equals the true absolute gap, with **no extra sign-bit or range-check machinery needed beyond what 2.1 already adds.**
 
 **so:**
 $$V_{Delta,def}(X) := Delta(X) - \big(SurpA(X)+SurpB(X)\big) = 0$$

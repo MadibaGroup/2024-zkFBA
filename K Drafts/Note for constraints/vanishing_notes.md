@@ -4,7 +4,7 @@
 
 ### 1.1 Initialization constraints have their target points swapped
 
-The factor $Z_H(X)/(X-\omega^j)$ vanishes at **every** domain point *except* $\omega^j$, it is PLONKbook's "Zero all but first/last" pattern (`zero1`: $P(X)\cdot Z_H(X)/(X-\omega^0)$ forces equality only at $\omega^0$; $P(X)\cdot Z_H(X)/(X-\omega^{n-1})$ forces it only at $\omega^{n-1}$). So as written, the *Supply* equation only constrains index $n-1$ (the **highest** tick), and the *Demand* equation only constrains index $0$ (the **lowest** tick), exactly backwards from what the prose says, and from what the data requires: in example tables, `AskDepth` at price-index 0 equals the ask volume at that tick (price 0, Ask=0, AskDepth=0), and `BidDepth` at the *highest* tick equals the bid volume there.
+The factor $Z_H(X)/(X-\omega^j)$ vanishes at **every** domain point *except* $\omega^j$, it is "Zero all but first/last" pattern (`zero1`: $P(X)\cdot Z_H(X)/(X-\omega^0)$ forces equality only at $\omega^0$; $P(X)\cdot Z_H(X)/(X-\omega^{n-1})$ forces it only at $\omega^{n-1}$). So the *Supply* equation only constrains index $n-1$ (the **highest** tick), and the *Demand* equation only constrains index $0$ (the **lowest** tick), exactly backwards: in the dummie example, `AskDepth` at price-index 0 equals the ask volume at that tick (price 0, Ask=0, AskDepth=0), and `BidDepth` at the *highest* tick equals the bid volume there.
 
 This same swap (`VAccA,I` uses $\omega^{n-1}$, `VAccB,I` uses $\omega^0$), it's been carried forward consistently.
 
@@ -16,9 +16,9 @@ $$V_{AccB,init}(X) := (AccB(X) - Bid(X)) \cdot \frac{Z_H(X)}{X-\omega^{n-1}} = 0
 
 $$V_{AccA}(X) := (X-\omega^{n-1})\cdot\big[AccA(\omega X) - AccA(X) - Ask(X)\big] = 0$$
 $$V_{AccB}(X) := (X-\omega^{n-1})\cdot\big[AccB(X) - AccB(\omega X) - Bid(X)\big] = 0$$
-This matches PLONKbook's `rotate` gadget pattern directly ($\mathsf{Poly}_{Arr'}(X) = \mathsf{Poly}_{Arr}(X\omega)$, no need to invoke $\omega^{-1}$), and the disabling factor $(X-\omega^{n-1})$ correctly turns the constraint off only at the wrap-around point, per `zero1`.
+This matches `rotate` gadget pattern directly ($\mathsf{Poly}_{Arr'}(X) = \mathsf{Poly}_{Arr}(X\omega)$, no need to invoke $\omega^{-1}$), and the disabling factor $(X-\omega^{n-1})$ correctly turns the constraint off only at the wrap-around point, per `zero1`.
 
-Introducing $\omega^{-1}$ and ends up with a sign error:
+Introducing $\omega^{-1}$:
 $$V_{Acc\_A,2}(X) = \big(AccA(X) - Ask(X) + AccA(\omega X)\big)\cdot(X-\omega^{n-1}) = 0$$
 Expanding: $AccA(\omega X) = Ask(X) - AccA(X)$, i.e. the supply accumulator would *alternate sign* every tick instead of accumulating. The `AccB` version has the same problem, plus it evaluates `ArrB` at the wrong index. Neither reproduces the data (e.g. `AccA` going $0\to20\to50\to100$ as Ask volumes $0,20,30,50$ are added, a strictly additive recurrence, never alternating).
 
@@ -28,11 +28,11 @@ Expanding: $AccA(\omega X) = Ask(X) - AccA(X)$, i.e. the supply accumulator woul
 
 ## 2. Minimum Selection, `Min(X)`
 
-### 2.1 Mutual Exclusivity
+### Mutual Exclusivity
 
-$$V_{KL}(X) = (AccA(X)-Min(X))\cdot(AccB(X)-Min(X)) = 0$$
+$$V_{KL}(X) = (AccA(X)-Min(X))\cdot(AccB(X)-Min(X)) = 0$$ [Note: checking the KL notation]
 
-This only proves $Min(X)$ equals **one** of the two sides, it says nothing about which one, or whether it's the *smaller* one. A dishonest auctioneer could set $Min(X)=AccA(X)$ at a tick where $AccB(X) < AccA(X)$: the product is still zero, the proof still passes, and the reported trade volume is now *larger than the demand actually available*, precisely the "inventing shares" attack the documents say this constraint is meant to prevent.
+This only proves $Min(X)$ equals **one** of the two sides, it says nothing about which one, or whether it's the *smaller* one. A dishonest auctioneer could set $Min(X)=AccA(X)$ at a tick where $AccB(X) < AccA(X)$: the product is still zero, the proof still passes, and the reported trade volume is now *larger than the demand actually available*, precisely the "inventing shares" attack this constraint is meant to prevent.
 
 This exact uncertainty without resolving it (*"checked in our vanishing polynomial OR is it possible for it to even become a negative number?"* / *"If we correctly prove that Constraint B holds, we have indirectly proven that Constraint A is also true"*, this second claim is the gap; B does **not** imply A). Everything downstream (ceiling, plateau, cliffs, tie-break) is computed from `Min(X)`.
 
@@ -58,7 +58,7 @@ The bit-decomposition logic is sound and matches the `range` gadget reasoning di
 
 ### 4.1 Endpoint-only plateau pinning
 
-Only *because* `Min(X)` is provably unimodal: since `Ask(X)` is range-checked non-negative and `AccA` only ever adds it, `AccA` is forced non-decreasing; symmetrically `AccB` is forced non-increasing. The min of a non-decreasing and a non-increasing curve is single-peaked, so endpoints at $V_{max}$ plus a global ceiling (3) forces the entire interior to also equal $V_{max}$, no dip is possible.
+Only *because* `Min(X)` is provably unimodal: since `Ask(X)` is range-checked non-negative and `AccA` only ever adds it, `AccA` is forced non-decreasing; symmetrically, `AccB` is forced non-increasing. The min of a non-decreasing and a non-increasing curve is single-peaked, so endpoints at $V_{max}$ plus a global ceiling (3) force the entire interior to also equal $V_{max}$, no dip is possible.
 
 Someone who doesn't reconstruct the unimodality argument will read the endpoint-only check as an unjustified shortcut rather than the (correct) consequence of 1's accumulator monotonicity.
 
@@ -67,7 +67,7 @@ Someone who doesn't reconstruct the unimodality argument will read the endpoint-
 The cliff equations:
 $$V_{cliff,L}(X) = (V_{max}-Min(X)-1-Slack_L(X))\cdot Mask_{c-1}(X) = 0$$
 $$V_{cliff,R}(X) = (V_{max}-Min(X)-1-Slack_R(X))\cdot Mask_{d+1}(X) = 0$$
-"Since Slack must be ≥0 (enforced by bit-checks)", and that bit-check is not mentioned for `Slack_L`/`Slack_R` specifically; only the generic Booleanity constraint ($B_j\cdot(B_j-1)=0$) is listed, with no equation connecting it to these two particular slack variables. Without the *decomposition* equation (not just Booleanity of generic bits), a malicious prover could set $Slack_L$ to a field element that "wraps around" to look non-negative, defeating the entire cliff argument.
+"Since Slack must be ≥0 (enforced by bit-checks)", a malicious prover could set $Slack_L$ to a field element that "wraps around" to look non-negative, defeating the entire cliff argument.
 
 **so (mirroring 3's pattern):**
 $$Slack_L(X) - \sum_{j=0}^{k-1}2^j B^{Slack_L}_j(X) = 0, \qquad Slack_R(X) - \sum_{j=0}^{k-1}2^j B^{Slack_R}_j(X) = 0$$
@@ -80,17 +80,17 @@ each paired with Booleanity on $B^{Slack_L}_j$, $B^{Slack_R}_j$.
 - 'surplusB = DepthB − Min', 'surplusA = DepthA − Min', these are the **leftover volume on each side at the clearing price**, used for Phase-3 pro-rata rationing of the long side. These are exactly $K(X), L(X)$ from 2.1 above.
 - `Surplus(X) := AccA(X) − AccB(X)`, the **net imbalance between the two sides**, used for the Phase-2 tie-break.
 
-These are conceptually different quantities reused under the same name. Renaming for clarity: keeping **`SurpA(X)`/`SurpB(X)`** exclusively for the pro-rata leftover quantities ($K$/$L$), and using **`Delta(X)`** exclusively for the tie-break imbalance, which also matches the literal `Delta (Δ)` column header already used in the example table.
+These are conceptually different quantities reused under the same name. **`SurpA(X)`/`SurpB(X)`** are exclusively for the pro-rata leftover quantities ($K$/$L$), and using **`Delta(X)`** exclusively for the tie-break imbalance, which also matches the literal `Delta (Δ)` column header already used in our dummie example.
 
 The *sign* of the imbalance is what Phase 3 uses to decide which side is short and which is long (and therefore which side's IO orders are eligible). If this feeds into IO-eligibility logic downstream, the flipped sign would route IO orders to the wrong side. ($Delta(X) := AccB(X) - AccA(X)$).
 
-### 5.3 The signed imbalance can't be bit-decomposed directly
+### 5.1 The signed imbalance can't be bit-decomposed directly
 
 Both `Vflr` and the "Valley Proof" (`Vsurp`) bit-decompose `Surplus(X)` directly. But `Surplus(X) = AccA(X)-AccB(X)` is a **signed** quantity, within the plateau it's typically positive on one side of the true clearing price and negative on the other (it crosses zero exactly where the tie-break should land). Bit-decomposition only proves a value is non-negative and bounded; applying it directly to a value that's legitimately negative at some valid points will make the proof **fail at those points even though the auctioneer is being honest**, the same modular-wraparound problem the "Half-Field Equator" logic was built to avoid for the raw order columns, just re-introduced here for the tie-break column.
 
-So: In example tables, the column `Delta` is **not** `AccA − AccB`, it's `Bid Surplus + Ask Surplus`. Checking the numbers (`Plateau necessity...md`, price 90: $SurpB=300, SurpA=0$, Delta listed = $300$; price 100: $SurpB=0,SurpA=700$, Delta listed = $700$) confirms:
+So: In dummie example, the column `Delta` is **not** `AccA − AccB`, it's `Bid Surplus + Ask Surplus`. Checking the numbers confirms:
 $$Delta(X) = SurpB(X) + SurpA(X) = K(X)+L(X) = |AccA(X)-AccB(X)|$$
-This is automatically non-negative, because exactly one of $K,L$ is zero at every tick (proven already by $V_{KL}$ in 2) and the other equals the true absolute gap, with **no extra sign-bit or range-check machinery needed beyond what 2.1 already adds.**
+This is automatically non-negative, because exactly one of $K,L$ is zero at every tick (proven already by $V_{KL}$ in 2) and the other equals the true absolute gap, with **no extra sign-bit or range-check machinery needed beyond what 2 already adds.**
 
 **so:**
 $$V_{Delta,def}(X) := Delta(X) - \big(SurpA(X)+SurpB(X)\big) = 0$$
@@ -108,7 +108,7 @@ plus the transition equation. PLONKbook's own Plookup specification requires **b
 $$\mathsf{Poly}_Z(\omega^0) = \mathsf{Poly}_Z(\omega^{\kappa-1}) = 1$$
 enforced together via $[\mathsf{Poly}_Z(X)-1]\cdot Z_H(X)/\big((X-\omega^0)(X-\omega^{\kappa-1})\big) = 0$. Without the end condition, the grand product is never checked to actually complete a full, consistent pass through the sorted multiset, a prover could get the start right and still cheat partway through. It should be promoted from comment to constraint:
 
-**so: adding, for every Plookup-style check in the protocol (raw-input equator check, and the surplus-membership lookup if we keep that variant instead of the bit-decomposition version in 5.3):**
+**so: adding, for every Plookup-style check in the protocol (raw-input equator check, and the surplus-membership lookup if we keep that variant instead of the bit-decomposition version in 5):**
 $$L_n(X)\cdot(Z(X) - 1) = 0$$
 (target value is **1**, matching the start condition, not a generic "Target", which PLONKbook leaves undefined only because the basic, non-halo2 Plookup variant always closes back to 1.)
 
@@ -154,6 +154,6 @@ $$L_1(X)(Z(X)-1)=0 \qquad L_n(X)(Z(X)-1)=0 \qquad \text{(+ transition equation)}
 
 ## 9. Open items?
 
-- **Bit-width $k$ for the new decomposition equations** (2.1, 4.2, 5.3), should match whatever $k$ already fixed for `Vceiling`, since all are bounding quantities of the same order of magnitude (order sizes / depths).
+- **Bit-width $k$ for the new decomposition equations** (2, 4.2, 5.1), should match whatever $k$ already fixed for `Vceiling`, since all are bounding quantities of the same order of magnitude (order sizes / depths).
 - **Range-check style consistency**: the protocol currently mixes bit-decomposition (ceiling/floor) with Plookup-table lookups (raw-input equator check). Both are individually sound (validated against PLONKbook's `range` and `lookup2` gadgets respectively): whether to standardize on one for the whole protocol is a cost/clarity tradeoff, not a bug.
 - restricting the tie-break search to $p\in[c,d]$ only

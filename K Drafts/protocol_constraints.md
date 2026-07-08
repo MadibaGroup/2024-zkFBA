@@ -168,7 +168,7 @@ LHS contributes a neutral factor $\gamma$ for each 0-entry and a position-encodi
 | Proving key dependency | Yes, $\sigma$ hardcoded at setup | None |
 | What it proves | Position-exact correspondence | Multiset equality |
 
-Since $c$ and $d$ are publicly disclosed, the cleanest design keeps $Mask_P(X)$ as a verifier-computable public polynomial,  a sum of public Lagrange basis polynomials $\sum_{i=c}^{d} L_i(X)$,  requiring no commitment and no position argument. Either approach is valid if the mask is treated as a committed witness.
+Since $c$ and $d$ are publicly disclosed, the cleanest design keeps $Mask_P(X)$ as a verifier-computable public polynomial,  a sum of public Lagrange basis polynomials $\sum_{i=c}^{d} L_i(X)$,  requiring no commitment and no position argument. Either approach is valid if the mask is treated as a committed witness (the cleanest design of all is keeping masks public and verifier-computable entirely, skipping both arguments).
 
 **Plateau endpoint pins.** Once $Mask_P$ is established, the endpoints of the plateau are pinned by confirming $Min$ equals $V_{max}$ at $\omega^c$ and $\omega^d$:
 

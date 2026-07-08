@@ -4,7 +4,7 @@
 
 ## A Note on Column Order
 
-This document follows the left-to-right column order of our dummy example, easier for editing purposes. The trade-off is that some constraints on a given column reference polynomials that are formally introduced later,  specifically, the non-negativity proofs that complete the $Min(X)$ correctness argument appear in the Bid/Ask Surplus sections rather than next to $Min(X)$ itself. Those forward references are flagged inline.
+Here we follow the left-to-right column order of our dummy example, easier for editing purposes. The trade-off is that some constraints on a given column reference polynomials that are formally introduced later, specifically the non-negativity proofs that complete the $Min(X)$ correctness argument appear in the Bid/Ask Surplus sections rather than next to $Min(X)$ itself. Those forward references are flagged inline.
 
 ---
 
@@ -23,7 +23,7 @@ The public scalars disclosed as part of the clearing receipt are:
 - $c, d$: first and last tick indices of the plateau
 - $p^*$: the clearing price tick index
 
-**Column-to-polynomial-to-commitment table (in spreadsheet column order):**
+**Column array-to-polynomial-to-commitment table:**
 
 | Spreadsheet column | Role | Polynomial | Commitment |
 |---|---|---|---|
@@ -46,7 +46,7 @@ The public scalars disclosed as part of the clearing receipt are:
 | 1 (cliff point indicator) | Single-point Lagrange mask | $L_{c-1}(X)$, $L_{d+1}(X)$ | public |
 | Slack++ | Slack absorbing the cliff gap | $Slack_L(X)$, $Slack_R(X)$ | $\mathsf{cm}[Slack_L]$, $\mathsf{cm}[Slack_R]$ |
 
-Bit-decomposition witness columns $B_j(X)$ are introduced implicitly wherever a range proof is needed; each has commitment $\mathsf{cm}[B_j]$.
+Bit-decomposition witness columns $B_j(X)$ are introduced implicitly wherever a range proof is needed, each has commitment $\mathsf{cm}[B_j]$.
 
 ---
 
@@ -80,7 +80,7 @@ The first and third equations are boundary conditions: the grand product must op
 
 ---
 
-## 3. Bids++ and Asks++,  $B(X)$ and $A(X)$
+## 3. Bids++ and Asks++, $B(X)$ and $A(X)$
 
 These are the private raw inputs: how many shares were bid or offered at exactly each price tick, before any accumulation.
 
@@ -90,7 +90,7 @@ Catching bad inputs at this stage prevents all downstream columns from inheritin
 
 ---
 
-## 4. Bid Depth and Ask Depth,  $AccB(X)$ and $AccA(X)$
+## 4. Bid Depth and Ask Depth, $AccB(X)$ and $AccA(X)$
 
 $AccB(X)$ is the cumulative demand at each tick: the total volume willing to buy at that price or higher. It is built by summing bid volumes downward from the highest price tick.
 

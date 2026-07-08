@@ -1,12 +1,10 @@
-# Zeequent zk-FBA -- Constraint Specification and Intuition
+# Constraint Specification and Intuition
 
 ---
 
 ## A Note on Column Order
 
-This document follows the left-to-right column order of the protocol spreadsheet (columns.png), so every section maps directly to a column you can find and edit. The trade-off is that some constraints on a given column reference polynomials that are formally introduced later -- specifically, the non-negativity proofs that complete the $Min(X)$ correctness argument appear in the Bid/Ask Surplus sections rather than next to $Min(X)$ itself. Those forward references are flagged inline.
-
-The alternative -- a dependency-first ordering -- groups all constraints on $Min(X)$ together, which makes the proof logic self-contained per section but no longer mirrors the spreadsheet. Both orderings are valid; this document chooses spreadsheet order for ease of editing.
+This document follows the left-to-right column order of our dummy example, easier for editing purposes. The trade-off is that some constraints on a given column reference polynomials that are formally introduced later,  specifically, the non-negativity proofs that complete the $Min(X)$ correctness argument appear in the Bid/Ask Surplus sections rather than next to $Min(X)$ itself. Those forward references are flagged inline.
 
 ---
 
@@ -43,8 +41,8 @@ The public scalars disclosed as part of the clearing receipt are:
 | Selector (valley) | 1 at $p^*$, 0 otherwise | $Mask_V(X)$ | $\mathsf{cm}[Mask_V]$ or public |
 | S*Delta in {0, surplus} | Valley-masked imbalance | $SD(X)$ | $\mathsf{cm}[SD]$ |
 | Selector (cliff) | 1 at $c-1$ and $d+1$, 0 elsewhere | $Mask_C(X)$ | $\mathsf{cm}[Mask_C]$ |
-| MCV (constant column) | $V_{max}$ at every tick | public scalar | -- |
-| Cliff value | $Min$ opened at cliff ticks | KZG opening of $Min(X)$ | -- |
+| MCV (constant column) | $V_{max}$ at every tick | public scalar | - |
+| Cliff value | $Min$ opened at cliff ticks | KZG opening of $Min(X)$ | - |
 | 1 (cliff point indicator) | Single-point Lagrange mask | $L_{c-1}(X)$, $L_{d+1}(X)$ | public |
 | Slack++ | Slack absorbing the cliff gap | $Slack_L(X)$, $Slack_R(X)$ | $\mathsf{cm}[Slack_L]$, $\mathsf{cm}[Slack_R]$ |
 
@@ -78,11 +76,11 @@ $$(X - \omega^{n-1}) \cdot \big[Z(\omega X)(\gamma + s(X) + \beta s(\omega X)) -
 
 $$L_n(X) \cdot (Z(X) - 1) = 0$$
 
-The first and third equations are boundary conditions: the grand product must open at 1 at both the start and the end of the domain. The middle equation is the membership check traversing every tick. Both boundary conditions are required -- without the end condition, a prover could satisfy the start and then quietly substitute values outside the table partway through without detection.
+The first and third equations are boundary conditions: the grand product must open at 1 at both the start and the end of the domain. The middle equation is the membership check traversing every tick. Both boundary conditions are required,  without the end condition, a prover could satisfy the start and then quietly substitute values outside the table partway through without detection.
 
 ---
 
-## 3. Bids++ and Asks++ -- $B(X)$ and $A(X)$
+## 3. Bids++ and Asks++,  $B(X)$ and $A(X)$
 
 These are the private raw inputs: how many shares were bid or offered at exactly each price tick, before any accumulation.
 
@@ -92,7 +90,7 @@ Catching bad inputs at this stage prevents all downstream columns from inheritin
 
 ---
 
-## 4. Bid Depth and Ask Depth -- $AccB(X)$ and $AccA(X)$
+## 4. Bid Depth and Ask Depth,  $AccB(X)$ and $AccA(X)$
 
 $AccB(X)$ is the cumulative demand at each tick: the total volume willing to buy at that price or higher. It is built by summing bid volumes downward from the highest price tick.
 
@@ -108,7 +106,7 @@ The supply accumulator starts at the lowest tick:
 
 $$\big(AccA(X) - A(X)\big) \cdot \frac{Z_H(X)}{X - \omega^0} = 0$$
 
-The factor $Z_H(X)/(X - \omega^j)$ is zero at every domain point except $\omega^j$, so each equation pins exactly one absolute value -- the base case of the accumulator. Without this anchor, a shifted accumulator would look internally consistent (all relative increments correct) yet report the wrong totals everywhere.
+The factor $Z_H(X)/(X - \omega^j)$ is zero at every domain point except $\omega^j$, so each equation pins exactly one absolute value,  the base case of the accumulator. Without this anchor, a shifted accumulator would look internally consistent (all relative increments correct) yet report the wrong totals everywhere.
 
 **Transition.**
 
@@ -126,25 +124,25 @@ These transitions have a structural consequence used later: $AccB(X)$ is forced 
 
 ---
 
-## 5. Min(Bid,Ask) -- $Min(X)$
+## 5. Min(Bid,Ask),  $Min(X)$
 
-$Min(X)$ is the executable volume at each tick: the smaller of cumulative supply and demand. It is the most important intermediate column -- the plateau, cliffs, surplus, and tie-break all derive from it.
+$Min(X)$ is the executable volume at each tick: the smaller of cumulative supply and demand. It is the most important intermediate column,  the plateau, cliffs, surplus, and tie-break all derive from it.
 
 **Mutual exclusivity.** $Min(X)$ must equal one of the two accumulators at every tick:
 
 $$\big(AccA(X) - Min(X)\big) \cdot \big(AccB(X) - Min(X)\big) = 0$$
 
-This product is zero exactly when $Min = AccA$ or $Min = AccB$. On its own it does not force the smaller side to be chosen -- it would accept $Min = AccA$ even when $AccA > AccB$. The surplus non-negativity constraints in Section 9 close that gap; see the note there.
+This product is zero exactly when $Min = AccA$ or $Min = AccB$. On its own it does not force the smaller side to be chosen,  it would accept $Min = AccA$ even when $AccA > AccB$. The surplus non-negativity constraints in Section 9 close that gap; see the note there.
 
 **Global max ceiling.** The publicly disclosed $V_{max}$ must be an upper bound on $Min(X)$ everywhere in the book:
 
 $$(V_{max} - Min(X)) - \sum_{j=0}^{k-1} 2^j B^{ceil}_j(X) = 0$$
 
-If any tick had $Min(X) > V_{max}$, the expression $V_{max} - Min(X)$ would be negative -- a large field element near $q$ -- which cannot be expressed as a sum of $k$ bits. This prevents the auctioneer from understating $V_{max}$ to exclude legitimate plateau ticks from the clearing interval.
+If any tick had $Min(X) > V_{max}$, the expression $V_{max} - Min(X)$ would be negative,  a large field element near $q$,  which cannot be expressed as a sum of $k$ bits. This prevents the auctioneer from understating $V_{max}$ to exclude legitimate plateau ticks from the clearing interval.
 
 ---
 
-## 6. Plateau Selector -- $Mask_P(X)$
+## 6. Plateau Selector,  $Mask_P(X)$
 
 $Mask_P(X)$ is 1 at every tick inside the plateau $[c, d]$ and 0 everywhere else. It gates all plateau-specific constraints, restricting them to the clearing interval.
 
@@ -154,9 +152,9 @@ $$Mask_P(X) \cdot (Mask_P(X) - 1) = 0$$
 
 **Position well-formedness.** Booleanity alone does not constrain which ticks are marked. Two methods are available for proving the 1s fall exactly at positions $c$ through $d$.
 
-*Option A -- Permutation argument.* PLONK's copy-constraint mechanism proves that the multiset of positions where $Mask_P = 1$ is an exact rearrangement of the public set $\{c, c+1, \ldots, d\}$. A permutation $\sigma$ is hardcoded into the proving key, and a grand product argument checks consistency. This reuses standard PLONK infrastructure but requires the permutation to be fixed at setup time.
+*Option A,  Permutation argument.* PLONK's copy-constraint mechanism proves that the multiset of positions where $Mask_P = 1$ is an exact rearrangement of the public set $\{c, c+1, \ldots, d\}$. A permutation $\sigma$ is hardcoded into the proving key, and a grand product argument checks consistency. This reuses standard PLONK infrastructure but requires the permutation to be fixed at setup time.
 
-*Option B -- Shuffle argument (Habock 2022).* Using a random verifier challenge $\gamma$, two compressed products are computed:
+*Option B,  Shuffle argument (Habock 2022).* Using a random verifier challenge $\gamma$, two compressed products are computed:
 
 $$\mathrm{LHS} = \prod_{i=0}^{n-1} \big[(1 - Mask_P(\omega^i)) \cdot \gamma + Mask_P(\omega^i) \cdot (\omega^i + \gamma)\big]$$
 
@@ -170,7 +168,7 @@ LHS contributes a neutral factor $\gamma$ for each 0-entry and a position-encodi
 | Proving key dependency | Yes, $\sigma$ hardcoded at setup | None |
 | What it proves | Position-exact correspondence | Multiset equality |
 
-Since $c$ and $d$ are publicly disclosed, the cleanest design keeps $Mask_P(X)$ as a verifier-computable public polynomial -- a sum of public Lagrange basis polynomials $\sum_{i=c}^{d} L_i(X)$ -- requiring no commitment and no position argument. Either approach is valid if the mask is treated as a committed witness.
+Since $c$ and $d$ are publicly disclosed, the cleanest design keeps $Mask_P(X)$ as a verifier-computable public polynomial,  a sum of public Lagrange basis polynomials $\sum_{i=c}^{d} L_i(X)$,  requiring no commitment and no position argument. Either approach is valid if the mask is treated as a committed witness.
 
 **Plateau endpoint pins.** Once $Mask_P$ is established, the endpoints of the plateau are pinned by confirming $Min$ equals $V_{max}$ at $\omega^c$ and $\omega^d$:
 
@@ -182,7 +180,7 @@ where $L_c(X)$ and $L_d(X)$ are the public Lagrange basis polynomials at those t
 
 ---
 
-## 7. In {0, MCV} -- $InMCV(X)$
+## 7. In {0, MCV},  $InMCV(X)$
 
 $InMCV(X)$ is $V_{max}$ inside the plateau and 0 outside. It encodes "what $Min$ must equal at plateau positions" in polynomial form so it can appear in product constraints alongside $Mask_P$.
 
@@ -200,9 +198,9 @@ $$InMCV(X) \cdot (InMCV(X) - V_{max}) = 0$$
 
 ---
 
-## 8. Bid Surplus++ and Ask Surplus++ -- $SurpB(X)$ and $SurpA(X)$
+## 8. Bid Surplus++ and Ask Surplus++,  $SurpB(X)$ and $SurpA(X)$
 
-$SurpB(X) = AccB(X) - Min(X)$ is the demand leftover -- volume that wanted to buy at this price but found no matching supply. $SurpA(X) = AccA(X) - Min(X)$ is the supply leftover.
+$SurpB(X) = AccB(X) - Min(X)$ is the demand leftover,  volume that wanted to buy at this price but found no matching supply. $SurpA(X) = AccA(X) - Min(X)$ is the supply leftover.
 
 At any tick, exactly one surplus is zero (the side that was the binding constraint on trade volume) and the other captures the excess. These columns serve two roles: they complete the proof that $Min$ is the true minimum (below), and they feed the Phase 3 pro-rata rationing calculation at $p^*$.
 
@@ -214,11 +212,11 @@ $$SurpA(X) - \sum_{j=0}^{k-1} 2^j B^{sA}_j(X) = 0$$
 
 Both surplus columns are bit-decomposed, proving they are non-negative at every tick.
 
-**Completing the Min proof.** Recall from Section 5 that mutual exclusivity only proves $Min$ equals one of the two accumulators, not the smaller one. The bit-decompositions here close that gap: if the auctioneer set $Min = AccA$ at a tick where $AccA > AccB$, then $SurpB = AccB - AccA$ would be a true negative number -- an enormous field element near $q$ -- which cannot be expressed as a sum of $k$ bits. The proof would fail at exactly that tick. Together, mutual exclusivity plus non-negativity on both sides uniquely forces $Min(X) = \min(AccA(X), AccB(X))$ at every tick.
+**Completing the Min proof.** Recall from Section 5 that mutual exclusivity only proves $Min$ equals one of the two accumulators, not the smaller one. The bit-decompositions here close that gap: if the auctioneer set $Min = AccA$ at a tick where $AccA > AccB$, then $SurpB = AccB - AccA$ would be a true negative number,  an enormous field element near $q$,  which cannot be expressed as a sum of $k$ bits. The proof would fail at exactly that tick. Together, mutual exclusivity plus non-negativity on both sides uniquely forces $Min(X) = \min(AccA(X), AccB(X))$ at every tick.
 
 ---
 
-## 9. Abs(Delta) -- $\Delta(X)$
+## 9. Abs(Delta),  $\Delta(X)$
 
 $\Delta(X)$ is the absolute imbalance at each tick: the total unmatched volume on both sides combined.
 
@@ -228,25 +226,25 @@ Since exactly one of $SurpA$, $SurpB$ is zero at every tick (established by the 
 
 ---
 
-## 10. Check on Delta -- $ChkD(X)$
+## 10. Check on Delta,  $ChkD(X)$
 
-$ChkD(X)$ is 1 at every tick inside the plateau where $\Delta = V_{min\Delta}$ (the minimum imbalance), and 0 elsewhere. In the typical case where the minimum is achieved at multiple consecutive ticks -- a valley plateau -- this column spans all of them.
+$ChkD(X)$ is 1 at every tick inside the plateau where $\Delta = V_{min\Delta}$ (the minimum imbalance), and 0 elsewhere. In the typical case where the minimum is achieved at multiple consecutive ticks,  a valley plateau,  this column spans all of them.
 
 **Booleanity:**
 
 $$ChkD(X) \cdot (ChkD(X) - 1) = 0$$
 
-**Correctness** -- every tick marked by $ChkD$ must have $\Delta = V_{min\Delta}$:
+**Correctness**,  every tick marked by $ChkD$ must have $\Delta = V_{min\Delta}$:
 
 $$\big(\Delta(X) - V_{min\Delta}\big) \cdot ChkD(X) = 0$$
 
-**Containment** -- $ChkD$ cannot fire outside the plateau:
+**Containment**,  $ChkD$ cannot fire outside the plateau:
 
 $$ChkD(X) \cdot (1 - Mask_P(X)) = 0$$
 
 ---
 
-## 11. Valley Selector -- $Mask_V(X)$
+## 11. Valley Selector,  $Mask_V(X)$
 
 $Mask_V(X)$ marks the specific clearing price $p^*$ within the valley. It is 1 at a single tick (or a contiguous range if a tertiary tie-break covers multiple ticks) and 0 everywhere else.
 
@@ -254,7 +252,7 @@ $Mask_V(X)$ marks the specific clearing price $p^*$ within the valley. It is 1 a
 
 $$Mask_V(X) \cdot (Mask_V(X) - 1) = 0$$
 
-**Containment** -- the clearing price must be drawn from within the valley:
+**Containment**,  the clearing price must be drawn from within the valley:
 
 $$Mask_V(X) \cdot (1 - ChkD(X)) = 0$$
 
@@ -262,7 +260,7 @@ $$Mask_V(X) \cdot (1 - ChkD(X)) = 0$$
 
 $$Mask_P(X) \cdot \Big((\Delta(X) - V_{min\Delta}) - \sum_{j=0}^{k-1} 2^j B^{flr}_j(X)\Big) = 0$$
 
-The plateau mask restricts this check to $[c, d]$ -- imbalance outside the plateau is irrelevant to the tie-break. The bit-decomposition proves $\Delta(X) - V_{min\Delta} \geq 0$ at every plateau tick: if any tick had $\Delta < V_{min\Delta}$, the difference would be negative and un-bit-decomposable.
+The plateau mask restricts this check to $[c, d]$,  imbalance outside the plateau is irrelevant to the tie-break. The bit-decomposition proves $\Delta(X) - V_{min\Delta} \geq 0$ at every plateau tick: if any tick had $\Delta < V_{min\Delta}$, the difference would be negative and un-bit-decomposable.
 
 **Valley pin.** The floor proves nothing dips below $V_{min\Delta}$ but does not prove that value is actually reached at the claimed clearing price. This constraint completes the argument:
 
@@ -274,7 +272,7 @@ As with $Mask_P$, the position of the 1-entries in $Mask_V$ can be proved via a 
 
 ---
 
-## 12. S*Delta in {0, surplus} -- $SD(X)$
+## 12. S*Delta in {0, surplus},  $SD(X)$
 
 $SD(X)$ is the product of the valley selector and $\Delta$. It is $V_{min\Delta}$ where $Mask_V$ fires and 0 everywhere else.
 
@@ -282,21 +280,21 @@ $SD(X)$ is the product of the valley selector and $\Delta$. It is $V_{min\Delta}
 
 $$SD(X) - Mask_V(X) \cdot \Delta(X) = 0$$
 
-**Membership** -- $SD$ takes only values in $\{0, V_{min\Delta}\}$:
+**Membership**,  $SD$ takes only values in $\{0, V_{min\Delta}\}$:
 
 $$SD(X) \cdot (SD(X) - V_{min\Delta}) = 0$$
 
 ---
 
-## 13. Cliff Selector and Cliff Mechanism -- $Mask_C(X)$, Cliff Value, $L_{c-1}$/$L_{d+1}$, $Slack_L(X)$/$Slack_R(X)$
+## 13. Cliff Selector and Cliff Mechanism,  $Mask_C(X)$, Cliff Value, $L_{c-1}$/$L_{d+1}$, $Slack_L(X)$/$Slack_R(X)$
 
-This group of columns -- the cliff selector, the constant MCV column, the cliff value, the single-point Lagrange indicators, and the slack -- all belong to the same argument: proving that $[c, d]$ is the entire plateau and not a sub-interval that the auctioneer chose to report.
+This group of columns,  the cliff selector, the constant MCV column, the cliff value, the single-point Lagrange indicators, and the slack,  all belong to the same argument: proving that $[c, d]$ is the entire plateau and not a sub-interval that the auctioneer chose to report.
 
 **What these columns are:**
 
 - $Mask_C(X)$: committed selector, 1 at the two cliff points $c-1$ and $d+1$, 0 elsewhere.
 - MCV constant column: the scalar $V_{max}$ at every tick. This is a public constant; the verifier substitutes it directly and no polynomial commitment is needed.
-- Cliff value column: the openings of $Min(X)$ at the cliff ticks. These are not a separately committed polynomial -- they are scalar evaluations of the already-committed $Min(X)$, revealed in plaintext and tied to $\mathsf{cm}[Min]$ via KZG evaluation proofs.
+- Cliff value column: the openings of $Min(X)$ at the cliff ticks. These are not a separately committed polynomial,  they are scalar evaluations of the already-committed $Min(X)$, revealed in plaintext and tied to $\mathsf{cm}[Min]$ via KZG evaluation proofs.
 - $L_{c-1}(X)$, $L_{d+1}(X)$: public Lagrange basis polynomials at the cliff ticks. Verifier-computable from the disclosed $c$ and $d$.
 - $Slack_L(X)$, $Slack_R(X)$: private witness columns that absorb the gap between the cliff volume and $V_{max} - 1$.
 
@@ -304,7 +302,7 @@ This group of columns -- the cliff selector, the constant MCV column, the cliff 
 
 $$Mask_C(X) \cdot (Mask_C(X) - 1) = 0$$
 
-**Containment** -- cliff ticks must be outside the plateau:
+**Containment**,  cliff ticks must be outside the plateau:
 
 $$Mask_C(X) \cdot Mask_P(X) = 0$$
 
@@ -324,7 +322,7 @@ $$Slack_R(X) - \sum_{j=0}^{k-1} 2^j B^{slkR}_j(X) = 0$$
 
 Without the bit-decomposition, a "negative" slack (a large field element near $q$) could satisfy the cliff equation even when the cliff volume actually equals $V_{max}$, defeating the argument entirely.
 
-Slack bit-width: in the worst case $Slack = V_{max} - 1$, so $k = \lceil \log_2 V_{max} \rceil$ bits suffice -- the same width used for the ceiling in Section 5.
+Slack bit-width: in the worst case $Slack = V_{max} - 1$, so $k = \lceil \log_2 V_{max} \rceil$ bits suffice,  the same width used for the ceiling in Section 5.
 
 ---
 

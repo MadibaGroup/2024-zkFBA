@@ -1,4 +1,4 @@
-# Constraint Specification and Intuition
+# Constraints
 
 ---
 

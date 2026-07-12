@@ -20,6 +20,7 @@ Verification is constant. 12.3 ms -> 13.1 ms -> 12.9 ms. Three different domain 
 Proof size is essentially constant. UltraHonk proof size is determined by the number of wire/permutation polynomials committed (fixed by circuit structure) and a logarithmic number of KZG opening evaluations (proportional to log_2 domain). Going from domain 4,096 to 65,536 adds only four evaluation points, a rounding difference of 0.3 KB.
 
 ## RUST VS NOIR as the N gets bigger:
+
 The Noir prover overtakes Rust at large N. The Rust CSV prover clocks 54 ms at N=100 and 416 ms at N=1000. At N=21, Rust is 3x faster than Noir (31 ms vs 93 ms). By N=1000, Noir (299 ms) beats Rust (416 ms). The reason is the V_KL = (AccA − Min) · (AccB − Min) quotient polynomial in the Rust implementation: computing it requires polynomial multiplication then naive long division (O(domain^2)). At N=1000 the Rust domain is 1,024, and that O(domain^2) term (plus the Layer 4 sanity check at 371 ms alone) dominates. Barretenberg avoids this entirely; UltraHonk's gate structure never forms an explicit product polynomial, the product constraint is encoded as a mul-gate and the quotient is computed by the general-purpose proving engine using a sublinear approach.
 
 All three Noir sizes are practical for batch auction systems. Even N=1000 at 299 ms fits inside any batch interval longer than 300 ms. At the 1-second cadence used by most FBA proposals, the prover is idle 70% of the time at the largest realistic order-book size.

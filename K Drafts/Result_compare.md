@@ -1,11 +1,15 @@
 ### Cross-Size Comparison
 
 
-| Dataset  | n | domain | MCV  | Total |
-| --- | --- | --- |
+| Dataset | n | domain | MCV | Total |
+
+| --- | --- | --- | --- | --- |
+
 | 21-tick hardcoded | 21 | 32 | 5,000 | 31.4 ms |
-| 100-tick log-normal | 100 | 128 | 5,849 | 54.0 ms
-| 1000-tick log-normal | 1000 | 1,024 | 55,940 | 416 ms
+
+| 100-tick log-normal | 100 | 128 | 5,849 | 54.0 ms |
+
+| 1000-tick log-normal | 1000 | 1,024 | 55,940 | 416 ms |
 
 
 

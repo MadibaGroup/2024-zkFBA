@@ -11,7 +11,7 @@
 
 ### Key Observations
 
-**The verifier is O(1) — it doesn't change with n:**
+**The verifier is O(1), it doesn't change with n:**
 
 - Layer 3f (batch_check): always 4 pairings, ~1.9 ms regardless of whether n=21 or n=1000
 

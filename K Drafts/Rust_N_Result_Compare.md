@@ -25,14 +25,14 @@
 
 - Witness commits (5 MSMs): 3.1ms -> 3.5ms -> 6.2ms
 
-- Quotient polynomials (Layer 3c): 0.8ms -> 1ms -> 12ms — V_KL = (AccA−Min)·(AccB−Min) involves polynomial multiplication followed by naive long division: O(domain_size^2)
+- Quotient polynomials (Layer 3c): 0.8ms -> 1ms -> 12ms: V_KL = (AccA−Min)·(AccB−Min) involves polynomial multiplication followed by naive long division: O(domain_size^2)
 
 **The bottleneck is Layer 4 (algebraic constraint check), which is NOT ZK:**
 
-- 4ms -> 31ms -> 371ms — this checks the witness directly by evaluating the polynomial at all n data points (O(n · domain_size) Horner evaluations)
+- 4ms -> 31ms -> 371ms: this checks the witness directly by evaluating the polynomial at all n data points (O(n · domain_size) Horner evaluations)
 
 - In a real deployment, the prover runs Layer 4 as a sanity check only; the verifier never does this
 
 **MCV range proof stays fixed:**
 
-- Layer 3g always proves MCV element of [0, 65536) with a 16-element domain regardless of auction size — the range proof domain is completely decoupled from the FBA domain
+- Layer 3g always proves MCV element of [0, 65536) with a 16-element domain regardless of auction size, the range proof domain is completely decoupled from the FBA domain

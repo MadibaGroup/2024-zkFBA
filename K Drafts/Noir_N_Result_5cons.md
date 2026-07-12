@@ -13,7 +13,7 @@
 
 Gates scale linearly with N, not at the predicted rate. The estimate going in was ~3,281 ACIR opcodes for N=100 -> domain 2^15=32,768. The actual gate count (8,394 -> 2^14) is half that, because the UltraHonk compiler merges C5's product gate, the two subtraction witnesses, and the range checks into shared lookup table rows more efficiently than the per-constraint breakdown suggested. N=1000 also lands one power-of-two lower than predicted (2^16 instead of 2^18).
 
-Proving scales O(n log n) in theory but shows large constant-cost amortization in practice. The domain went 4x for N=100 and 16x for N=1000, yet prove time only went 1.3x and 3.5x. The reason is that bb prove has significant fixed overhead, SRS loading, curve parameter initialization, pairing setup, that dominates at the 4K–16K domain sizes involved here. At these scales, parallelism across 14 threads also absorbs most of the arithmetic growth.
+Proving scales O(n log n) in theory but shows large constant-cost amortization in practice. The domain went 4x for N=100 and 16x for N=1000, yet prove time only went 1.3x and 3.5x. The reason is that bb prove has significant fixed overhead, SRS loading, curve parameter initialization, pairing setup, that dominates at the 4K-16K domain sizes involved here. At these scales, parallelism across 14 threads also absorbs most of the arithmetic growth.
 
 Verification is constant. 12.3 ms -> 13.1 ms -> 12.9 ms. Three different domain sizes, indistinguishable verification times. This is the ZK property in action: the verifier performs the same four BN254 pairings regardless of how many price ticks were in the auction.
 

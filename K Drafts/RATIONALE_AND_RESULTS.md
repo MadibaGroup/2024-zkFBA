@@ -1,10 +1,6 @@
-# zk_fba_csv_full: Rationale, Design, and Benchmark Results
-
-**Kimia Esmaili, Concordia University**
+# Full Comparison: Rationale, Design, and Benchmark Results
 
 ---
-
-## What This Is
 
 A hand-written Rust/arkworks (BN254, KZG10) implementation of the Frequent
 Batch Auction (FBA) clearing-price zero-knowledge protocol specified in
@@ -422,8 +418,7 @@ Honk permutation argument, not because Rust is doing more work per byte.
 | Constraint coverage per proof | 26 of 32 cryptographically bound today | All 33, in one proof | Noir (soundness), n/a for speed |
 | Proof size | Smaller today, but proving less | Larger, but proving everything | depends on what "smaller" should mean here |
 
-The core lesson lines up with what `NOIR_SCALING_ANALYSIS.md` already
-concluded for the earlier version of this code, and with the broader point
+The core lesson lines up with the broader point
 made in Wahby et al. [2018] about doubly-efficient SNARKs: a hand-rolled,
 custom-arithmetized prover can absolutely win on constant factors at small
 to medium N, especially when it's proving a narrower slice of the problem
@@ -458,28 +453,6 @@ checking everything it claims to check.
 - **`Cargo.toml`/`Cargo.lock`**, arkworks 0.4.x pinning plus the MadibaGroup
   `gadgets` git dependency.
 
----
-
-## Files to Publish
-
-For a public GitHub repo presenting this as project code and rationale:
-
-- `src/lib.rs`, `src/main.rs`, `benches/fba_bench.rs`
-- `Cargo.toml`, `Cargo.lock` (pins the exact arkworks/gadgets commit used)
-- `RATIONALE_AND_RESULTS.md` (this file) and `PROTOCOL_DESIGN_AND_RESULTS.md`
-- `protocol_constraints.md` (the formal spec this code implements against;
-  include a copy or a link, since the constraint numbers throughout the
-  code and both docs are meaningless without it)
-- A short top-level `README.md` linking the above (not currently present,
-  worth adding, pointing readers at `PROTOCOL_DESIGN_AND_RESULTS.md` first
-  and this document second)
-
-**Not recommended for inclusion**: `Result_compare.md` (superseded by this
-document; either delete it or fold its historical numbers in as a
-footnote), the `target/` build directory, `.DS_Store`, and the CSV order-book
-input files themselves (they live under `~/Downloads` outside this repo;
-if included, note that they're *sample* inputs only, since the whole point
-of the protocol is that a real order book stays private).
 
 ---
 

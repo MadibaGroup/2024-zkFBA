@@ -1,8 +1,5 @@
 # Why Noir Outscales the Hand-Written Rust Prover at Large N
 
-**Kimia Esmaili, Concordia University**
-
----
 
 ## Observed Phenomenon
 

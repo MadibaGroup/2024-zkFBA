@@ -3,19 +3,14 @@
 ---
 
 A hand-written Rust/arkworks (BN254, KZG10) implementation of the Frequent
-Batch Auction (FBA) clearing-price zero-knowledge protocol specified in
-`protocol_constraints.md`. It reads a CSV order book (Price, Bids++, Asks++),
+Batch Auction (FBA) clearing-price zero-knowledge protocol. It reads a CSV order book (Price, Bids++, Asks++),
 re-derives every protocol column from those three trusted inputs alone, and
 produces a KZG-committed, Fiat-Shamir-driven proof that the disclosed
 clearing receipt (`c`, `d`, `p*`, `V_max`, `V_min_delta`) is the correct
 output of the auction, all without revealing the underlying order book.
 
-It's the arkworks/KZG counterpart to the Noir/Barretenberg implementation at
-`~/zk_fba_noir`. Both target the same 33-constraint protocol spec, but they
-are independent, hand-rolled circuits, not one compiled from the other. The
-code-level walkthrough of this implementation lives in a separate
-companion doc, `PROTOCOL_DESIGN_AND_RESULTS.md` (mirroring
-`~/zk_fba_noir/PROTOCOL_DESIGN_AND_RESULTS.md`); this document is about
+It's the arkworks/KZG counterpart to the Noir/Barretenberg implementation. Both target the same 33-constraint protocol spec, but they
+are independent, hand-rolled circuits, not one compiled from the other. This document is about
 rationale, benchmarks, and how the two implementations stack up against
 each other.
 
@@ -87,7 +82,7 @@ the losing side of the book and can run up to the full cumulative order
 volume (over 2^16 on the 1000-tick dataset), unlike `V_max`, which is bounded
 by `RANGE_BITS = 16` since it's a `min()` of two accumulators.
 
-### 3. MadibaGroup gadget reuse
+### 3. Previous adget reuse
 
 Two pieces of the `gadgets` crate (MadibaGroup 2024-Gadgets-Code) get reused
 rather than reimplemented:
@@ -113,8 +108,7 @@ a `Vec`-indexed generic loop over a constraint list. This is a deliberate
 trade-off: every residue is individually named, printed, and debuggable
 end-to-end in `main.rs` (`r[8] = 0  PASS`), at the cost of the boilerplate
 visible in `compute_quotients`/`fiat_shamir_prove`/`commit_quotients`. A
-generic version would be shorter but harder to audit constraint-by-constraint
-against `protocol_constraints.md`'s own numbering, which is the whole point
+generic version would be shorter but harder to audit constraint-by-constraint, which is the whole point
 of a research prototype like this one.
 
 ### 5. Bit gadgets are committed but not yet opened against the verifier
@@ -202,8 +196,7 @@ verifications, never Layer 4. In a production deployment, Layer 4 would be
 deleted outright, and Layer 4b would need its opening/verification step
 finished rather than removed.
 
-This mirrors the finding documented for the Noir/Barretenberg comparison in
-`~/zk_fba_noir/NOIR_SCALING_ANALYSIS.md`: a non-cryptographic, prover-only
+This mirrors the finding documented for the Noir/Barretenberg comparison: a non-cryptographic, prover-only
 sanity-check layer is the dominant cost at scale in a hand-written prover,
 not the KZG/quotient machinery itself.
 
@@ -215,8 +208,7 @@ increase overall against a 32x domain-size increase. Several of the fourteen
 quotients here involve multiplying two degree-n polynomials (`V_KL`, `#7`)
 and dividing a resulting degree-2n numerator by `Z_H(X)` via coefficient-form
 long division, which costs `O(n^2)` field multiplications [Knuth 1997, sec.
-4.6.1]. This is the same division bottleneck documented in
-`NOIR_SCALING_ANALYSIS.md`'s Root Cause 1 for the original 5-witness Rust
+4.6.1]. This is the same division bottleneck documented as Root Cause 1 for the original 5-witness Rust
 prover. Growth here is milder than a clean n-squared law would predict, most
 likely because several of the fourteen quotients are cheap `O(n)`
 single-point (`div_by_linear`) checks rather than full polynomial divisions,
@@ -235,11 +227,11 @@ independent of the auction size. That's the actual cryptographic
 verification cost profile a real verifier would experience; it excludes
 Layer 4/4b entirely, since a verifier never runs those.
 
-### Note on comparing against `Result_compare.md`
+### Note on comparing
 
 An earlier snapshot of this codebase (5 witness + 5 quotient polynomials, 12
 constraints wired end-to-end) measured 416 ms total, 371 ms of which was
-Layer 4, at 1000 ticks; see `Result_compare.md`, which predates the
+Layer 4, at 1000 ticks; which predates the
 33-constraint expansion and is superseded by this document. The current
 9-witness/14-quotient/32-constraint version is proportionally slower in
 absolute terms (roughly 2.4 s vs. 416 ms) because Layer 4 and Layer 4b now
@@ -247,8 +239,7 @@ check roughly 2.5 to 3 times as many constraint families, each still paying
 the same `O(n * domain_size)` per-tick evaluation cost. The scaling
 *behavior* (prover-only sanity layer dominates, verifier stays flat) hasn't
 changed; only the constant factor grew, in proportion to the constraint
-coverage. Any older Rust numbers cited elsewhere (including in
-`NOIR_SCALING_ANALYSIS.md`, whose crossover analysis was written against
+coverage. Any older Rust numbers cited elsewhere (whose crossover analysis was written against
 that earlier snapshot) reflect that same earlier version and shouldn't be
 read as current for this codebase; the comparison section below uses only
 the fresh numbers measured against this document's own benchmark run.
@@ -268,8 +259,7 @@ alone.
 
 ### The numbers side by side
 
-Noir figures come straight from `~/zk_fba_noir/PROTOCOL_DESIGN_AND_RESULTS.md`'s
-results table. Rust figures come from this document's own benchmark run
+Noir figures come straight from our results table. Rust figures come from this document's own benchmark run
 above (single-run trace for the per-phase breakdown, Criterion medians for
 end-to-end).
 
@@ -336,7 +326,7 @@ real reasons for this, not just measurement noise:
 
 ### Why that's expected to flip at larger N
 
-`NOIR_SCALING_ANALYSIS.md` already worked out the mechanism for an earlier,
+We already worked out the mechanism for an earlier,
 smaller version of both circuits, and the same mechanism still applies here
 because neither implementation has changed its core algorithm, only its
 constraint count grew. Three things point the same direction:
@@ -369,8 +359,7 @@ rather than an algorithmic one: this codebase could add threading without
 changing its complexity class, it just doesn't right now.
 
 **Where that puts the crossover.** The earlier, smaller version of this
-codebase (documented in `Result_compare.md` and analyzed in
-`NOIR_SCALING_ANALYSIS.md`) crossed over against Noir somewhere around
+codebase crossed over against Noir somewhere around
 N=600-800. That analysis compared full end-to-end numbers that included an
 even more expensive version of this codebase's own Layer 4. The current
 codebase's *core proof* numbers are faster in absolute terms than that
@@ -441,9 +430,7 @@ checking everything it claims to check.
   (Fiat-Shamir, batch openings, scalar range proofs), then `full_pipeline`
   (wires all of the above together). Each function/struct carries a
   one-line `#N` constraint reference rather than restating the protocol
-  spec; see this document for the "why," `protocol_constraints.md` for the
-  formal spec, and `PROTOCOL_DESIGN_AND_RESULTS.md` for a section-by-section
-  code walkthrough.
+  spec.
 - **`src/main.rs`**, a runnable trace: executes the pipeline by hand
   (mirroring `full_pipeline`) for three datasets (21/100/1000-tick),
   printing per-layer timing and a PASS/FAIL line for every one of the 32

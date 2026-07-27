@@ -1,19 +1,14 @@
 # ZK-FBA full-protocol prover (Rust/arkworks): design rationale, code guide, results
 
-This document covers `zk_fba_csv_full` -- a hand-written Rust/arkworks
-(BN254, KZG10) prover implementing 32 of the 33 constraints from
-`protocol_constraints.md` (Section 14's Full Constraint List) for the
+This document covers the hand-written Rust/arkworks
+(BN254, KZG10) prover implementing 32 of the 33 constraints for the
 zero-knowledge frequent batch auction (FBA) protocol. It explains *why*
 the prover is built the way it is and *what* each part of `src/lib.rs`
 does, plus the benchmark results.
 
-This is the arkworks counterpart to `~/zk_fba_noir`'s Noir circuits
-(see that project's own `PROTOCOL_DESIGN_AND_RESULTS.md`). Both target
+This is the arkworks counterpart to the Noir circuits. Both target
 the same spec, but they're independent, hand-rolled implementations,
-not one compiled from the other. If you want a side-by-side latency,
-complexity, and proof-size comparison between the two, that lives in
-`RATIONALE_AND_RESULTS.md` -- this file stays focused on the Rust side
-by itself.
+not one compiled from the other.
 
 ## What the prover proves
 

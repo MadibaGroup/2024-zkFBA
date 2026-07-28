@@ -1,13 +1,12 @@
-### What are the things that can be done to beat Barretenberg:
+### What are the things that can be done to beat Barretenberg (other than the FFT fix):
 ---
 
 - More efficient lookup arguments (e.g., improving on Plookup or LogUp trade-offs)
 - Faster polynomial commitment schemes
 - Better batching strategies for KZG openings
-- Improved MSM algorithms (still an active area)
+- Improved MSM algorithms (Feasible?)
 - Memory-efficient prover architectures for very large circuits
-- Hardware acceleration (GPU/FPGA/ASIC)
-- Specialized compilers that exploit circuit structure to reduce the number of constraints before proving
+- Specialized compilers that exploit circuit structure to reduce the number of constraints before proving (Idea?)
 
 For example, if our compiler emits 20% fewer constraints than Barretenberg's input for the same computation, 
 then every downstream O(nlogn) step also becomes cheaper. 

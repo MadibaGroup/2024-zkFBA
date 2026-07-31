@@ -24,7 +24,7 @@ not implemented; see below for why.
 
 ### 1. Public vs. committed polynomials
 
-`protocol_constraints.md` (section 6/11) notes that once a clearing receipt
+In the protocol constraints document (6/11) we mentioned that once a clearing receipt
 discloses `c`, `d`, `p*`, `V_max`, and `V_min_delta`, several auxiliary
 polynomials can be built by the verifier directly from those disclosed
 scalars instead of being committed witnesses, at zero additional information
@@ -59,7 +59,7 @@ the protocol doc's own footnote, not a missing feature.
 
 ### 2. Bit-decomposition gadget instead of Plookup
 
-`protocol_constraints.md` (section 2) offers Plookup lookup-table range
+The protocol constraints (section 2) offer Plookup lookup-table range
 checks as its reference design for `#1`/`#2` (bid/ask non-negativity) and
 the related ceiling/floor checks (`#8`, `#15`, `#16`, `#23`). This codebase
 (like the Noir implementation, which gets this for free from native checked

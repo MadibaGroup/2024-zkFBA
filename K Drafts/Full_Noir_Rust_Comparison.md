@@ -3,7 +3,7 @@
 ---
 
 A hand-written Rust/arkworks (BN254, KZG10) implementation of the Frequent
-Batch Auction (FBA) clearing-price zero-knowledge protocol. It reads a CSV order book (Price, Bids++, Asks++),
+Batch Auction (FBA) clearing-price zero-knowledge protocol: It reads a CSV order book (Price, Bids++, Asks++),
 re-derives every protocol column from those three trusted inputs alone, and
 produces a KZG-committed, Fiat-Shamir-driven proof that the disclosed
 clearing receipt (`c`, `d`, `p*`, `V_max`, `V_min_delta`) is the correct

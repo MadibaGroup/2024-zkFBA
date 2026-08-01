@@ -88,9 +88,7 @@ the exact same points as before, it is not a spot-check or a reduction in
 what gets verified, it is the same check computed the efficient way instead
 of the wasteful way.
 
-**A soundness side effect worth being upfront about:**
-
-While wiring the coset-FFT quotients through, I also finished part of the
+**A soundness side effect:** While wiring the coset-FFT quotients through, I also finished part of the
 bit-gadget soundness gap flagged as the top-priority limitation in the
 original document. The six bit-decomposition gadget instances (`#1`, `#2`,
 `#8`, `#15`, `#16`, `#23`) used to have their KZG commitments computed and

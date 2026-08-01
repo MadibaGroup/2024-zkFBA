@@ -1,21 +1,14 @@
 # zk_fba_csv_full: Optimized Rust, Updated Rationale and Results
 ---
 
-## What This Is
-
-This is the follow-up to `RATIONALE_AND_RESULTS.md`. That document benchmarked
-the Rust/arkworks (BN254, KZG10) implementation of the FBA clearing-price
-protocol and, in its "Comparing Noir/Barretenberg and Rust/arkworks" section,
-made a specific prediction: Rust was faster than Noir at N=100 and N=1000 on
+Rust was faster than Noir at N=21 on
 raw constant factors, but Rust's quotient construction was `O(n^2)` against
 UltraHonk's `O(n log n)`, so the expectation was that Noir would eventually
 close the gap and probably overtake Rust somewhere past N=1000.
 
-I went back and fixed the actual algorithmic gap instead of just living with
-the prediction. This doc covers what the gap was, what I changed, and what
+There was this actual algorithmic gap and now we see what
 the numbers look like now at N=100 and N=1000, the same two sizes the
-original comparison used since those are the only two where I have real
-measured Noir numbers to compare against. Short version: the `O(n^2)` vs
+original comparison used. Short version: the `O(n^2)` vs
 `O(n log n)` story that was supposed to eventually favor Noir is gone. Rust's
 quotient construction is `O(n log n)` now too, matching Noir's own mechanism,
 and the margin between the two got wider, not narrower, at both sizes. There
@@ -23,15 +16,12 @@ is one honest new cost that came with this, which is that fixing a real
 soundness gap along the way made the proof slightly bigger than before. That
 is covered below too, not glossed over.
 
-Nothing about the protocol, the constraint coverage, or the privacy
-properties changed. This was a performance and one soundness pass on the
-existing code, not a redesign.
 
 ---
 
 ## The Gap: Two Separate `O(n^2)` Costs Hiding in the Rust Prover
 
-`RATIONALE_AND_RESULTS.md` flagged this already but treated it as a known,
+We flagged this already but treated it as a known,
 accepted limitation rather than something to fix. There were actually two
 separate quadratic costs in the codebase, not one.
 
@@ -49,9 +39,9 @@ already showed this bending upward inside Rust's own numbers well before N
 got anywhere near Noir's circuit sizes, which is exactly the signal that
 something asymptotic, not just constant-factor, was going on.
 
-### Gap 2: `verify_all` was quietly `O(n^2)` too, and nobody had flagged it
+### Gap 2: `verify_all` was quietly `O(n^2)` too, and was not flagged
 
-This one wasn't in the original document at all, I found it while going
+This one wasn't in the original document at all, we found it while going
 through the code to fix Gap 1. Layer 4's `verify_all` (the prover-side
 redundant sanity check that re-verifies every constraint in plaintext) was
 evaluating each of roughly 14 polynomials at every one of the `n` domain
@@ -70,7 +60,7 @@ changes the conclusion of that section, not just the numbers.
 
 ---
 
-## How I Fixed It
+## How we Fixed It
 
 ### Fix 1: coset-FFT quotient division
 
@@ -286,45 +276,16 @@ these two sizes is gone.
 
 ---
 
-## Where This Leaves Things
-
-The core lesson from the original document mostly still holds, a
-hand-rolled prover can win on constant factors at small to medium N,
+So a hand-rolled prover can win on constant factors at small to medium N,
 especially against a general-purpose constraint compiler doing strictly
 more work per proof. What changed is that "small to medium N" no longer
 comes with an expiration date driven by an `O(n^2)` time bomb sitting in the
-quotient construction. That bomb is defused. What's left standing is a
+quotient construction. What's left standing is a
 threading gap that's an engineering problem, not an algorithmic one, and a
 genuine, not-yet-finished soundness item (Phase 3 opening of the bit
 gadgets) that costs a bit of proof size now and will cost a bit more once
 it's actually finished properly.
 
-### Updated limitations / next steps
-
-- **Finish Phase 3**: fold the six bit-gadget instances into the same
-  `batch_check` pairing call as the other 14 constraints, replacing
-  `bit_gadgets_ok`'s current plaintext `recon_ok`/`bool_ok` check. This is
-  what the original document called the single most important thing to do
-  before treating this codebase as more than a research prototype, and
-  that's still true, it's just partially in progress now instead of not
-  started.
-- **Thread the MSMs.** Every commitment here runs on one thread; Barretenberg
-  spreads its across all cores. Same complexity class, real constant-factor
-  gap, addresses the one row in the table above that Noir still legitimately
-  wins.
-- **Get real Noir numbers at N=5,000-20,000.** The threading gap is the only
-  remaining mechanism that could still produce a crossover, and the only way
-  to know where, or whether, it actually bites is to measure both systems
-  out there, not extrapolate from N=100/N=1000.
-- **Measure the real proof size once Phase 3 lands**, rather than estimating
-  by element counting. `CanonicalSerialize` on the actual `BatchCheckProof`/
-  `OpenEval` types would pin this down exactly instead of the arithmetic
-  done above.
-- Layer 4 is still a pure redundant duplicate that a real deployment would
-  delete outright now that it's cheap; it wasn't worth deleting when it was
-  slow because deleting a correctness check under time pressure is a bad
-  habit to build, but there's no reason to keep paying even the now-small
-  cost in a production build.
 
 ---
 
@@ -337,10 +298,3 @@ it's actually finished properly.
 - Knuth, D. E. (1997). *The Art of Computer Programming, Vol. 2: Seminumerical Algorithms* (3rd ed.), sec. 4.6.1. Addison-Wesley.
 - Pippenger, N. (1976). On the evaluation of powers and related problems. In *17th Annual Symposium on Foundations of Computer Science*, pp. 258-263. IEEE.
 - Wahby, R. S., Tzialla, I., Shelat, A., Thaler, J., and Walfish, M. (2018). Doubly-efficient zkSNARKs without trusted setup. In *IEEE Symposium on Security and Privacy*, pp. 926-943.
-
-See `RATIONALE_AND_RESULTS.md` for the full original design rationale
-(bit-decomposition gadget choice, public-vs-committed polynomial split,
-MadibaGroup gadget reuse, and so on), none of which changed in this pass.
-This document only covers what changed: the two `O(n^2)` fixes, the partial
-bit-gadget soundness fix and its proof-size cost, and the updated Noir
-comparison at N=100 and N=1000.

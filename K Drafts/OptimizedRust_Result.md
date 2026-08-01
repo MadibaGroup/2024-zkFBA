@@ -88,7 +88,7 @@ the exact same points as before, it is not a spot-check or a reduction in
 what gets verified, it is the same check computed the efficient way instead
 of the wasteful way.
 
-### A soundness side effect worth being upfront about
+**A soundness side effect worth being upfront about:**
 
 While wiring the coset-FFT quotients through, I also finished part of the
 bit-gadget soundness gap flagged as the top-priority limitation in the

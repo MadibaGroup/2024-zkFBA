@@ -122,8 +122,7 @@ gap.
 
 ## What NOT to re-derive
 
-Do not re-estimate proof size by counting elements on paper again, that
-was tried twice earlier in this project and was wrong both times (missed
+Do not re-estimate proof size by counting elements on paper again, tried earlier and was wrong both times (missed
 that `OpenEval::Plain` carries 2 field elements not 1, and missed the range
 proof groups entirely). The `main.rs` block that prints `PROOF SIZE` walks
 the actual `BatchCheckProof` structs and is the source of truth; if the

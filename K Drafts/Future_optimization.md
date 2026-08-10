@@ -117,7 +117,7 @@ Pippenger `O(m/log m)` complexity class either way [Pippenger 1976]) is the
 only remaining mechanism that could still produce a widening prove-time
 crossover at larger N in Noir's favor. CSVs already exist for this. Doing
 item 1 first (parallel MSM) before re-benchmarking would make this a fairer
-comparison, otherwise you'd just be re-confirming a known, already-explained
+comparison, otherwise we'd just be re-confirming a known, already-explained
 gap.
 
 ## What NOT to re-derive

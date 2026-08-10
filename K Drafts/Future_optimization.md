@@ -9,7 +9,7 @@ KZG pairing-verified opening) of the bit-gadget soundness fix are all done.
 load-bearing, not decorative, it swaps a bit-gadget commitment and confirms
 `batch_check` rejects it. 4/4 unit tests pass.
 
-Real, measured numbers (not estimates):
+Real, measured numbers:
 
 | Metric | Noir, N=100 | Rust, N=100 | Noir, N=1000 | Rust, N=1000 |
 |---|---|---|---|---|

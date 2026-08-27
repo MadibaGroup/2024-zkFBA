@@ -23,7 +23,7 @@ custom_end = datetime.strptime(
 ).replace(tzinfo=ny_tz)
 
 # Fetch data
-client = db.Historical("db-6r3jSVELk5KhJWPCN333Th8npx8tv")
+client = db.Historical("API KEY")
 data = client.timeseries.get_range(
     dataset="XNAS.ITCH",
     schema="mbp-10",

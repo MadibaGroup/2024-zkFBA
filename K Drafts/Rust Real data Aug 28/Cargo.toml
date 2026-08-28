@@ -1,0 +1,28 @@
+[package]
+name    = "zk_fba_csv_full"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ark-ff          = "0.4"
+ark-poly        = "0.4"
+ark-bn254       = "0.4"
+ark-ec          = "0.4"
+ark-std         = "0.4"
+ark-serialize   = "0.4"
+ark-poly-commit = "0.4"
+sha2            = "0.10"
+rayon           = "1"
+gadgets = { git = "https://github.com/MadibaGroup/2024-Gadgets-Code" }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name    = "fba_bench"
+harness = false
+
+[profile.release]
+opt-level = 3
+[profile.bench]
+opt-level = 3

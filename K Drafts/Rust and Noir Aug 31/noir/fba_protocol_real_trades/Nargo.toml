@@ -1,0 +1,7 @@
+[package]
+name            = "fba_protocol_real_trades"
+type            = "bin"
+authors         = ["Kimia Esmaili, Concordia University"]
+compiler_version = ">=1.0.0"
+
+[dependencies]

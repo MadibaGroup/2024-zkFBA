@@ -1,10 +1,5 @@
-# [Working title] Zeequent: A Polynomial IOP for Frequent Batch Auctions
+# Zeequent
 
-*Editorial note: title is a placeholder — pick a variant of the form
-"Zeequent: [technical noun phrase]" to mirror how "Zeeperio" names the
-Eperio-derived system. Author list/affiliations omitted here since FC'27
-Regular submissions are double-blind; restore them only in the
-camera-ready version.*
 
 **Keywords:** frequent batch auctions, polynomial IOPs, KZG commitments,
 custom arithmetization, zero-knowledge proofs

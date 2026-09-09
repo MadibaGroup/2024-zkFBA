@@ -134,15 +134,13 @@ these same three claims against `fba_protocol_100/src/main.nr` /
 implementation is the more complete/current one.
 
 ## Open threads / next steps
-1. ~~Kimia has not yet supplied her own draft text~~ — SUPERSEDED 2026-09-07:
-   Kimia explicitly asked me to start drafting Abstract/Intro myself
-   ("start writing in the cadence for this conference... do abstract and
+1. ("start writing in the cadence for this conference... do abstract and
    intro"), then asked for "the next part" (Background/Related Work). The
    old "wait for her draft" instruction no longer applies — I am now
    actively drafting the paper section by section, in the zkpwriting voice,
    pending her review/edits after each part.
 2. The exact Häbock 2022 citation (title/venue) should be pulled from
-   wherever `protocol_constraints.md` sourced it, or asked of Kimia directly
+   wherever `protocol_constraints.md` sourced it, or asked directly
    — not guessed. Flagged inline in `paper_draft.md` §2.3 as an open
    editorial note.
 3. ~~Pull constraint definitions/equations directly from
@@ -155,7 +153,7 @@ implementation is the more complete/current one.
    to the companion overview paper (main.pdf) needs an anonymized citation
    form before submission — currently just referred to in prose as "a
    companion paper" with no bracket number, deliberately, to avoid
-   inventing a self-citation format before Kimia decides on one.
+   inventing a self-citation format.
 
 ## Paper draft status (`~/zk_fba_real_data/paper_draft.md`)
 Live draft file — read this first if resuming cold, it has more detail
@@ -163,8 +161,7 @@ than this summary. Sections written so far, in the FC'27/Zeeperio cadence
 (Abstract → Intro → numbered Contributions → Background/Related Work →
 [constraint walkthrough, not yet started]):
 
-- **Title**: placeholder only ("Zeequent: A Polynomial IOP for Frequent
-  Batch Auctions") — Kimia should pick her own variant.
+
 - **Abstract**: written. States the problem (companion paper leaves crypto
   construction unspecified), what we supply (33-constraint PIOP, two
   gadgets, KZG10+Fiat-Shamir), and gives the headline Noir benchmark
@@ -292,7 +289,7 @@ than this summary. Sections written so far, in the FC'27/Zeeperio cadence
   before this turn ended. Worth remembering as a check to repeat after
   future sections: grep the draft for internal planning vocabulary
   ("companion paper" is fine/intentional, but "zeeperio"/"structural
-  model"/"per Kimia" etc should never appear in manuscript prose).
+  model"/"per author" etc should never appear in manuscript prose).
 - **§7 Conclusion**: written, single section, no subsections (matches
   Zeeperio's own short-conclusion cadence). Restates the paper's core move
   (crossing the arithmetization boundary the companion paper stopped at),
@@ -308,14 +305,14 @@ than this summary. Sections written so far, in the FC'27/Zeeperio cadence
   extractor construction using KZG10 binding [7] + Schwartz-Zippel (§3.2),
   and must actually engage with [12]/[13]'s batching-specific subtleties
   rather than just restate the single-constraint case. **Appendix B:
-  [reserved]** — placeholder only, flags an open decision for Kimia: either
+  [reserved]** — placeholder only, flags an open decision for author: either
   (a) per-constraint non-expansivity arguments for the other 32 rows of
   Table 1 (Zeeperio's own structural pattern — one constraint in full,
   rest tabulated with a lighter per-item argument in an appendix), or (b)
   implementation/ABI details for the Rust/Noir circuits. Not decided yet.
   **Checked for the same "zeeperio" leak caught last turn** — one hit
   remains at line ~779, but it's inside Appendix B's own bracketed
-  editorial note (an aside to Kimia about what to appendix, not manuscript
+  editorial note (an aside to author about what to appendix, not manuscript
   prose), same category as the title note at the top of the file — judged
   fine, not a repeat of the earlier leak.
 - **Appendix A: Knowledge-Soundness Reduction — now written in full**, 4
@@ -351,7 +348,7 @@ than this summary. Sections written so far, in the FC'27/Zeeperio cadence
   writing — one hit remains at the Appendix B placeholder (bracketed
   editorial note, not manuscript prose, same as last turn's judgment).
 - **Appendix B: Non-Expansivity of the Remaining 32 Constraints — now
-  written in full**, option (a) (Kimia chose per-constraint non-
+  written in full**, option (a) (author chose per-constraint non-
   expansivity arguments over implementation/ABI details). Re-read
   `~/zk_fba_real_data/train/protocol_constraints.md` in full again this
   turn to pull every one of the 32 remaining constraints' exact equations
@@ -431,13 +428,13 @@ than this summary. Sections written so far, in the FC'27/Zeeperio cadence
   `nargo`/`bb` CLI toolchain commands.
   **Anonymization finding, standing constraint going forward**:
   `~/zk_fba_noir/fba_protocol_100/Nargo.toml` contains the line
-  `authors = ["Kimia Esmaili, Concordia University"]`. **This string must
+  `authors = ["author Esmaili, Concordia University"]`. **This string must
   NEVER be quoted or referenced in `paper_draft.md` or any other
   manuscript-facing content** — FC'27 requires mandatory double-blind
   anonymization. Appendix C deliberately describes the Noir package
   generically ("a plain Noir binary package with no external dependencies")
   without naming its `authors` field. Verified via
-  `grep -ni "zeeperio\|Kimia Esmaili\|Concordia" paper_draft.md` after
+  `grep -ni "zeeperio\|author Esmaili\|Concordia" paper_draft.md` after
   writing this appendix — the only hit is the pre-existing bracketed title
   placeholder note at the top of the file, not manuscript prose; no leak.
 - **Draft is now fully complete, all sections and all three appendices
@@ -451,7 +448,7 @@ than this summary. Sections written so far, in the FC'27/Zeeperio cadence
   tightening pass across every section now that the full skeleton exists,
   (4) the anonymized-citation format decision before submission. There is
   no more "next section" or "next appendix" to write — any further "do X"
-  from Kimia is now an editing/revision instruction against existing
+  from author is now an editing/revision instruction against existing
   content, not a drafting one.
 
 ## Citation numbering established this session (for consistency across

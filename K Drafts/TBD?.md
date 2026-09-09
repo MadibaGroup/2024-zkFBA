@@ -1,47 +1,5 @@
-# Session Handoff — Zeequent CS/Security Paper
+# TBD - what to do?
 
-Last updated: 2026-09-07 (after: drafting Appendix C in full, option (b) of
-the Appendix B decision)
-
-## What this file is
-A standing handoff note for the "write the security/math/CS-heavy companion
-paper to Zeequent Batch Auctions" project. Updated after every response in
-the current session per Kimia's standing instruction, so a fresh session can
-pick up without re-deriving context. If you are a new session reading this:
-read this file fully before doing anything else on this project.
-
-## The task
-Write a security/math/CS-heavy version of `~/zk_fba_real_data/train/main.pdf`
-(the finance-heavy "Zeequent Batch Auctions: An Overview" paper by Kimia
-Esmaili, Elizabeth van Oorschot, Jeremy Clark). Target venue: **FC'27**
-(Financial Cryptography and Data Security 2027, fc27.ifca.ai), Regular paper
-category (15 pages + refs/appendices), LNCS Springer template, mandatory
-anonymization. Deadline: 17 Sept 2026 (firm/extended 24 Sept 2026 23:59 AoE).
-
-Structural model: `~/zk_fba_real_data/train/zeeperio.pdf` (Malhotra/Essex/
-Clark, Eperio voting zk-SNARK paper) — used purely for cadence/sectioning,
-not content. Shape: Abstract → Intro → numbered Contributions → Background →
-one constraint walked through in full PIOP detail (vanishing poly → quotient
-→ KZG opening → Schwartz-Zippel → batching via RLC) → remaining constraints
-as tables/boxes → user-facing checks → Implementation & Performance
-(benchmark table) → Security Proof (high-level in body, full proof in
-appendix) → Conclusion → Appendices.
-
-Technical content source: `~/zk_fba_real_data/train/protocol_constraints.md`
-— the full 33-constraint spec (§14 has the complete numbered table). This is
-what fills the new paper's constraint section (analogous to Zeeperio §3).
-
-Voice: the `zkpwriting` skill (installed at
-`~/.claude/skills/zkpwriting/SKILL.md`) — terse declarative openers, "we" as
-grammatical subject with named systems as the object of "we" sentences, flat
-unapologetic limitations, no adjectival inflation ("novel", "powerful" etc
-banned), cite/footnote sourcing rather than narrating it, **never invent a
-citation, benchmark number, or named system that wasn't given**.
-
-**Standing instruction from Kimia: do not draft actual paper prose
-unprompted.** She said she will supply her own draft section text in a later
-prompt for editing/tightening in this voice. Until she does, this is a
-research/reference-gathering phase, not a drafting phase.
 
 ## Where the implementations live
 - `~/zk_fba/` — Rust/arkworks hand-rolled PLONK-style prover. BN254, KZG10,
@@ -65,10 +23,9 @@ research/reference-gathering phase, not a drafting phase.
   the paper's Implementation & Performance section needs to state this scope
   difference explicitly rather than imply a fair apples-to-apples benchmark.
 
-## Bibliography already compiled (delivered to Kimia this session)
-**main.pdf's own 8 references** (verbatim, confirmed by direct PDF read this
-session — main.pdf contains NO algebraic formulas at all, it explicitly
-defers "concrete cryptographic details" to the GitHub repo):
+## Bibliography already compiled
+**main.pdf's own 8 references** NO algebraic formulas at all:
+
 1. Budish, Cramton, Shim — Implementation details for FBAs, AER 104(5), 2014
 2. Budish, Cramton, Shim — HFT arms race, QJE 130(4), 2015
 3. Bünz, Fisch, Szepieniec — Transparent SNARKs from Dark Compilers, EUROCRYPT 2020
@@ -99,10 +56,8 @@ explicitly. The new paper should add a direct Fiat-Shamir citation (Fiat &
 Shamir, CRYPTO 1986 — already correctly cited in `~/zk_fba/README.md`'s own
 reference list).
 
-**Unverified suggested additions** (flagged to Kimia as NOT yet adopted,
-per zkpwriting's "never invent a citation" rule — need her confirmation
-before citing): Plookup 2020, Häbock 2022 shuffle argument (this one IS
-already named and used in `protocol_constraints.md` §6, so it's a real,
+**Unverified suggested additions**: Plookup 2020, Häbock 2022 shuffle argument (this one IS
+already named and used in `protocol_constraints.md` NO. 6, so it's a real,
 minimum-effort citation to pull in, not invented — just need the exact
 paper title/venue, not yet retrieved), Schwartz-Zippel, Huber/Küsters/
 Liedtke/Rausch E-VOTE-ID 2024 (implementation/benchmarking framing),
@@ -110,7 +65,7 @@ Barretenberg/UltraHonk/arkworks/nargo as software-artifact citations.
 
 ## Constraint-discrepancy investigation (this session's task, now resolved)
 
-Kimia asked me to check whether `~/zk_fba/README.md`'s "Known Document
+Checking whether `~/zk_fba/README.md`'s "Known Document
 Corrections" section describes real errors in the reference documents. That
 section claims two (unnamed) reference documents contain three errors that
 the Rust implementation silently corrects. I compared the claims against

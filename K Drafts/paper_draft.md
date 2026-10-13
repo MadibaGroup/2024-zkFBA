@@ -10,8 +10,11 @@ custom arithmetization, zero-knowledge proofs
 
 Frequent batch auctions (FBAs) replace continuous limit-order matching with
 periodic uniform-price clearing, reducing the payoff to the sub-second
-latency advantages exploited by high-frequency traders [1,2]. An overview
-of a zero-knowledge FBA protocol describes an exchange that commits to an
+latency advantages exploited by high-frequency traders [1,2]. The problem with this 
+market structure is that the final clearing price is determined without participants 
+ever knowing the data used in its computation; hence, its soundness is object to doubt.
+In this paper, we propose a zero-knowledge FBA protocol, in which the person giving out
+the final clearing price in an exchange, commits to an
 order book and proves — without revealing individual orders — that a
 published clearing price and allocation satisfy the auction rule, but
 leaves the cryptographic construction itself unspecified, deferring it to

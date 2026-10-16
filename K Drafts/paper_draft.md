@@ -12,7 +12,7 @@ Frequent batch auctions (FBAs) replace continuous limit-order matching with
 periodic uniform-price clearing, reducing the payoff to the sub-second
 latency advantages exploited by high-frequency traders [1,2]. The problem with this 
 market structure is that the final clearing price is determined without participants 
-ever knowing the data used in its computation; hence, its soundness is object to doubt.
+ever knowing the data used in its computation; hence, its soundness is open to doubt.
 In this paper, we propose a zero-knowledge FBA protocol, in which the person giving out
 the final clearing price in an exchange, commits to an
 order book and proves — without revealing individual orders — that a
@@ -757,6 +757,38 @@ zero-knowledge guarantee. We would rather state that gap than paper over
 it — closing it is the most direct piece of future work this paper leaves,
 ahead of the pipelined-proving design sketched in Section 5.5 for
 sub-second batch cadences.
+
+---
+
+
+## 7 Refrences
+
+1- Budish, Cramton, Shim — Implementation Details for Frequent Batch Auctions, AER 104(5), 2014
+
+2- Budish, Cramton, Shim — The High-Frequency Trading Arms Race: Frequent Batch Auctions as a Market Design Response, QJE 130(4), 2015
+
+3- Bünz, Fisch, Szepieniec — Transparent SNARKs from DARK Compilers, EUROCRYPT 2020
+
+4- Gabizon, Williamson, Ciobotaru — PLONK: Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge, ePrint 2019
+
+5- Goldreich, Micali, Wigderson — How to Prove All NP Statements in Zero-Knowledge, CRYPTO 1986
+
+6- Harris — Trading and Exchanges: Market Microstructure for Practitioners, Oxford University Press, 2003
+
+7- Kate, Zaverucha, Goldberg — Constant-Size Commitments to Polynomials and Their Applications, ASIACRYPT 2010
+
+8- van Oorschot, Deng, Clark — Plonkbook, GitHub Pages, 2024
+
+9- Fiat, Shamir — How to Prove Yourself: Practical Solutions to Identification and Signature Problems, CRYPTO 1986
+
+10- Chiesa, Hu, Maller, Mishra, Vesely, Ward — Marlin: Preprocessing zkSNARKs with Universal and Updatable SRS, EUROCRYPT 2020
+
+11- Maller, Bowe, Kohlweiss, Meiklejohn — Sonic: Zero-Knowledge SNARKs from Linear-Size Universal and Updatable Structured Reference Strings, CCS 2019
+
+12- Lipmaa — PLONK Is Simulation Extractable in the Random Oracle Model, TCC 2025
+
+13- Sefranek — How (Not) to Simulate PLONK, SCN 2024
+
 
 ---
 

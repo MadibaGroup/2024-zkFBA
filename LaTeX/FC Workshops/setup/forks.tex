@@ -1,0 +1,13 @@
+% !TEX root = ../main.tex
+
+% = = = Document Variants
+\def\anonymous{0} % 0 = identified, 1 = anonymous
+\def\longpaper{0} % 0 = short, 1 = long
+
+\providecommand{\anonalt}[2]{%
+  \ifnum\anonymous=0\relax#1\else#2\fi
+}
+
+\providecommand{\longalt}[2]{%
+  \ifnum\longpaper=0\relax#1\else#2\fi
+}

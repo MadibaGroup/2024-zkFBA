@@ -1,26 +1,64 @@
 % !TEX root = ../main.tex
+
 \section{Introductory Remarks}
 
-Blah blah blah.
+Modern stock exchanges (\eg NASDAQ and NYSE) use two main trading systems~\cite{Har03}. During regular trading hours, traders can submit orders to a continuous limit order book (CLOB), where compatible buy and sell orders can execute as soon as they meet. Traders can also submit orders to a scheduled auction (or call market), where orders are held until a fixed time---the end of the trading day---and then executed together. Near the end of the day, this auction becomes the exclusive way to trade and then at market close, it clears as many trades as possible at a single price, which becomes the closing price of the stock. The same auction mechanism is used before the market opens the next day to establish an opening price.
 
- 
-% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+Closing auctions play an important role because the closing price is widely used as a reference point: traders benchmark their portfolios against it, indexes are calculated from it, and derivatives settle using it. By aggregating many orders and clearing them together at a single price, the closing auction also makes the official closing price less dependent on any single last-minute trade, which make it robust against simple forms of manipulation. %For large institutional investors, it can also provide a cleaner execution venue: a public, exchange-run auction at the official closing price, rather than a routing process where intermediaries may earn small fees or spreads.
 
-\paragraph{Scope.} 
-Blah blah blah.
+Across a typical trading day, most market activity occurs in the CLOB. Because CLOB orders are processed as they arrive, small differences in speed can determine who trades first. High-frequency traders (HFTs) use fast computers, private data links, and automated strategies to exploit these differences, sometimes investing heavily to shave milliseconds from communication times between markets. This has led to concerns that continuous markets reward speed too heavily. The counterpoint is that HFTs can also narrow spreads, add liquidity, and help prices adjust quickly to new information. But even if HFTs narrow spreads, the resulting liquidity may not be beneficial when it can be withdrawn faster than other traders can respond.
 
-% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+\subsection{Frequent Batch Auctions (FBAs)}
 
-\paragraph{Contributions.} 
-Our primary contributions are as follows.
+In an opening or closing auction, orders are collected over time and executed together at a single price. Since trades are not matched one-by-one as orders arrive, reaching the exchange faster by a few microseconds provides little direct advantage. This observation motivates frequent batch auctions (FBAs), proposed by Budish, Cramton, and Shim~\cite{BCS15}. An FBA takes the basic idea of an opening or closing auction and applies it repeatedly throughout the trading day. Instead of using a CLOB, an exchange can collect orders over short intervals (\eg each second) and then clear all the trades within that second using an auction. Since arriving at the start of the batch is no different from arrivng the end of the batch (there is no time priority, only price priority), traders can stop competing over speed and focus their strategies on price.
 
-\begin{enumerate}
+%The goal is not to remove competition from markets, but to change what traders compete over. In a continuous market, traders may compete to be faster by milliseconds or microseconds. In an FBA, orders submitted within the same batch are treated as arriving at the same time, so speed within the batch no longer determines priority. This reduces the payoff from latency races while preserving regular opportunities to trade.
 
-\item Blah blah blah.
+\subsection{Transparency} 
 
-\item Blah blah blah. 
+FBAs come with at least one disadvantage compared to CLOBs: transparency. In a CLOB, the order book is visible. A trader who submits an order may not know what other orders will arrive first, or how the book will change during the delay between submission and execution, but once the order reaches execution time, there is no uncertainty about why it executed, did not execute, or executed at a particular price.
 
-\item Blah blah blah. 
+Batch auctions are different. Orders are collected over a time window and cleared only after the window closes. During that interval, no participant can see the full set of orders that will determine the clearing price, and after the auction closes, participants typically see only the final outcome, not all the trades that failed to execute (even though the closing price of the auction depended on these invisible trades). This makes the auction less transparent: a trader can observe whether their own order executed and at what price, but cannot independently verify that the exchange included all eligible orders, excluded ineligible ones, chose the correct clearing price, and allocated trades appropriately.
 
-\end{enumerate}
+\subsection{Zero-Knowledge Proofs}
+
+Cryptography offers a bridge between correctness and secrecy. Any computation can, in principle, be accompanied by a proof that it was performed correctly; with a zero-knowledge proof (ZKP)~\cite{GMW86}, this can be done without revealing the private inputs to the computation. Applied to batch auctions, this means an exchange could prove that the published clearing price and allocation follow from the submitted orders, without revealing the orders themselves.
+
+In this research, we develop a zero-knowledge frequent batch auction (zk-FBA) protocol: a batch auction in which the exchange publishes the auction outcome together with a cryptographic proof that the clearing price and allocation were computed correctly. We use zk-SNARKs~\cite{GWC19}, which are modern zero-knowledge proofs designed to be compact and fast to verify. In designing the protocol, we do not rely on general-purpose tools for developing zk-SNARKs which are computationally expensive for the exchange which needs to produce a proof at the end of each batch auction (\eg once a second). Instead we design a leaner, custom mathematical representation of the clearing rule; in cryptographic terms, this is a custom arithmetization~\cite{vODC24} for a polynomial interactive oracle proof (PIOP)~\cite{BFS20}. %The protocol relies on a trusted setup~\cite{NRB+24}.
+
+\section{zk-FBAs}
+
+We now turn to our protocol. In this short paper, we provide only an overview of the approach. We refer the interested reader to our GitHub repository for the concrete cryptographic details.\footnote{GitHub: \url{https://github.com/MadibaGroup/2024-zkFBA}} Frequent batch auctions (FBAs) are primarily an academic market-design proposal~\cite{BCS14} rather than a widely deployed, operational standard, so there is no single canonical specification of exactly how it should operate. In this research, we fill on some concrete details by adapting the structure of a modern closing auction (in the style of NASDAQ's Closing Cross), just with the assumption that it runs frequently (\eg once a minute instead of once a day).
+
+\subsection{Order Types} 
+
+Like a CLOB or closing cross, each single asset (\eg an equity like APPL, token like ETH, a contract like June 2026 WTI crude oil futures) will have a dedicated FBA. Our zk-FBA supports three order types: limit, market, and imbalance-only (IO).\footnote{These correspond to LOC, MOC, and IO orders in NASDAQ's closing cross.} Each can be a buy or sell order.
+
+A \textit{limit} order specifies a limit price $\ell$. Let $p^*$ denote the market's closing (clearing) price for the batch. A buy limit order (bid) is eligible to execute only if $p^* \le \ell$, while a sell limit order (ask/offer) is eligible only if $p^* \ge \ell$. 
+
+A \textit{market} order specifies only a quantity (with no limit price). A buy market order is willing to execute at any closing price $p^*$, and a sell market order is likewise willing to execute at any closing price $p^*$; thus market orders are always eligible at $p^*$.
+
+An \textit{imbalance-only} (IO) order is a special type of order that resembles a limit order: it is either a buy order or a sell order with limit price $\ell$. However, IO orders are eligible only if they reduce the residual imbalance at the closing price $p^*$. Concretely, a buy IO is eligible only if $p^* \le \ell$ and there is excess supply at $p^*$ (i.e., more volume offered for sale than there are buyers). In that case, the buy IO may execute to reduce the imbalance. A sell IO is the converse: it is eligible only if $p^* \ge \ell$ and there is excess demand at $p^*$. The purpose of IO orders will be clearer after discussing how a market closes.
+
+\subsection{Market Closing} 
+
+At the end of each batch, the exchange computes a closing price $p^*$ in three conceptual phases. \emph{Phase 1:} Using only limit and market orders (\ie excluding IO), the exchange considers each price tick $p$ and computes the cumulative buy and sell depth at $p$, denoted $D(p)$ and $S(p)$. The executable volume at $p$ is $V(p) = \min(D(p), S(p))$. Let $V_{\max} = \max_p V(p)$ which is the price tick(s) that will allow the greatest volume of trades to execute. If $V_{\max}$ occurs at a single price, we set $p^*$ to that price and move to phase 3 directly. If $V_{\max}$ occurs at a contiguous\footnote{Cumulative buy depth $D(p)$ is non-increasing while cumulative sell depth $S(p)$ is non-decreasing, so $V(p)$ can only rise (weakly) up to the crossing region and then fall (weakly).} interval of prices $[c,d] = \{p : V(p)=V_{\max}\}$, we move to phase 2.
+
+If we enter \emph{Phase 2}, we have a set of prices that maximize trading volume, so the tie-breaker is to minimize the imbalance in supply and demand. For each $p \in [c,d]$ we compute the trade imbalance $\Delta(p) = D(p) - S(p)$, and select $p^*$ by minimizing the imbalance magnitude $|\Delta(p)|$ over $p \in [c,d]$ (with a deterministic tertiary rule if still tied). This gives a final market clearing price $p^*$.
+
+\emph{Phase 3:} Given $p^*$, the exchange executes all eligible limit and market orders at $p^*$. Orders strictly better than $p^*$ execute in full; such limit orders receive price improvement (a buy executes at $p^*\le \ell$ and a sell executes at $p^*\ge \ell$). Limit orders priced exactly at $p^*$ are eligible to execute, but if eligible buy and sell volume at $p^*$ are unequal then one side is short and the other side is long. The exchange then admits eligible IO orders on the short side at $p^*$ to reduce the residual imbalance. If an imbalance remains, the remaining at-price interest on the long side is rationed pro-rata within the batch.
+
+\subsection{Zero-Knowledge} 
+
+The zk-FBA protocol works as follows. The exchange creates arrays indexed by price ticks $p\in\mathcal{P}$: one array for limit-order bid volume $\textsf{BidsVol}[p]$, one for limit-order ask volume $\textsf{AsksVol}[p]$, and analogous arrays for IO volume $\textsf{IOBidsVol}[p]$ and $\textsf{IOAsksVol}[p]$. At the start of a batch these arrays are all zero. The exchange commits to each array by interpolating it as a polynomial over the tick domain and committing with a polynomial commitment scheme~\cite{KZG10} and the resulting commitments are published (publicly).
+
+When a trader submits an order, the exchange updates the appropriate array entry with the added volume. For limit/IO orders, this is at only the tick corresponding to its limit price. For market-order quantities, they are encoded by adding to the highest tick for buys and the lowest ticks for sells. The exchange commits and publishes the new auction book and gives the trader a short \emph{update receipt}: an opening proof showing that the committed polynomial changed by only the correct amount at only the correct tick.
+
+Upon close of a batch, the exchange runs Phases~1--3 above and produces a public \emph{clearing receipt}. Concretely, it materializes (and commits to) tick-indexed arrays for: (i) limit-order histograms $\textsf{BidsVol}[p]$ and $\textsf{AsksVol}[p]$, (ii) IO histograms $\textsf{IOBidsVol}[p]$ and $\textsf{IOAsksVol}[p]$, (iii) cumulative depth curves $D(p)$ and $S(p)$, (iv) executed volume $V(p)$, and (v) the leftover/surplus variables on each side at each tick (used to express imbalance and pro-rata allocation at $p^*$).
+
+The proof system enforces the market logic by stating algebraic relationships among these committed arrays. At a high level, the computation uses only a small set of gadgets: addition, subtraction, minimum, maximum, absolute value, non-negative check, and one-hot selectors. Several of these are common in the style of proof we use, while the others we were able to build from the standard gadgets.
+
+\section{Concluding Remarks}
+
+A practical limitation of zk-FBAs is that despite using very efficient proof techniques, it is not necessarily cheap enough. Producing a cryptographic certificate for every market after every minute (or faster) may simply be too slow or too costly, even with modern tooling. In future work, we will implement and optimize our protocol. The benchmark it, we will also generate synthetic datasets for what order flow might look like for a real market (\eg APPL) adapted to a FBA. The takeaway is that we can choose how often to run the auction and how much to reveal, and justify those choices with benchmarks rather than intuition.
 

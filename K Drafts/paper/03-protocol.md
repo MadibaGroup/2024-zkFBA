@@ -11,23 +11,7 @@ One batch runs in four phases (Figure 1).
 3. **Close.** The exchange runs the clearing rule of Section 2.1 on the book. It publishes either a clearing receipt with a *clearing proof*, or a *no-cross proof* if no bid meets an ask. It also publishes an *update-validity proof* that every logged change is a valid order.
 4. **Verify.** The verifier checks the opening, the chain of updates, and the two proofs against the final commitments.
 
-```mermaid
-sequenceDiagram
-    participant T as Trader
-    participant E as Exchange
-    participant B as Board
-    participant V as Verifier
-    E->>B: Open: commitments to an empty book, proof of emptiness
-    loop each order in the batch
-        T->>E: order (side, type, tick, quantity)
-        E->>B: update of the four book commitments
-        E->>T: update receipt
-        T-->>B: check receipt against the logged update
-    end
-    E->>B: Close: clearing receipt, clearing proof (or no-cross proof), update-validity proof
-    V-->>B: read opening, log, receipt, proofs
-    V->>V: check opening, log chain, update validity, clearing
-```
+<img width="937" height="441" alt="image" src="https://github.com/user-attachments/assets/227bc790-8ab3-4672-a70a-a66388df47e8" />
 
 **Figure 1.** One batch of the zk-FBA. Solid arrows are messages; dashed arrows are reads of the public board.
 

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" font-family="sans-serif" font-size="12">
+<rect width="640" height="360" fill="white"/>
+<rect x="197.5" y="30" width="275.0" height="280" fill="#e8e8e8"/>
+<text x="335.0" y="44" text-anchor="middle">plateau [c, d] = [2, 5]</text>
+<rect x="66.0" y="310.0" width="56.8" height="0.0" fill="#9db7d5"/>
+<rect x="134.8" y="254.0" width="56.8" height="56.0" fill="#9db7d5"/>
+<rect x="203.5" y="170.0" width="56.8" height="140.0" fill="#9db7d5"/>
+<rect x="272.2" y="170.0" width="56.8" height="140.0" fill="#9db7d5"/>
+<rect x="341.0" y="170.0" width="56.8" height="140.0" fill="#9db7d5"/>
+<rect x="409.8" y="170.0" width="56.8" height="140.0" fill="#9db7d5"/>
+<rect x="478.5" y="282.0" width="56.8" height="28.0" fill="#9db7d5"/>
+<rect x="547.2" y="310.0" width="56.8" height="0.0" fill="#9db7d5"/>
+<line x1="60" y1="310.0" x2="610" y2="310.0" stroke="black"/>
+<line x1="60" y1="30" x2="60" y2="310.0" stroke="black"/>
+<text x="94.4" y="326.0" text-anchor="middle">0</text>
+<text x="163.1" y="326.0" text-anchor="middle">1</text>
+<text x="231.9" y="326.0" text-anchor="middle">2</text>
+<text x="300.6" y="326.0" text-anchor="middle">3</text>
+<text x="369.4" y="326.0" text-anchor="middle">4</text>
+<text x="438.1" y="326.0" text-anchor="middle">5</text>
+<text x="506.9" y="326.0" text-anchor="middle">6</text>
+<text x="575.6" y="326.0" text-anchor="middle">7</text>
+<text x="52" y="314.0" text-anchor="end">0</text>
+<line x1="56" y1="310.0" x2="60" y2="310.0" stroke="black"/>
+<text x="52" y="244.0" text-anchor="end">5</text>
+<line x1="56" y1="240.0" x2="60" y2="240.0" stroke="black"/>
+<text x="52" y="174.0" text-anchor="end">10</text>
+<line x1="56" y1="170.0" x2="60" y2="170.0" stroke="black"/>
+<text x="52" y="104.0" text-anchor="end">15</text>
+<line x1="56" y1="100.0" x2="60" y2="100.0" stroke="black"/>
+<text x="335.0" y="352" text-anchor="middle">price tick</text>
+<text x="16" y="170.0" text-anchor="middle" transform="rotate(-90 16 170.0)">volume</text>
+<polyline points="60.0,100.0 128.8,100.0 128.8,100.0 197.5,100.0 197.5,100.0 266.2,100.0 266.2,142.0 335.0,142.0 335.0,142.0 403.8,142.0 403.8,142.0 472.5,142.0 472.5,282.0 541.2,282.0 541.2,310.0 610.0,310.0" fill="none" stroke="#b03030" stroke-width="2"/>
+<polyline points="60.0,310.0 128.8,310.0 128.8,254.0 197.5,254.0 197.5,170.0 266.2,170.0 266.2,170.0 335.0,170.0 335.0,170.0 403.8,170.0 403.8,170.0 472.5,170.0 472.5,100.0 541.2,100.0 541.2,58.0 610.0,58.0" fill="none" stroke="#2a6f3a" stroke-width="2" stroke-dasharray="6 3"/>
+<line x1="60" y1="170.0" x2="610" y2="170.0" stroke="#555" stroke-dasharray="2 3"/>
+<text x="606" y="165.0" text-anchor="end">V_max = 10</text>
+<text x="438.1" y="342.0" text-anchor="middle" font-weight="bold">p*</text>
+<line x1="72" y1="64" x2="98" y2="64" stroke="#b03030" stroke-width="2"/><text x="104" y="68">demand depth AccB</text>
+<line x1="72" y1="82" x2="98" y2="82" stroke="#2a6f3a" stroke-width="2" stroke-dasharray="6 3"/><text x="104" y="86">supply depth AccA</text>
+<rect x="72" y="94" width="26" height="10" fill="#9db7d5"/><text x="104" y="104">executable volume Min</text>
+</svg>

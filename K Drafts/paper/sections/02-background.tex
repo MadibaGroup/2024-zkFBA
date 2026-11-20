@@ -1,0 +1,42 @@
+\section{Background and Related Work}
+\label{sec:background}
+
+\subsection{Batch Auctions and the Closing Cross}
+\label{sec:fba}
+
+We take the clearing rule from the Nasdaq Closing Cross~\cite{nasdaq4754} and assume it runs once per batch. Each asset (an equity such as AAPL, a token such as ETH, a futures contract) has its own auction. Prices lie on a grid of $N$ ticks.
+
+\paragraph{Order types.}
+We support three order types, each as a buy or a sell.\footnote{These correspond to limit-on-close (LOC), market-on-close (MOC), and imbalance-only (IO) orders in the Closing Cross.} A \emph{limit order} carries a limit price $\ell$. With $\pstar$ the clearing price of the batch, a buy limit order (bid) is eligible to execute only if $\pstar \le \ell$, and a sell limit order (ask) only if $\pstar \ge \ell$. A \emph{market order} carries only a quantity and is eligible at any $\pstar$. An \emph{imbalance-only (IO) order} has a limit price like a limit order, but is eligible only when it reduces the residual imbalance at $\pstar$: a buy IO requires $\pstar \le \ell$ and excess supply at $\pstar$, and a sell IO requires $\pstar \ge \ell$ and excess demand.
+
+\paragraph{Clearing.}
+At the end of a batch the exchange determines $\pstar$ in three phases.
+
+\emph{Phase 1.} Using limit and market orders only, the exchange computes for each tick $p$ the cumulative buy depth $D(p)$, the cumulative sell depth $S(p)$, and the executable volume $V(p) = \min(D(p), S(p))$. Let $\Vmax = \max_p V(p)$. Since $D$ is non-increasing and $S$ is non-decreasing, $V$ rises weakly to the crossing region and then falls weakly, so the maximizing ticks form a contiguous interval $[c,d] = \{p : V(p) = \Vmax\}$, which we call the \emph{plateau}. If $c = d$, this tick is $\pstar$.
+
+\emph{Phase 2.} Otherwise the exchange computes the imbalance $\Delta(p) = |D(p) - S(p)|$ on the plateau and keeps the ticks that minimize it. If one tick remains, it is $\pstar$; a deterministic tertiary rule decides among several (\S\ref{sec:protocol}).
+
+\emph{Phase 3.} The exchange executes all eligible limit and market orders at $\pstar$. Orders priced strictly better than $\pstar$ execute in full, and such limit orders receive price improvement. If buy and sell volume at $\pstar$ are unequal, one side is long and the other short. The exchange admits eligible IO orders on the short side to reduce the imbalance, and rations what remains of the long side's interest at exactly $\pstar$ pro rata.
+
+The outcome of a batch is a \emph{clearing receipt} of eight public values (\S\ref{sec:protocol}), or the statement that no bid meets an ask.
+
+\subsection{Succinct Proofs}
+\label{sec:snarks}
+
+Zero-knowledge proofs date to the 1980s~\cite{gmw1986,bcc1988}, and classic constructions produce proofs at least linear in the size of the statement. A succinct argument (SNARK) is sublinear, typically of logarithmic or constant size. Several SNARKs~\cite{sonic2019,marlin2020,plonk2019} share the framework of a polynomial interactive oracle proof~\cite{dark2020}: the prover specifies polynomials, and the verifier checks identities among them at random points. A polynomial commitment scheme makes this concrete by binding the prover to each polynomial and proving its evaluations. We use KZG~\cite{kzg2010}, whose commitments and opening proofs are single group elements. KZG needs a structured reference string $(g, g^{\tau}, g^{\tau^2}, \dots)$ for a secret $\tau$ that must be discarded; the string is universal, and public ceremonies in which one honest participant suffices have produced it at scale~\cite{nikolaenko2024}. The Fiat--Shamir transform~\cite{fiatshamir1986} removes the verifier's messages, provided the transcript binds the full statement~\cite{bernhard2012,dao2023}.
+
+\paragraph{Custom arguments.}
+A computation reaches a SNARK in one of three ways: as a program compiled to the instructions of a virtual machine, as a circuit written in a domain-specific language, or as an arithmetization designed for that computation alone. Each level of abstraction costs the prover time. For ballot validity, a tailored proof is expected to be faster than a general-purpose one~\cite{huber2024}, and Zeeperio's custom PIOP for election tallies proves orders of magnitude more ballots than circuit-based systems in the literature~\cite{zeeperio2026}. We follow the third route. A batch auction suits it: the state is a small number of arrays indexed by price tick, and the rule is a fixed sequence of prefix sums, minima, comparisons, and selections, each of which is a known PIOP gadget~\cite{plonkbook}.
+
+
+\subsection{Related Work}
+\label{sec:related}
+
+\paragraph{Secrecy-preserving auctions and exchanges.}
+Parkes et al.\ run sealed-bid auctions in which the auctioneer proves the outcome correct over encrypted bids~\cite{parkes2008}, and Thorpe and Parkes extend the idea to a securities exchange whose operator proves facts about a hidden order book, such as the spread or the depth~\cite{thorpe2007}. Their proofs grow with the number of orders. A second line removes the operator. Bogetoft et al.\ compute the clearing price of a double auction among three parties with secure multiparty computation, in a deployment for Danish sugar-beet contracts~\cite{bogetoft2009}. Cartlidge, Smart, and Talibi Alaoui evaluate multiparty computation for dark pools and find volume matching practical where a continuous double auction is not~\cite{cartlidge2019}; FuturesMEX distributes a futures exchange among its traders~\cite{massacci2018}, and Ngo et al.\ build dark-pool trading on a witness-key-agreement primitive~\cite{ngo2021}. A recent systematization covers 22 such protocol families~\cite{arote2026}.
+
+\paragraph{Periodic and batch auctions.}
+Closest to our setting, Galal and Youssef give a publicly verifiable periodic auction that keeps bids secret, using aggregated Bulletproofs~\cite{bulletproofs2018} to prove the ordering of a vector of commitments~\cite{galal2021}. FairTraDEX builds a decentralised exchange on frequent batch auctions from zero-knowledge set-membership proofs and an escrowed commit--reveal step, with game-theoretic guarantees against value extraction~\cite{fairtradex2022}; orders are revealed when the batch ends. We differ in three respects. We keep the operator, as venues in regulated markets do, and make its output verifiable. We prove the full rule of a deployed cross, including imbalance-only orders and the tie-breaks that select one price from a plateau. Our proofs have constant size in the number of orders and price ticks. We are not aware of prior work with these three properties together.
+
+\paragraph{Proofs by exchanges.}
+Proofs of solvency are the established case of an exchange proving a statement about data it keeps private. Provisions gave the first zero-knowledge construction~\cite{provisions2015}; later systems shorten the proofs, and an examination of deployed ones found several broken~\cite{chalkias2022}. Xiezhi builds an end-to-end proof of solvency as a custom polynomial argument over KZG~\cite{xiezhi2026}. Our protocol applies the same method to a different duty of the exchange, and the two compose: one venue can prove both that it clears correctly and that it holds what it owes.

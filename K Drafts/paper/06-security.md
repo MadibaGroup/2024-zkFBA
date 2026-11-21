@@ -18,7 +18,7 @@ In the *reference auction*, a trusted exchange acknowledges each order to its tr
 
 **Table 7.** The properties of Definition 1.
 
-| Property | Election counterpart | Checked by | Rests on |
+| Property | Election counterpart [31] | Checked by | Rests on |
 |---|---|---|---|
 | Recorded as submitted | Recorded as cast | Each trader | The receipt equation; binding |
 | No removal | No ballot removed | Anyone | The update-validity proof |

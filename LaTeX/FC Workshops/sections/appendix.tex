@@ -594,9 +594,106 @@ Each term is per random-oracle query. With \(|\mathbb{F}| \approx 2^{254}\), \(n
   \textbf{Rounding.} The fill ratios are proved; the rounding of individual fills is a venue rule.
 \end{itemize}
 
-\section{The Noir Circuit}
+\section{Our Rust Implementation}
+\label{app:zq-rust}
 
-We wrote the Noir circuit directly from the clearing constraints. It supplies an independent implementation of the rule and the general-purpose benchmark in Section 5.5.
+\textbf{Software.} We use arkworks 0.4 in a Cargo workspace, with \texttt{sha2} for hashing and optional \texttt{rayon} support for parallel execution. Table 13 gives the size and responsibilities of the crates.
+
+\textbf{Table 13.} Crates of our Rust implementation. Lines exclude blanks and comments.
+
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.2520\linewidth}>{\raggedright\arraybackslash}p{0.5040\linewidth}>{\raggedright\arraybackslash}p{0.1440\linewidth}@{}}
+\toprule
+Crate & Content & Lines \\
+\midrule\endfirsthead
+\toprule
+Crate & Content & Lines \\
+\midrule\endhead
+\bottomrule\endfoot
+\texttt{zeequent-types} & Parameters, orders, the plaintext book, the receipt & 237 \\
+\texttt{zeequent-kzg} & Commitments, openings, transcript, setup import, file codec & 754 \\
+\texttt{zeequent-core} & Clearing rule, constraints, prover, verifier, committed book, update validity & 2,596 \\
+\texttt{zeequent-cli} & The command-line tool & 1,090 \\
+Tests & 44 tests & 1,459 \\
+\end{longtable}
+\endgroup
+
+\textbf{Setup.} The benchmarks use locally generated test parameters. For an external setup, we read the reference string from a powers-of-tau ceremony file: \([\tau^i]_1\) for \(i \le 2M + 8\), \([1]_2\), \([\tau]_2\), and the file's \([\alpha\tau^i]_1\) section as the blinding basis, so \(\gamma\) is the ceremony's \(\alpha\). From the powers we derive what depends on the domain: the Lagrange-basis points \([L_i(\tau)]_1\), by an inverse FFT over group elements, and \([Z_H(\tau)]_2\). A verifier that receives a setup from another party checks with pairings that its points are powers of one \(\tau\) and that the Lagrange points match them. The check does not show that \(\tau\) is unknown; that rests on the ceremony.
+
+\textbf{Commitments.} We commit directly to the evaluations in each witness column. In the Lagrange basis, \([p(\tau)]_1=\sum_i p[i]\,[L_i(\tau)]_1\) requires one size-\(n\) multi-scalar multiplication, with the column entries as scalars. Our earlier coefficient-based implementation took 3.6 times as long to prove. We commit separately to the mask \(\rho(X)Z_H(X)\) and the blinding term \(\gamma r(X)\), then add both commitments. For columns sampled within the proof, the mask and blinding degrees equal the number of opening points. Section 4.1 gives the degree-three masks for the running book commitments.
+
+\textbf{Quotient.} The combined constraint polynomial has degree up to \(3n + 3\), so we evaluate it on a coset of size \(4n\) that avoids \(H\), divide pointwise by \(Z_H\), and interpolate. The large coset is a union of four cosets of \(H\), and we process them one at a time with transforms of size \(n\). Before each transform we reduce a masked column, whose degree slightly exceeds \(n\), modulo \(X^n - s\), where \(s\) is the constant value of \(X^n\) on that coset. On each small coset \(Z_H\) is a constant and \(\omega x\) is the next point, so a shifted column is a rotation. If the constraints do not hold, the quotient has non-zero coefficients above degree \(2n + 8\) and the prover stops.
+
+\textbf{Openings.} To open several polynomials at a point \(z\), the prover combines them with powers of a challenge, divides by \(X - z\), and commits to the quotient \(W\); it sends one combined blinding evaluation \(b\). With \(C\) and \(v\) the combined commitment and value, the verifier checks both opening points with two pairings:
+
+\[
+e\Big(\sum_{k} r^k \big(C_k - v_k [1]_1 - b_k\, \Gamma + z_k W_k\big),\ [1]_2\Big) = e\Big(\sum_{k} r^k W_k,\ [\tau]_2\Big),
+\]
+
+where \(r\) is a further challenge. We evaluate the left pairing argument with a single multi-scalar multiplication over the proof commitments. This reduced verification time by about a factor of eight relative to combining the commitments pairwise.
+
+\textbf{Public polynomials.} We store a public polynomial as its non-zero values on \(H\). The verifier evaluates it at \(\zeta\) from \(L_i(\zeta) = \omega^i(\zeta^n - 1)/(n(\zeta - \omega^i))\) with one batch inversion, at a cost linear in the number of non-zero values: the width of the plateau for \(Mask_P\), 256 for the range table.
+
+\textbf{Transcript.} We maintain a SHA-256 digest. To absorb a message, we hash the current digest with the message label, length, and contents. To derive a challenge, we reduce 64 derived bytes modulo the field size and hash the challenge back into the state. The protocol label, parameters, receipt, and ordered commitments bind each challenge to the public statement and prior messages.
+
+\textbf{Proof format.} We serialize the column and quotient commitments, followed by two openings. Each opening includes its point, evaluations, combined blinding evaluation, and witness. A compressed curve point occupies 32 bytes. If \(c\) columns are opened and \(s\) also open at \(\omega\zeta\), the proof occupies \(32(2c+s+8)+12\) bytes. With \(c=88\) and \(s=7\) this gives 6,124 bytes. Decompression requires a base-field square root per point and accounts for most single-threaded verification time.
+
+\textbf{Determinism.} At the close we derive the prover's randomness from a hash of its private state, which includes the mask and blinding of every book column. Closing the same batch twice produces the same bytes, and the tool refuses orders after a close. This implements the one-proof rule of Section 6.3 for an honest exchange.
+
+\textbf{Batch files.} The command-line tool keeps a batch in a directory (Table 14) and has one command per protocol step: \texttt{setup}, \texttt{open}, \texttt{order}, \texttt{check-receipt}, \texttt{close}, \texttt{verify}, and \texttt{fill}.
+
+\textbf{Table 14.} Files of one batch, for 32-bit volumes.
+
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1800\linewidth}>{\raggedright\arraybackslash}p{0.3690\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}>{\raggedright\arraybackslash}p{0.1980\linewidth}@{}}
+\toprule
+File & Content & Public & Size \\
+\midrule\endfirsthead
+\toprule
+File & Content & Public & Size \\
+\midrule\endhead
+\bottomrule\endfoot
+Opening & Four commitments with their emptiness proofs & Yes & 1,576 B \\
+Board & The log & Yes & 416 B per order \\
+Update receipt & Column, tick, quantity, blinding, commitment before and after & To its trader & 192 B \\
+Outcome & The clearing receipt, or no-cross & Yes & About 100 B \\
+Clearing proof &  & Yes & 6,124 B \\
+Update-validity proof &  & Yes & 1,700 B \\
+State & Plaintext book, masks, blindings, update history & No & Grows with the orders \\
+\end{longtable}
+\endgroup
+
+\textbf{Tests.} Table 15 pairs implementation checks with the claims they exercise. In tests with a false statement we disable the prover's local checks, pass its output to the verifier, and check that the verifier rejects it.
+
+\textbf{Table 15.} Claims and the tests that support them.
+
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.3150\linewidth}>{\raggedright\arraybackslash}p{0.5850\linewidth}@{}}
+\toprule
+Claim & Test \\
+\midrule\endfirsthead
+\toprule
+Claim & Test \\
+\midrule\endhead
+\bottomrule\endfoot
+The code's clearing rule is Definition 2 & 2,000 random books; the receipt is recomputed from the definition by direct search \\
+The constraints admit one receipt (Theorem 1) & 300 random books of 6 ticks; every receipt with values up to the total volume is tried, and exactly one is accepted \\
+The polynomial system equals the integer constraints & Receipt values and witness cells are changed one at a time and proved with the prover's checks off; the verifier rejects each \\
+Every tie-break case proves and verifies & One book per case of the clearing-rule appendix, and a padded domain \\
+A crossing book cannot be declared no-cross & Direct test \\
+A logged step cannot cancel an order (no removal) & The attack of Section 4.3 is run; no update-validity proof verifies, whatever quantity and tick the exchange claims \\
+A repeated close reveals nothing new & The two proofs are compared byte for byte \\
+Range checks are exact & An 8-bit quantity in 3-bit limbs, a width that is not a multiple of the limb: values in range pass and values out of range fail \\
+\end{longtable}
+\endgroup
+
+\section{Our Noir Implementation}
+\label{app:zq-noir}
+
+We wrote the Noir circuit directly from the clearing constraints. It supplies an independent implementation of the rule and the general-purpose benchmark in Section~\ref{sec:zq-comparison}.
 
 \textbf{Statement.} The witness consists of four arrays of \(N\) unsigned 32-bit volumes and a salt. The crossing circuit publishes nine field elements (288 bytes) for the book digest and eight receipt values. The no-cross circuit publishes only the digest.
 
@@ -608,83 +705,91 @@ We wrote the Noir circuit directly from the clearing constraints. It supplies an
 
 \textbf{Table 16.} Types of the circuit and the constraints they replace.
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.2070\linewidth}>{\raggedright\arraybackslash}p{0.2250\linewidth}>{\raggedright\arraybackslash}p{0.4680\linewidth}@{}}
+\toprule
 Quantity & Type & Replaces \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Quantity & Type & Replaces \\
+\midrule\endhead
+\bottomrule\endfoot
 Volume at one tick & 32-bit unsigned & F1, F2, F24, F25 \\
 Depths, \(Min\), surpluses, \(\Delta\) & 64-bit unsigned & F12, F13, and the range of every accumulated value \\
-\(c\), \(d\), \(p^*\) & 32-bit unsigned & \\
-Side & Boolean & \\
-Array of length \(N\) & & F3, F4, F26, F27 \\
+\(c\), \(d\), \(p^*\) & 32-bit unsigned &  \\
+Side & Boolean &  \\
+Array of length \(N\) &  & F3, F4, F26, F27 \\
 \end{longtable}
+\endgroup
 
 \textbf{Receipt.} An unconstrained function computes a candidate receipt from the book. The circuit then applies the scalar and per-tick checks in Table 17. By Theorem 1, every accepted candidate equals the rule's receipt. The backend handles reads at \(c\), \(d\), \(p^*\), and their neighbours as memory lookups because those positions depend on the witness.
 
-\textbf{Table 17.} Steps of the clearing check in the circuit.
+\textbf{Table 17.} Steps of the clearing check in our Noir implementation.
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1710\linewidth}>{\raggedright\arraybackslash}p{0.5760\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}@{}}
+\toprule
 Step & Assertion & Constraints \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Step & Assertion & Constraints \\
+\midrule\endhead
+\bottomrule\endfoot
 Receipt & \(c \le p^* \le d < N\); \(V_{max} \ge 1\); \(V_{min\Delta} \le P\); \(s\), \(P\), \(J\) zero when balanced & Scalar checks \\
 Depth & Running sums from the top tick and from the bottom tick & F5--F8, F28--F31 \\
 Each tick & The minimum; \(\Delta = SurpA + SurpB\); \(Min \le V_{max}\); \(\Delta \ge V_{min\Delta}\) on \([c,d]\) & F9--F14, F18, F19 \\
 Plateau & \(Min[c] = Min[d] = V_{max}\); \(Min\) strictly lower at \(c - 1\) and \(d + 1\) where they exist & F15--F17 \\
 Clearing tick & The surpluses at \(p^*\) are \(V_{min\Delta}\) on the long side and 0 on the other & F20 \\
 Tie-break & If \(p^* > c\) and supply is long or the batch is balanced, \(\Delta[p^* - 1] > V_{min\Delta}\) & F21 \\
-Rationing & \(P\) is the long side\textquotesingle s volume at \(p^*\); \(J\) is the short side\textquotesingle s eligible IO depth at \(p^*\) & F32, F33 \\
+Rationing & \(P\) is the long side's volume at \(p^*\); \(J\) is the short side's eligible IO depth at \(p^*\) & F32, F33 \\
 \end{longtable}
+\endgroup
 
 \textbf{Digest.} We pack the four volumes at each tick into \(b+2^{32}a+2^{64}b^{io}+2^{96}a^{io}\). A width-four Poseidon2 sponge with rate three and capacity one absorbs the resulting field elements. We initialize the state to \((\text{salt},0,0,N)\), permute once before absorption, and take the first state element as the output after absorption. The private salt prevents an observer from testing a guessed low-volume book against the digest without also guessing the salt. At 1,000 ticks a Pedersen hash of the unpacked volumes required 1.78 million gates. Our sponge uses about 25,000. This arrangement of the standard permutation has not received a separate security analysis.
 
 \textbf{Size.} The circuit has 12,757 gates at 100 ticks, 100,357 at 1,000, and 197,666 at 2,000, about 100 per tick. The proof is 14,656 bytes and the verification key 3,680 bytes at every size. The number of ticks is a compile-time constant, so each book size has its own verification key.
 
-\textbf{Tests.} Four of 20 library tests check hand-computed receipts for a demand-long book, a supply-long book, a balanced book, and a book with one maximizing tick and IO interest. Twelve tests submit false receipts and check which constraint rejects them. The remaining tests cover no-cross and the dependence of the digest on the book and salt. The Noir and Rust receipts agree on all 57 calibrated and replayed benchmark books and on the 362 books constructed from Cboe outcomes in Section 5.7.
+\textbf{Tests.} Four of 20 library tests check hand-computed receipts for a demand-long book, a supply-long book, a balanced book, and a book with one maximizing tick and IO interest. Twelve tests submit false receipts and check which constraint rejects them. The remaining tests cover no-cross and the dependence of the digest on the book and salt. Across the 57 calibrated and replayed books and the 362 Cboe-derived books, the six fields exported by our Rust benchmark agree with our Noir implementation. Independent recomputation from the input volumes checks all eight fields returned by our Noir implementation, including the two rationing quantities.
 
 \textbf{Toolchain.} We compile with \texttt{nargo} 1.0.0 and prove with Barretenberg 6.0.0 in its zero-knowledge UltraHonk mode with a Poseidon2 transcript. The circuit is 208 lines and its tests 161.
 
 \section{Order-Flow Data and Tie Frequency}
+\label{app:zq-data}
 
 \subsection{Source and Choice of Days}
 
-We reconstruct the AAPL book from Nasdaq TotalView-ITCH order and trade messages \cite{itch}. We fixed the following day-selection procedure before measuring tie frequency.
+We reconstruct the AAPL book from Nasdaq TotalView-ITCH order and trade messages \cite{itch}. We defined the initial sampling procedure before measuring tie frequency and extended the event screen after the first replay. The extension left the four calibration dates unchanged.
 
 \begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  \textbf{Frame.} The 219 trading days from 2 January to 13 November 2026.
-\item
-  \textbf{Exclusions.} We remove days within one day of an FOMC decision, a CPI release, or an employment report, monthly option expiries, the index reconstitution day, the days around the election, early closes, and days next to holidays. 119 days remain.
-\item
-  \textbf{Order.} We shuffle the remaining days with a fixed seed.
-\item
-  \textbf{Screen.} We take the days in that order and keep a day unless it has a further scheduled event (other macro releases, central-bank minutes, month ends, earnings days of AAPL and NVDA and the day after, AAPL\textquotesingle s ex-dividend and product-event days), an unusual session in the stock or in the market (a return beyond 2 standard deviations of the last 60 days, volume above twice or below half the 20-day median, a range above twice the median), or a shock in six large technology stocks or in semiconductor, oil, Treasury, or gold funds. 62 of the 119 days pass.
+\item \textbf{Frame.} The 219 trading days from 2 January to 13 November 2026.
+\item \textbf{Exclusions.} We remove days within one day of an FOMC decision, a CPI release, or an employment report, monthly option expiries, the index reconstitution day, the days around the election, early closes, and days next to holidays. 119 days remain.
+\item \textbf{Order.} We shuffle the remaining days with a fixed seed.
+\item \textbf{Screen.} We take the days in that order and keep a day unless it has a further scheduled event (other macro releases, central-bank minutes, month ends, earnings days of AAPL and NVDA and the day after, AAPL's ex-dividend and product-event days), an unusual session in the stock or in the market (a return beyond 2 standard deviations of the last 60 days, volume above twice or below half the 20-day median, a range above twice the median), or a shock in six large technology stocks or in semiconductor, oil, Treasury, or gold funds. 62 of the 119 days pass.
 \end{enumerate}
 
 We analyze the first four passing days in the shuffled sequence. Table 18 also includes one rejected day, which we replay for a separate comparison.
 
 \textbf{Table 18.} Days replayed.
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.2250\linewidth}>{\raggedright\arraybackslash}p{0.1980\linewidth}>{\raggedright\arraybackslash}p{0.4770\linewidth}@{}}
+\toprule
 Day & Order messages & Role \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Day & Order messages & Role \\
+\midrule\endhead
+\bottomrule\endfoot
 23 January 2026 & 3,176,565 & Analysis \\
 4 May 2026 & 5,629,415 & Analysis \\
 9 July 2026 & 6,065,233 & Analysis \\
 20 July 2026 & 11,064,805 & Analysis \\
 27 August 2026 & 5,092,753 & Rejected by the screen (day after NVDA earnings) \\
 \end{longtable}
+\endgroup
 
 \subsection{From Messages to Batches}
 
@@ -692,44 +797,71 @@ On a one-cent grid, we partition the regular session (09:30 to 16:00 New York ti
 
 Including resting orders changes the result. Using executions alone produces a plateau in nearly every batch. With resting depth included, most crossing batches have one maximizing price.
 
-\textbf{Reconstruction checks.} Resting depth stayed non-negative on every day. Across 156,950 crossing batches on the four analysis days, no plateau reached a window boundary and every batch had a candidate clearing tick. The Python replay passes the Rust test cases. To select benchmark books, we take the first plateau with one imbalance minimizer and the first with several, whenever present, for each of the five days and four durations. This gives 32 books with identical Python and Rust receipts.
+\textbf{Reconstruction checks.} Resting depth stayed non-negative on every day. Across 156,950 crossing batches on the four analysis days, no plateau reached a window boundary and every batch had a candidate clearing tick. The Python replay passes the test cases from our Rust implementation. To select benchmark books, we take the first plateau with one imbalance minimizer and the first with several, whenever present, for each of the five days and four durations. This gives 32 benchmark books with plateaus two to 35 ticks wide. Twelve also have a tie at minimum imbalance. We use this selected set to exercise the tie-break. The four screened days supply the denominator for frequency estimates.
 
 \subsection{Tie Frequency}
 
-We classify crossing batches by whether a tie remains after volume maximization and, if so, after imbalance minimization. Table 6 reports means across four days. The plateau frequency at one second is 3.63\%, with a 95\% \(t\) interval of 1.5\% to 5.7\%. At 0.1, 10, and 60 seconds the frequencies are 2.10\% (1.2\% to 3.0\%), 2.85\% (1.6\% to 4.1\%), and 0.71\% (0.5\% to 0.9\%). The intervals use four daily observations, even though each day contains many batches.
+\textbf{Table 6.} Tie frequency in replayed AAPL order flow, as a percentage of crossing batches; mean over four days, standard deviation across days in parentheses.
+
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.0990\linewidth}>{\raggedright\arraybackslash}p{0.1800\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}>{\raggedright\arraybackslash}p{0.2790\linewidth}>{\raggedright\arraybackslash}p{0.1890\linewidth}@{}}
+\toprule
+Batch length & Crossing batches per day & One maximizing tick & Plateau, one minimum-imbalance tick & Plateau, several \\
+\midrule\endfirsthead
+\toprule
+Batch length & Crossing batches per day & One maximizing tick & Plateau, one minimum-imbalance tick & Plateau, several \\
+\midrule\endhead
+\bottomrule\endfoot
+0.1 s & 23,131 & 97.90 (0.59) & 1.78 (0.40) & 0.33 (0.29) \\
+1 s & 13,386 & 96.37 (1.32) & 3.31 (1.05) & 0.32 (0.31) \\
+10 s & 2,331 & 97.15 (0.78) & 2.79 (0.70) & 0.06 (0.08) \\
+60 s & 390 & 99.29 (0.13) & 0.71 (0.13) & 0.00 (0.00) \\
+\end{longtable}
+\endgroup
+
+Muni Toke derives the clearing-price range under a stochastic call-auction model \cite{munitoke2015}. Here we measure ties under our rule on reconstructed continuous-market order flow. We classify crossing batches by whether a tie remains after volume maximization and, if so, after imbalance minimization. Table 6 reports means across four days. The plateau frequency at one second is 3.63\%, with a 95\% \(t\) interval of 1.5\% to 5.7\%. At 0.1, 10, and 60 seconds the frequencies are 2.10\% (1.2\% to 3.0\%), 2.85\% (1.6\% to 4.1\%), and 0.71\% (0.5\% to 0.9\%). The intervals use four daily observations, even though each day contains many batches.
 
 \textbf{Table 19.} Per day: percentage of crossing batches with a plateau / with several minimum-imbalance ticks.
 
-\begin{longtable}[]{@{}lllll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1800\linewidth}>{\raggedright\arraybackslash}p{0.1800\linewidth}>{\raggedright\arraybackslash}p{0.1800\linewidth}>{\raggedright\arraybackslash}p{0.1800\linewidth}>{\raggedright\arraybackslash}p{0.1800\linewidth}@{}}
+\toprule
 Day & 0.1 s & 1 s & 10 s & 60 s \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Day & 0.1 s & 1 s & 10 s & 60 s \\
+\midrule\endhead
+\bottomrule\endfoot
 23 January & 1.30 / 0.09 & 2.16 / 0.07 & 2.11 / 0.00 & 0.77 / 0.00 \\
 4 May & 2.25 / 0.14 & 3.62 / 0.13 & 2.44 / 0.00 & 0.77 / 0.00 \\
 9 July & 2.14 / 0.35 & 3.38 / 0.35 & 3.91 / 0.17 & 0.77 / 0.00 \\
 20 July & 2.72 / 0.72 & 5.37 / 0.75 & 2.95 / 0.09 & 0.51 / 0.00 \\
 27 August (rejected) & 1.80 / 0.39 & 3.33 / 0.48 & 3.25 / 0.00 & 0.51 / 0.00 \\
 \end{longtable}
+\endgroup
 
 At all four batch lengths, the rejected day's overall plateau frequency falls within the range observed on the four analysis days.
 
 \textbf{Table 20.} By time of day, four analysis days pooled: plateau / several minimum-imbalance ticks, in percent.
 
-\begin{longtable}[]{@{}llll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.2250\linewidth}>{\raggedright\arraybackslash}p{0.2250\linewidth}>{\raggedright\arraybackslash}p{0.2250\linewidth}>{\raggedright\arraybackslash}p{0.2250\linewidth}@{}}
+\toprule
 Batch length & First 30 minutes & Middle & Last 30 minutes \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Batch length & First 30 minutes & Middle & Last 30 minutes \\
+\midrule\endhead
+\bottomrule\endfoot
 0.1 s & 3.62 / 0.87 & 2.04 / 0.31 & 1.29 / 0.17 \\
 1 s & 5.92 / 0.86 & 3.70 / 0.32 & 2.01 / 0.13 \\
 10 s & 3.33 / 0.28 & 2.94 / 0.05 & 1.39 / 0.00 \\
 60 s & 0.00 / 0.00 & 0.76 / 0.00 & 0.83 / 0.00 \\
 \end{longtable}
+\endgroup
 
 At batch lengths up to ten seconds, ties are most frequent in the first half hour and least frequent in the last.
 
@@ -740,40 +872,41 @@ At batch lengths up to ten seconds, ties are most frequent in the first half hou
 We centre each crossing book on its clearing tick and calibrate each batch duration separately. We record occupancy and volume quantiles by tick up to 100 ticks from the centre and in 12 bands out to 10,000 ticks. We also retain the joint volumes within 10 ticks of the centre and the total bid volume above and ask volume below that region. Table 21 compares three generators using 20,000 books of 601 ticks each.
 
 \begin{itemize}
-\item
-  \textbf{Independent ticks.} Each tick is drawn on its own from the measured occupancy and volume distribution.
-\item
-  \textbf{Core occupancy.} Which ticks within 5 of the centre hold volume is copied jointly from a real batch; the sizes are independent.
-\item
-  \textbf{Bootstrap.} The volumes within 10 ticks of the centre are those of a real batch, the periphery is drawn from the marginals, and its totals are rescaled to that batch\textquotesingle s.
+\item \textbf{Independent ticks.} Each tick is drawn on its own from the measured occupancy and volume distribution.
+\item \textbf{Core occupancy.} Which ticks within 5 of the centre hold volume is copied jointly from a real batch; the sizes are independent.
+\item \textbf{Bootstrap.} The volumes within 10 ticks of the centre are those of a real batch, the periphery is drawn from the marginals, and its totals are rescaled to that batch's.
 \end{itemize}
 
 \textbf{Table 21.} Tie classes of real and generated batches, in percent of crossing batches, and the median \(V_{max}\). The real rows pool all crossing batches, so they differ slightly from the means over days in Table 6.
 
-\begin{longtable}[]{@{}llllll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}@{}}
+\toprule
 Batch length & Source & One maximizing tick & Plateau, one minimum & Plateau, several & Median \(V_{max}\) \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Batch length & Source & One maximizing tick & Plateau, one minimum & Plateau, several & Median \(V_{max}\) \\
+\midrule\endhead
+\bottomrule\endfoot
 0.1 s & Real & 97.81 & 1.82 & 0.38 & 80 \\
-& Independent ticks & 91.17 & 7.60 & 1.23 & 67 \\
-& Core occupancy & 97.44 & 2.48 & 0.09 & 63 \\
-& Bootstrap & 97.77 & 1.87 & 0.36 & 80 \\
+ & Independent ticks & 91.17 & 7.60 & 1.23 & 67 \\
+ & Core occupancy & 97.44 & 2.48 & 0.09 & 63 \\
+ & Bootstrap & 97.77 & 1.87 & 0.36 & 80 \\
 1 s & Real & 96.21 & 3.43 & 0.36 & 120 \\
-& Independent ticks & 85.40 & 12.45 & 2.15 & 132 \\
-& Core occupancy & 93.89 & 5.91 & 0.20 & 119 \\
-& Bootstrap & 95.94 & 3.74 & 0.32 & 120 \\
+ & Independent ticks & 85.40 & 12.45 & 2.15 & 132 \\
+ & Core occupancy & 93.89 & 5.91 & 0.20 & 119 \\
+ & Bootstrap & 95.94 & 3.74 & 0.32 & 120 \\
 10 s & Real & 97.15 & 2.79 & 0.06 & 804 \\
-& Independent ticks & 92.03 & 7.43 & 0.55 & 1,034 \\
-& Core occupancy & 93.67 & 6.21 & 0.11 & 1,028 \\
-& Bootstrap & 97.22 & 2.73 & 0.05 & 801 \\
+ & Independent ticks & 92.03 & 7.43 & 0.55 & 1,034 \\
+ & Core occupancy & 93.67 & 6.21 & 0.11 & 1,028 \\
+ & Bootstrap & 97.22 & 2.73 & 0.05 & 801 \\
 60 s & Real & 99.29 & 0.71 & 0.00 & 4,852 \\
-& Independent ticks & 98.26 & 1.70 & 0.04 & 6,562 \\
-& Core occupancy & 98.52 & 1.43 & 0.05 & 6,546 \\
-& Bootstrap & 99.31 & 0.69 & 0.00 & 4,859 \\
+ & Independent ticks & 98.26 & 1.70 & 0.04 & 6,562 \\
+ & Core occupancy & 98.52 & 1.43 & 0.05 & 6,546 \\
+ & Bootstrap & 99.31 & 0.69 & 0.00 & 4,859 \\
 \end{longtable}
+\endgroup
 
 Drawing ticks independently overstates the frequency of plateaus at every duration. Copying the central occupancy pattern narrows the discrepancy at 0.1 s, but independent sizes can still shift the crossing price. The bootstrap preserves both the volumes near the clearing tick and the outer totals that enter the depth calculation there. Its one-second plateau frequency is 4.06\%, close to the pooled replay frequency of 3.79\%. This agreement assesses how well resampling preserves the observed frequencies.
 
@@ -787,40 +920,48 @@ The estimates depend on the replay definition, particularly the inclusion of res
 
 \textbf{Feed and instrument.} We use 111,871 BXE messages for Orange SA (ORAp) on 1 September 2020 \cite{cboepitch}. The file includes order-level traffic for the displayed book. For the periodic auctions it supplies the following three message types.
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.2790\linewidth}>{\raggedright\arraybackslash}p{0.4410\linewidth}>{\raggedright\arraybackslash}p{0.1800\linewidth}@{}}
+\toprule
 Message & Fields we use & Count \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Auction update, type periodic & Indicative price and size of the auction now forming & 924 \\
+\midrule\endfirsthead
+\toprule
+Message & Fields we use & Count \\
+\midrule\endhead
+\bottomrule\endfoot
+Auction update, type periodic & Indicative price and size of the auction now forming & 922 \\
 Auction summary, type periodic & Final price and size & 362 \\
 Trade, flagged as auction execution & Quantity and price of one execution & 400 \\
 \end{longtable}
+\endgroup
 
-We assign a flagged execution to an auction when its timestamp matches the auction summary. For each of the 362 summaries, the assigned execution quantities sum to the reported size. Individual auction orders, including unexecuted interest, are absent from the file.
+Of the 922 periodic updates, 493 carry a positive indicative price. We associate each such update with the next periodic summary. The time between those messages need not equal the auction duration. We assign a flagged execution to an auction when its timestamp matches the auction summary. For each of the 362 summaries, the assigned execution quantities sum to the reported size. Individual auction orders, including unexecuted interest, are absent from the file.
 
 \textbf{Table 29.} The periodic auctions of ORAp on BXE, 1 September 2020.
 
-\begin{longtable}[]{@{}ll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.4050\linewidth}>{\raggedright\arraybackslash}p{0.4950\linewidth}@{}}
+\toprule
 Quantity & Value \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Quantity & Value \\
+\midrule\endhead
+\bottomrule\endfoot
 Auctions & 362, between 08:02 and 16:30 \\
 Shares traded in auctions & 238,921 \\
-Shares per auction & Median 434; quartiles 305 and 878; minimum 9, maximum 5,116 \\
+Shares per auction & Median 433.5; quartiles 305 and 878; minimum 9, maximum 5,116 \\
 Executions per auction & One: 327; two: 32; three: 3 \\
-Indicative updates per auction & One: 282; two: 56; three or more: 24 \\
-Time from first indicative update to execution & At most 100 ms: 320; above 1 s: 35 \\
+Positive-price updates assigned to each summary & One: 282; two: 56; three or more: 24 \\
+First assigned positive-price update to summary & At most 100 ms: 320; above 1 s: 35 \\
 Time between auctions & Median 44 s \\
 Auction prices & EUR 9.193 to 9.359, on a grid of EUR 0.001; 126 distinct \\
 \end{longtable}
+\endgroup
 
-For comparison, the executions against the venue\textquotesingle s displayed book for this symbol that day total about 0.57 million shares.
+For comparison, the executions against the venue's displayed book for this symbol that day total about 0.57 million shares.
 
 \textbf{Constructed books.} For each summary we centre a grid of 101 ticks, spaced EUR 0.001 apart, on the published price. We put the reported executed volume on each side at the centre and leave every other tick empty. The centre is then the unique maximizing tick and has zero imbalance. Both implementations generate a proof for each of the 362 books. In every case, the receipt's price and volume match the published fields.
 
@@ -829,45 +970,80 @@ For comparison, the executions against the venue\textquotesingle s displayed boo
 \textbf{Scope.} The sample covers one stock on one day. Our interpretation of the message fields still requires confirmation against the specification in force on that date. Permission to publish derived figures depends on the data licence.
 
 \section{Extended Benchmarks}
+\label{app:zq-bench}
 
-All timings are in milliseconds and use the laptop and thread settings in Section 5.2. We report medians of 20 Rust runs and 10 Noir runs per book, collected in a single sitting. Rust measurements time function calls and report decoding separately from proof verification. Noir measurements time whole commands.
+Times are in milliseconds unless stated otherwise. Section~\ref{sec:zq-platform} describes the laptop. For the calibrated and replayed books, we timed 20 runs per book and thread count for our Rust implementation and ten for our Noir implementation. For the Cboe-derived books we timed five runs per book and thread count for our Rust implementation and one eight-thread run per book for our Noir implementation.
 
 \subsection{The Clearing Proof Against Ticks and Volume Width}
 
-\textbf{Table 22.} Uniform books, 250 orders per batch, one thread.
+\textbf{Table 22.} Our Rust implementation on uniform books, 250 orders per batch, one thread.
 
-\begin{longtable}[]{@{}lllllllllll@{}}
-\toprule\noalign{}
-\(N\) & \(n\) & \(k_{in}\) & Commitments & Proof (B) & Prove & Verify & Decode & Update-validity prove & No-cross prove & Batch check \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-100 & 128 & 16 & 70 & 4,908 & 264 & 9.2 & 15.3 & 378 & 92 & 77 \\
-100 & 128 & 32 & 97 & 6,636 & 349 & 10.2 & 21.1 & 415 & 111 & 78 \\
-250 & 256 & 16 & 52 & 3,756 & 298 & 8.7 & 11.5 & 384 & 118 & 78 \\
-250 & 256 & 32 & 79 & 5,484 & 448 & 9.6 & 17.5 & 449 & 152 & 80 \\
-500 & 512 & 16 & 62 & 4,396 & 582 & 9.0 & 13.5 & 381 & 190 & 77 \\
-500 & 512 & 32 & 89 & 6,124 & 781 & 9.7 & 19.0 & 422 & 234 & 78 \\
-1,000 & 1,024 & 16 & 62 & 4,396 & 998 & 9.3 & 14.0 & 382 & 320 & 78 \\
-1,000 & 1,024 & 32 & 89 & 6,124 & 1,366 & 10.0 & 19.3 & 424 & 402 & 79 \\
-2,000 & 2,048 & 16 & 62 & 4,396 & 1,803 & 9.2 & 14.1 & 625 & 568 & 80 \\
-2,000 & 2,048 & 32 & 89 & 6,124 & 2,462 & 10.0 & 19.6 & 693 & 715 & 81 \\
-4,000 & 4,096 & 16 & 62 & 4,396 & 3,330 & 9.1 & 13.7 & 1,102 & 1,047 & 85 \\
-4,000 & 4,096 & 32 & 89 & 6,124 & 4,506 & 10.1 & 19.2 & 1,218 & 1,303 & 87 \\
-8,000 & 8,192 & 16 & 62 & 4,396 & 6,367 & 8.9 & 13.6 & 1,950 & 1,950 & 95 \\
-8,000 & 8,192 & 32 & 89 & 6,124 & 8,723 & 9.8 & 18.9 & 2,196 & 2,484 & 95 \\
+\begingroup
+\setlength{\tabcolsep}{1.5pt}\scriptsize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}@{}}
+\toprule
+\(N\) & \(n\) & \(k_{in}\) & Commitments & Proof (B) & Prove & Verify & Decode \\
+\midrule\endfirsthead
+\toprule
+\(N\) & \(n\) & \(k_{in}\) & Commitments & Proof (B) & Prove & Verify & Decode \\
+\midrule\endhead
+\bottomrule\endfoot
+100 & 128 & 16 & 70 & 4,908 & 264 & 9.2 & 15.3 \\
+100 & 128 & 32 & 97 & 6,636 & 349 & 10.2 & 21.1 \\
+250 & 256 & 16 & 52 & 3,756 & 298 & 8.7 & 11.5 \\
+250 & 256 & 32 & 79 & 5,484 & 448 & 9.6 & 17.5 \\
+500 & 512 & 16 & 62 & 4,396 & 582 & 9.0 & 13.5 \\
+500 & 512 & 32 & 89 & 6,124 & 781 & 9.7 & 19.0 \\
+1,000 & 1,024 & 16 & 62 & 4,396 & 998 & 9.3 & 14.0 \\
+1,000 & 1,024 & 32 & 89 & 6,124 & 1,366 & 10.0 & 19.3 \\
+2,000 & 2,048 & 16 & 62 & 4,396 & 1,803 & 9.2 & 14.1 \\
+2,000 & 2,048 & 32 & 89 & 6,124 & 2,462 & 10.0 & 19.6 \\
+4,000 & 4,096 & 16 & 62 & 4,396 & 3,330 & 9.1 & 13.7 \\
+4,000 & 4,096 & 32 & 89 & 6,124 & 4,506 & 10.1 & 19.2 \\
+8,000 & 8,192 & 16 & 62 & 4,396 & 6,367 & 8.9 & 13.6 \\
+8,000 & 8,192 & 32 & 89 & 6,124 & 8,723 & 9.8 & 18.9 \\
 \end{longtable}
+\endgroup
 
-\textbf{Table 23.} The same runs on eight threads.
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}@{}}
+\toprule
+\(N\) & \(n\) & \(k_{in}\) & Update-validity prove & No-cross prove & Batch check \\
+\midrule\endfirsthead
+\toprule
+\(N\) & \(n\) & \(k_{in}\) & Update-validity prove & No-cross prove & Batch check \\
+\midrule\endhead
+\bottomrule\endfoot
+100 & 128 & 16 & 378 & 92 & 77 \\
+100 & 128 & 32 & 415 & 111 & 78 \\
+250 & 256 & 16 & 384 & 118 & 78 \\
+250 & 256 & 32 & 449 & 152 & 80 \\
+500 & 512 & 16 & 381 & 190 & 77 \\
+500 & 512 & 32 & 422 & 234 & 78 \\
+1,000 & 1,024 & 16 & 382 & 320 & 78 \\
+1,000 & 1,024 & 32 & 424 & 402 & 79 \\
+2,000 & 2,048 & 16 & 625 & 568 & 80 \\
+2,000 & 2,048 & 32 & 693 & 715 & 81 \\
+4,000 & 4,096 & 16 & 1,102 & 1,047 & 85 \\
+4,000 & 4,096 & 32 & 1,218 & 1,303 & 87 \\
+8,000 & 8,192 & 16 & 1,950 & 1,950 & 95 \\
+8,000 & 8,192 & 32 & 2,196 & 2,484 & 95 \\
+\end{longtable}
+\endgroup
 
-\begin{longtable}[]{@{}llllllll@{}}
-\toprule\noalign{}
+\textbf{Table 23.} Our Rust implementation on the same books with eight threads.
+
+\begingroup
+\setlength{\tabcolsep}{1.5pt}\scriptsize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}@{}}
+\toprule
 \(N\) & \(k_{in}\) & Prove & Verify & Decode & Update-validity prove & No-cross prove & Batch check \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+\(N\) & \(k_{in}\) & Prove & Verify & Decode & Update-validity prove & No-cross prove & Batch check \\
+\midrule\endhead
+\bottomrule\endfoot
 100 & 16 & 98 & 6.4 & 3.6 & 122 & 41 & 52 \\
 100 & 32 & 117 & 6.7 & 5.0 & 131 & 50 & 53 \\
 250 & 16 & 115 & 6.2 & 2.9 & 113 & 56 & 51 \\
@@ -883,20 +1059,193 @@ All timings are in milliseconds and use the laptop and thread settings in Sectio
 8,000 & 16 & 1,590 & 6.7 & 3.6 & 532 & 533 & 70 \\
 8,000 & 32 & 2,026 & 6.8 & 4.6 & 549 & 618 & 69 \\
 \end{longtable}
+\endgroup
 
 At \(n=256\), the accumulated widths of 24 and 40 bits are multiples of eight, so the proof needs no scaled top limbs. This explains the smaller column count than at \(n=512\). At \(n=128\) the prover uses seven-bit limbs and needs more columns. With 250 orders the update-validity domain has \(\max(n,1024)\) rows. Timings vary little up to \(n=1024\) and increase at larger \(n\). Using eight threads on four physical cores speeds up clearing-proof generation by a factor of 3.6 at \(n=1024\) and 4.3 at \(n=8192\).
 
+\textbf{Figure 3.} Scaling with price-grid size. Our Rust implementation uses uniform books and our Noir implementation uses calibrated books. Panel (a) shows proving time. For our Noir implementation it plots the median of the paired witness and proof times, whereas Table 5 sums the two component medians. Panel (b) shows one-thread verification, including decoding for our Rust implementation. Panel (c) gives the serialized proof size at the indicated input widths.
+
+% Figure 3. Native LaTeX drawing; panels may break across pages.
+\begin{center}
+\begingroup\setlength{\unitlength}{0.80pt}\scriptsize\thinlines
+\begin{picture}(325,314)
+\put(185,294){\makebox(0,0)[b]{(a) Prover time (ms)}}
+\put(60,92){\framebox(250,190){}}
+\qbezier(71.6,92)(71.6,90)(71.6,88)
+\put(71.6,76){\makebox(0,0)[b]{100}}
+\qbezier(190.8,92)(190.8,90)(190.8,88)
+\put(190.8,76){\makebox(0,0)[b]{1,000}}
+\qbezier(310,92)(310,90)(310,88)
+\put(310,76){\makebox(0,0)[b]{10,000}}
+{\linethickness{0.10pt}\qbezier(60,92)(185,92)(310,92)}
+\put(55,88){\makebox(0,0)[rb]{100}}
+{\linethickness{0.10pt}\qbezier(60,155.3)(185,155.3)(310,155.3)}
+\put(55,151.3){\makebox(0,0)[rb]{1,000}}
+{\linethickness{0.10pt}\qbezier(60,218.7)(185,218.7)(310,218.7)}
+\put(55,214.7){\makebox(0,0)[rb]{10,000}}
+{\linethickness{0.10pt}\qbezier(60,282)(185,282)(310,282)}
+\put(55,278){\makebox(0,0)[rb]{100,000}}
+\put(185,60){\makebox(0,0)[b]{price ticks N}}
+\qbezier(71.6,126.4)(95.3,129.85)(119,133.3)\qbezier(119,133.3)(136.95,140.9)(154.9,148.5)\qbezier(154.9,148.5)(172.85,156.2)(190.8,163.9)\qbezier(190.8,163.9)(208.75,172)(226.7,180.1)\qbezier(226.7,180.1)(244.65,188.4)(262.6,196.7)\qbezier(262.6,196.7)(280.5,205.8)(298.4,214.9)
+\put(71.6,126.4){\circle*{4.5}}
+\put(119,133.3){\circle*{4.5}}
+\put(154.9,148.5){\circle*{4.5}}
+\put(190.8,163.9){\circle*{4.5}}
+\put(226.7,180.1){\circle*{4.5}}
+\put(262.6,196.7){\circle*{4.5}}
+\put(298.4,214.9){\circle*{4.5}}
+\qbezier(70,46)(83,46)(96,46)
+\put(83,46){\circle*{4.5}}
+\put(102,42){\makebox(0,0)[lb]{Our Rust implementation, 1 thread}}
+\qbezier(71.6,96.4)(74.07,96.79)(76.54,97.17)\qbezier(79.5,97.63)(81.97,98.02)(84.44,98.41)\qbezier(87.41,98.87)(89.88,99.25)(92.35,99.64)\qbezier(95.31,100.1)(97.78,100.49)(100.25,100.87)\qbezier(103.22,101.34)(105.69,101.72)(108.16,102.11)\qbezier(111.12,102.57)(113.59,102.96)(116.06,103.34)\qbezier(119,103.8)(121.37,104.58)(123.75,105.36)\qbezier(126.6,106.3)(128.97,107.08)(131.35,107.86)\qbezier(134.2,108.8)(136.57,109.58)(138.95,110.36)\qbezier(141.8,111.29)(144.17,112.07)(146.55,112.86)\qbezier(149.4,113.79)(151.77,114.57)(154.15,115.35)\qbezier(154.9,115.6)(157.25,116.44)(159.61,117.28)\qbezier(162.44,118.29)(164.79,119.13)(167.14,119.97)\qbezier(169.97,120.97)(172.33,121.81)(174.68,122.65)\qbezier(177.51,123.66)(179.86,124.5)(182.22,125.34)\qbezier(185.04,126.35)(187.4,127.19)(189.75,128.03)\qbezier(190.8,128.4)(193.14,129.29)(195.48,130.17)\qbezier(198.28,131.23)(200.62,132.12)(202.96,133.01)\qbezier(205.76,134.07)(208.1,134.95)(210.44,135.84)\qbezier(213.24,136.9)(215.58,137.79)(217.92,138.67)\qbezier(220.72,139.74)(223.06,140.62)(225.4,141.51)\qbezier(226.7,142)(229,142.99)(231.29,143.98)\qbezier(234.04,145.17)(236.34,146.16)(238.64,147.15)\qbezier(241.39,148.34)(243.68,149.33)(245.98,150.32)\qbezier(248.73,151.51)(251.03,152.5)(253.32,153.5)\qbezier(256.08,154.68)(258.37,155.68)(260.67,156.67)\qbezier(262.6,157.5)(264.85,158.59)(267.1,159.68)\qbezier(269.8,160.98)(272.05,162.07)(274.3,163.16)\qbezier(277.01,164.46)(279.26,165.55)(281.51,166.64)\qbezier(284.21,167.94)(286.46,169.03)(288.71,170.12)\qbezier(291.41,171.42)(293.66,172.51)(295.91,173.6)
+\put(71.6,96.4){\circle*{4.5}}
+\put(119,103.8){\circle*{4.5}}
+\put(154.9,115.6){\circle*{4.5}}
+\put(190.8,128.4){\circle*{4.5}}
+\put(226.7,142){\circle*{4.5}}
+\put(262.6,157.5){\circle*{4.5}}
+\put(298.4,174.8){\circle*{4.5}}
+\qbezier(70,34)(72.5,34)(75,34)\qbezier(78,34)(80.5,34)(83,34)\qbezier(86,34)(88.5,34)(91,34)\qbezier(94,34)(95,34)(96,34)
+\put(83,34){\circle*{4.5}}
+\put(102,30){\makebox(0,0)[lb]{Our Rust implementation, 8 threads}}
+\qbezier(71.6,171.1)(95.3,177.2)(119,183.3)\qbezier(119,183.3)(136.95,189.65)(154.9,196)\qbezier(154.9,196)(172.85,203.25)(190.8,210.5)\qbezier(190.8,210.5)(208.75,219.05)(226.7,227.6)
+\put(71.6,171.1){\circle{4.5}}
+\put(119,183.3){\circle{4.5}}
+\put(154.9,196){\circle{4.5}}
+\put(190.8,210.5){\circle{4.5}}
+\put(226.7,227.6){\circle{4.5}}
+\qbezier(70,22)(83,22)(96,22)
+\put(83,22){\circle{4.5}}
+\put(102,18){\makebox(0,0)[lb]{Our Noir implementation, 1 thread}}
+\qbezier(71.6,161)(74.08,161.29)(76.57,161.58)\qbezier(79.55,161.92)(82.03,162.21)(84.51,162.5)\qbezier(87.49,162.84)(89.98,163.13)(92.46,163.42)\qbezier(95.44,163.77)(97.92,164.05)(100.41,164.34)\qbezier(103.39,164.69)(105.87,164.98)(108.35,165.26)\qbezier(111.33,165.61)(113.82,165.9)(116.3,166.19)\qbezier(119,166.5)(121.45,167.02)(123.89,167.54)\qbezier(126.83,168.16)(129.27,168.67)(131.72,169.19)\qbezier(134.65,169.81)(137.1,170.33)(139.54,170.85)\qbezier(142.48,171.47)(144.93,171.99)(147.37,172.51)\qbezier(150.31,173.13)(152.6,173.61)(154.9,174.1)\qbezier(154.9,174.1)(157.3,174.8)(159.7,175.49)\qbezier(162.58,176.33)(164.99,177.02)(167.39,177.72)\qbezier(170.27,178.55)(172.67,179.25)(175.07,179.94)\qbezier(177.95,180.78)(180.35,181.47)(182.75,182.17)\qbezier(185.64,183)(188.04,183.7)(190.44,184.4)\qbezier(190.8,184.5)(193.14,185.37)(195.49,186.24)\qbezier(198.3,187.28)(200.65,188.15)(202.99,189.02)\qbezier(205.8,190.06)(208.15,190.93)(210.49,191.8)\qbezier(213.31,192.84)(215.65,193.71)(217.99,194.57)\qbezier(220.81,195.62)(223.15,196.49)(225.5,197.35)
+\put(71.6,161){\circle{4.5}}
+\put(119,166.5){\circle{4.5}}
+\put(154.9,174.1){\circle{4.5}}
+\put(190.8,184.5){\circle{4.5}}
+\put(226.7,197.8){\circle{4.5}}
+\qbezier(70,10)(72.5,10)(75,10)\qbezier(78,10)(80.5,10)(83,10)\qbezier(86,10)(88.5,10)(91,10)\qbezier(94,10)(95,10)(96,10)
+\put(83,10){\circle{4.5}}
+\put(102,6){\makebox(0,0)[lb]{Our Noir implementation, 8 threads}}
+\end{picture}\endgroup
+\end{center}
+\begin{center}
+\begingroup\setlength{\unitlength}{0.80pt}\scriptsize\thinlines
+\begin{picture}(325,314)
+\put(185,294){\makebox(0,0)[b]{(b) Verifier time (ms), 1 thread}}
+\put(60,92){\framebox(250,190){}}
+\qbezier(71.6,92)(71.6,90)(71.6,88)
+\put(71.6,76){\makebox(0,0)[b]{100}}
+\qbezier(190.8,92)(190.8,90)(190.8,88)
+\put(190.8,76){\makebox(0,0)[b]{1,000}}
+\qbezier(310,92)(310,90)(310,88)
+\put(310,76){\makebox(0,0)[b]{10,000}}
+{\linethickness{0.10pt}\qbezier(60,92)(185,92)(310,92)}
+\put(55,88){\makebox(0,0)[rb]{0}}
+{\linethickness{0.10pt}\qbezier(60,118.4)(185,118.4)(310,118.4)}
+\put(55,114.4){\makebox(0,0)[rb]{5}}
+{\linethickness{0.10pt}\qbezier(60,144.9)(185,144.9)(310,144.9)}
+\put(55,140.9){\makebox(0,0)[rb]{10}}
+{\linethickness{0.10pt}\qbezier(60,171.3)(185,171.3)(310,171.3)}
+\put(55,167.3){\makebox(0,0)[rb]{15}}
+{\linethickness{0.10pt}\qbezier(60,197.7)(185,197.7)(310,197.7)}
+\put(55,193.7){\makebox(0,0)[rb]{20}}
+{\linethickness{0.10pt}\qbezier(60,224.1)(185,224.1)(310,224.1)}
+\put(55,220.1){\makebox(0,0)[rb]{25}}
+{\linethickness{0.10pt}\qbezier(60,250.6)(185,250.6)(310,250.6)}
+\put(55,246.6){\makebox(0,0)[rb]{30}}
+{\linethickness{0.10pt}\qbezier(60,277)(185,277)(310,277)}
+\put(55,273){\makebox(0,0)[rb]{35}}
+\put(185,60){\makebox(0,0)[b]{price ticks N}}
+\qbezier(71.6,257.2)(95.3,245.95)(119,234.7)\qbezier(119,234.7)(136.95,239.15)(154.9,243.6)\qbezier(154.9,243.6)(172.85,245.4)(190.8,247.2)\qbezier(190.8,247.2)(208.75,247.85)(226.7,248.5)\qbezier(226.7,248.5)(244.65,247.75)(262.6,247)\qbezier(262.6,247)(280.5,245.3)(298.4,243.6)
+\put(71.6,257.2){\circle*{4.5}}
+\put(119,234.7){\circle*{4.5}}
+\put(154.9,243.6){\circle*{4.5}}
+\put(190.8,247.2){\circle*{4.5}}
+\put(226.7,248.5){\circle*{4.5}}
+\put(262.6,247){\circle*{4.5}}
+\put(298.4,243.6){\circle*{4.5}}
+\qbezier(70,46)(83,46)(96,46)
+\put(83,46){\circle*{4.5}}
+\put(102,42){\makebox(0,0)[lb]{Our Rust implementation}}
+\qbezier(71.6,234.7)(95.3,234.7)(119,234.7)\qbezier(119,234.7)(136.95,234.7)(154.9,234.7)\qbezier(154.9,234.7)(172.85,234.7)(190.8,234.7)\qbezier(190.8,234.7)(208.75,237.35)(226.7,240)
+\put(71.6,234.7){\circle{4.5}}
+\put(119,234.7){\circle{4.5}}
+\put(154.9,234.7){\circle{4.5}}
+\put(190.8,234.7){\circle{4.5}}
+\put(226.7,240){\circle{4.5}}
+\qbezier(70,34)(83,34)(96,34)
+\put(83,34){\circle{4.5}}
+\put(102,30){\makebox(0,0)[lb]{Our Noir implementation}}
+\end{picture}\endgroup
+\end{center}
+\begin{center}
+\begingroup\setlength{\unitlength}{0.80pt}\scriptsize\thinlines
+\begin{picture}(325,314)
+\put(185,294){\makebox(0,0)[b]{(c) Proof size (bytes)}}
+\put(60,92){\framebox(250,190){}}
+\qbezier(71.6,92)(71.6,90)(71.6,88)
+\put(71.6,76){\makebox(0,0)[b]{100}}
+\qbezier(190.8,92)(190.8,90)(190.8,88)
+\put(190.8,76){\makebox(0,0)[b]{1,000}}
+\qbezier(310,92)(310,90)(310,88)
+\put(310,76){\makebox(0,0)[b]{10,000}}
+{\linethickness{0.10pt}\qbezier(60,92)(185,92)(310,92)}
+\put(55,88){\makebox(0,0)[rb]{0}}
+{\linethickness{0.10pt}\qbezier(60,148.4)(185,148.4)(310,148.4)}
+\put(55,144.4){\makebox(0,0)[rb]{5,000}}
+{\linethickness{0.10pt}\qbezier(60,204.7)(185,204.7)(310,204.7)}
+\put(55,200.7){\makebox(0,0)[rb]{10,000}}
+{\linethickness{0.10pt}\qbezier(60,261.1)(185,261.1)(310,261.1)}
+\put(55,257.1){\makebox(0,0)[rb]{15,000}}
+\put(185,60){\makebox(0,0)[b]{price ticks N}}
+\qbezier(71.6,166.8)(95.3,160.3)(119,153.8)\qbezier(119,153.8)(136.95,157.4)(154.9,161)\qbezier(154.9,161)(172.85,161)(190.8,161)\qbezier(190.8,161)(208.75,161)(226.7,161)\qbezier(226.7,161)(244.65,161)(262.6,161)\qbezier(262.6,161)(280.5,161)(298.4,161)
+\put(71.6,166.8){\circle*{4.5}}
+\put(119,153.8){\circle*{4.5}}
+\put(154.9,161){\circle*{4.5}}
+\put(190.8,161){\circle*{4.5}}
+\put(226.7,161){\circle*{4.5}}
+\put(262.6,161){\circle*{4.5}}
+\put(298.4,161){\circle*{4.5}}
+\qbezier(70,46)(83,46)(96,46)
+\put(83,46){\circle*{4.5}}
+\put(102,42){\makebox(0,0)[lb]{Our Rust implementation, 32-bit}}
+\qbezier(71.6,147.3)(74.01,146.64)(76.42,145.98)\qbezier(79.32,145.18)(81.73,144.52)(84.14,143.86)\qbezier(87.03,143.07)(89.44,142.41)(91.85,141.75)\qbezier(94.75,140.95)(97.16,140.29)(99.57,139.63)\qbezier(102.46,138.84)(104.87,138.17)(107.28,137.51)\qbezier(110.18,136.72)(112.59,136.06)(115,135.4)\qbezier(117.89,134.6)(118.45,134.45)(119,134.3)\qbezier(119,134.3)(121.45,134.8)(123.9,135.3)\qbezier(126.84,135.89)(129.29,136.39)(131.74,136.89)\qbezier(134.68,137.49)(137.13,137.99)(139.58,138.48)\qbezier(142.52,139.08)(144.97,139.58)(147.42,140.08)\qbezier(150.36,140.68)(152.63,141.14)(154.9,141.6)\qbezier(154.9,141.6)(157.4,141.6)(159.9,141.6)\qbezier(162.9,141.6)(165.4,141.6)(167.9,141.6)\qbezier(170.9,141.6)(173.4,141.6)(175.9,141.6)\qbezier(178.9,141.6)(181.4,141.6)(183.9,141.6)\qbezier(186.9,141.6)(188.85,141.6)(190.8,141.6)\qbezier(190.8,141.6)(193.3,141.6)(195.8,141.6)\qbezier(198.8,141.6)(201.3,141.6)(203.8,141.6)\qbezier(206.8,141.6)(209.3,141.6)(211.8,141.6)\qbezier(214.8,141.6)(217.3,141.6)(219.8,141.6)\qbezier(222.8,141.6)(224.75,141.6)(226.7,141.6)\qbezier(226.7,141.6)(229.2,141.6)(231.7,141.6)\qbezier(234.7,141.6)(237.2,141.6)(239.7,141.6)\qbezier(242.7,141.6)(245.2,141.6)(247.7,141.6)\qbezier(250.7,141.6)(253.2,141.6)(255.7,141.6)\qbezier(258.7,141.6)(260.65,141.6)(262.6,141.6)\qbezier(262.6,141.6)(265.1,141.6)(267.6,141.6)\qbezier(270.6,141.6)(273.1,141.6)(275.6,141.6)\qbezier(278.6,141.6)(281.1,141.6)(283.6,141.6)\qbezier(286.6,141.6)(289.1,141.6)(291.6,141.6)\qbezier(294.6,141.6)(296.5,141.6)(298.4,141.6)
+\put(71.6,147.3){\circle*{4.5}}
+\put(119,134.3){\circle*{4.5}}
+\put(154.9,141.6){\circle*{4.5}}
+\put(190.8,141.6){\circle*{4.5}}
+\put(226.7,141.6){\circle*{4.5}}
+\put(262.6,141.6){\circle*{4.5}}
+\put(298.4,141.6){\circle*{4.5}}
+\qbezier(70,34)(72.5,34)(75,34)\qbezier(78,34)(80.5,34)(83,34)\qbezier(86,34)(88.5,34)(91,34)\qbezier(94,34)(95,34)(96,34)
+\put(83,34){\circle*{4.5}}
+\put(102,30){\makebox(0,0)[lb]{Our Rust implementation, 16-bit}}
+\qbezier(71.6,257.2)(95.3,257.2)(119,257.2)\qbezier(119,257.2)(136.95,257.2)(154.9,257.2)\qbezier(154.9,257.2)(172.85,257.2)(190.8,257.2)\qbezier(190.8,257.2)(208.75,257.2)(226.7,257.2)
+\put(71.6,257.2){\circle{4.5}}
+\put(119,257.2){\circle{4.5}}
+\put(154.9,257.2){\circle{4.5}}
+\put(190.8,257.2){\circle{4.5}}
+\put(226.7,257.2){\circle{4.5}}
+\qbezier(70,22)(83,22)(96,22)
+\put(83,22){\circle{4.5}}
+\put(102,18){\makebox(0,0)[lb]{Our Noir implementation}}
+\end{picture}\endgroup
+\end{center}
+
 \subsection{Spread}
 
-\textbf{Table 24.} \(N = 1000\), 32-bit volumes, 250 orders: median and interquartile range over 20 runs.
+\textbf{Table 24.} Our Rust implementation, \(N = 1000\), 32-bit volumes, 250 orders: median and interquartile range over 20 runs.
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.3960\linewidth}>{\raggedright\arraybackslash}p{0.2520\linewidth}>{\raggedright\arraybackslash}p{0.2520\linewidth}@{}}
+\toprule
 Metric & One thread & Eight threads \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Metric & One thread & Eight threads \\
+\midrule\endhead
+\bottomrule\endfoot
 Clearing proof, prove & 1,366 [1,356--1,377] & 376 [359--384] \\
 Clearing proof, verify & 10.0 [9.5--10.3] & 6.7 [6.6--6.8] \\
 Clearing proof, decode & 19.3 [18.8--19.6] & 4.8 [4.5--5.2] \\
@@ -904,94 +1253,112 @@ Update-validity proof, prove & 424 [419--428] & 122 [121--123] \\
 Update-validity proof, verify & 43.0 [42.4--44.0] & 20.5 [20.0--20.8] \\
 Batch check & 79.3 [77.5--80.3] & 52.0 [51.5--52.3] \\
 \end{longtable}
+\endgroup
 
-\subsection{Calibrated and Real Books}
+All three proofs in the 1,000-tick, 32-bit configuration open at two points. The crossing, update-validity and no-cross proofs contain 89, 17 and 20 column-and-quotient commitments, respectively. In the eight-thread experiment of Table 4, update-proof verification including decoding took 23, 43 and 69 ms at 250, 1,000 and 2,200 orders. The update proof occupied 1,700 bytes at each log length. The full batch check in Table 24 uses decoded inputs.
 
-\textbf{Table 25.} The clearing proof on the calibrated books (five per size) and on the 32 real books, 32-bit volumes. Brackets give the range of the per-book medians.
+\subsection{Calibrated and Replayed Books}
 
-\begin{longtable}[]{@{}llllll@{}}
-\toprule\noalign{}
+\textbf{Table 25.} Our Rust implementation's clearing proof on the calibrated books (five per size) and on the 32 replayed books, 32-bit volumes. Brackets give the range of the per-book medians.
+
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}@{}}
+\toprule
 Books & \(N\) & \(n\) & Prove, one thread & Prove, eight threads & Verify + decode, one thread \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Books & \(N\) & \(n\) & Prove, one thread & Prove, eight threads & Verify + decode, one thread \\
+\midrule\endhead
+\bottomrule\endfoot
 Calibrated & 100 & 128 & 343 [341--345] & 117 [111--130] & 30.6 \\
 Calibrated & 250 & 256 & 414 [408--420] & 150 [134--156] & 26.3 \\
 Calibrated & 500 & 512 & 769 [765--771] & 232 [228--235] & 28.6 \\
 Calibrated & 1,000 & 1,024 & 1,343 [1,339--1,351] & 373 [363--382] & 28.8 \\
 Calibrated & 2,000 & 2,048 & 2,437 [2,433--2,447] & 626 [608--633] & 28.6 \\
-Real & 601--662 & 1,024 & 1,348 [1,334--1,363] & 367 [353--381] & 29.5 \\
+Replayed & 601--662 & 1,024 & 1,348 [1,334--1,363] & 367 [353--381] & 29.5 \\
 \end{longtable}
+\endgroup
 
 At a domain size of 1,024, median clearing-proof generation times for the uniform, calibrated, and replayed books differ by less than 3\%.
 
+On the 362 Cboe-derived books (101 ticks, 32-bit inputs), the median of the per-book proving medians for our Rust implementation was 384 ms on one thread and 112 ms on eight. Each clearing proof occupied 6,636 bytes.
+
 \subsection{Operations Outside the Proofs}
 
-\textbf{Table 26.} Per-order and per-batch operations, \(N = 1000\), 32-bit volumes.
+\textbf{Table 26.} Per-order and per-batch operations in our Rust implementation, \(N = 1000\), 32-bit volumes.
 
-\begin{longtable}[]{@{}llll@{}}
-\toprule\noalign{}
-Operation & One thread & Eight threads & Published size \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Record an order (exchange) & 0.98 & 0.99 & 416 B on the board \\
-Check a receipt (trader) & 0.24 & 0.24 & 192 B receipt \\
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.3240\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}>{\raggedright\arraybackslash}p{0.2700\linewidth}@{}}
+\toprule
+Operation & One thread & Eight threads & Encoded size \\
+\midrule\endfirsthead
+\toprule
+Operation & One thread & Eight threads & Encoded size \\
+\midrule\endhead
+\bottomrule\endfoot
+Record an order (exchange) & 0.98 & 0.99 & 416 B in the public log \\
+Check a receipt (trader) & 0.24 & 0.24 & 192 B private receipt \\
 Open a batch & 13.3 & 9.6 & 1,576 B \\
-Check an opening & 19.1 & 18.5 & \\
-Run the clearing rule & 0.07 & 0.08 & \\
+Check an opening & 19.1 & 18.5 &  \\
+Run the clearing rule & 0.07 & 0.08 &  \\
 \end{longtable}
+\endgroup
 
 The single-thread recording time of 0.98 ms per order corresponds to roughly 1,000 order updates per second for this operation alone.
 
-\subsection{The Noir Circuit}
+\subsection{Our Noir Implementation}
 
-\textbf{Table 27.} The circuit on the calibrated books (median over five books and ten runs each, interquartile range in brackets) and on the 32 real books. The proof is 14,656 bytes and verification takes 27 to 30 ms in every row.
+\textbf{Table 27.} Our Noir implementation on the calibrated books (median over five books and ten runs each, interquartile range in brackets) and on the 32 replayed books. The proof is 14,656 bytes and verification takes 27 to 30 ms in every row.
 
-\begin{longtable}[]{@{}llllllll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{1.5pt}\scriptsize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1350\linewidth}>{\raggedright\arraybackslash}p{0.0990\linewidth}>{\raggedright\arraybackslash}p{0.1080\linewidth}>{\raggedright\arraybackslash}p{0.0900\linewidth}>{\raggedright\arraybackslash}p{0.0990\linewidth}>{\raggedright\arraybackslash}p{0.1080\linewidth}>{\raggedright\arraybackslash}p{0.1440\linewidth}>{\raggedright\arraybackslash}p{0.1170\linewidth}@{}}
+\toprule
 Books & \(N\) & Gates & Threads & Witness & Key & Prove & Prover memory \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+Books & \(N\) & Gates & Threads & Witness & Key & Prove & Prover memory \\
+\midrule\endhead
+\bottomrule\endfoot
 Calibrated & 100 & 12,757 & 1 & 720 & 344 & 1,052 [1,044--1,064] & 36 MB \\
-& & & 8 & 702 & 191 & 525 [518--540] & 45 MB \\
+ &  &  & 8 & 702 & 191 & 525 [518--540] & 45 MB \\
 Calibrated & 250 & 27,357 & 1 & 764 & 683 & 1,994 [1,981--2,012] & 57 MB \\
-& & & 8 & 739 & 288 & 764 [754--777] & 68 MB \\
+ &  &  & 8 & 739 & 288 & 764 [754--777] & 68 MB \\
 Calibrated & 500 & 51,666 & 1 & 844 & 1,181 & 3,541 [3,532--3,567] & 96 MB \\
-& & & 8 & 820 & 456 & 1,159 [1,145--1,173] & 106 MB \\
+ &  &  & 8 & 820 & 456 & 1,159 [1,145--1,173] & 106 MB \\
 Calibrated & 1,000 & 100,357 & 1 & 1,001 & 2,213 & 6,427 [6,396--6,480] & 157 MB \\
-& & & 8 & 989 & 763 & 1,898 [1,879--1,927] & 180 MB \\
+ &  &  & 8 & 989 & 763 & 1,898 [1,879--1,927] & 180 MB \\
 Calibrated & 2,000 & 197,666 & 1 & 1,337 & 4,260 & 12,478 [12,400--12,716] & 305 MB \\
-& & & 8 & 1,315 & 1,470 & 3,359 [3,333--3,420] & 326 MB \\
-Real & 601--662 & 61,521--67,434 & 1 & 877 & 1,439 & 4,195 [4,115--4,300] & 116 MB \\
-& & & 8 & 858 & 537 & 1,316 [1,297--1,352] & 129 MB \\
+ &  &  & 8 & 1,315 & 1,470 & 3,359 [3,333--3,420] & 326 MB \\
+Replayed & 601--662 & 61,521--67,434 & 1 & 877 & 1,439 & 4,195 [4,115--4,300] & 116 MB \\
+ &  &  & 8 & 858 & 537 & 1,316 [1,297--1,352] & 129 MB \\
 \end{longtable}
+\endgroup
 
 The key column reports verification-key generation, performed once per book size. Additional threads accelerate proving, while witness generation remains sequential.
 
-\textbf{Table 28.} Ratio of the circuit\textquotesingle s proving time, with witness generation, to ours, on the same books.
+\textbf{Table 28.} Proving time for our Noir implementation, including witness generation, divided by proving time for our Rust implementation, on the same books.
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begingroup
+\setlength{\tabcolsep}{2pt}\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.3000\linewidth}>{\raggedright\arraybackslash}p{0.3000\linewidth}>{\raggedright\arraybackslash}p{0.3000\linewidth}@{}}
+\toprule
 \(N\) & One thread & Eight threads \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule\endfirsthead
+\toprule
+\(N\) & One thread & Eight threads \\
+\midrule\endhead
+\bottomrule\endfoot
 100 & 5.2 & 10.5 \\
 250 & 6.7 & 10.0 \\
 500 & 5.7 & 8.5 \\
 1,000 & 5.5 & 7.7 \\
 2,000 & 5.7 & 7.5 \\
-Real, 601--662 & 3.8 & 5.9 \\
+Replayed, 601--662 & 3.8 & 5.9 \\
 \end{longtable}
+\endgroup
 
-The Noir measurements include process startup under WSL2. The Rust measurements time native Windows function calls. The implementations also use different transcript hashes. We did not isolate these effects or benchmark another backend configuration.
-
-
-
+Our Noir implementation runs as timed commands under WSL2, including process startup. For our Rust implementation we time native Windows function calls. The implementations also use different transcript hashes. We did not isolate these effects or benchmark another backend configuration.
 

@@ -40,6 +40,14 @@ Batch auctions support several order types, which can be further configured with
 
 
 % = = = = = = = = = 
+\begin{figure}[!tp]
+    \centering
+    \adjustbox{angle=90,max totalsize={\linewidth}{0.85\textheight}}{\includegraphics{figures/overview.pdf}}
+    \caption{Overview of the batch-auction example. \textbf{Top:} Sequential order submissions update the aggregated order book, illustrated by the eighth order. \textbf{Bottom:} The clearing algorithm maximizes executable volume (Phase 1) and minimizes imbalance (Phase 2), using auxiliary columns to certify the results. Six price ticks are padded to eight rows.}
+    \label{fig:overview}
+\end{figure}
+% = = = = = = = = = 
+
 \section{The zk-FBA Protocol}
 
 

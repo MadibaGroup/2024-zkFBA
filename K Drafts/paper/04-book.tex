@@ -1,25 +1,25 @@
 % Converted from 04-book.md.
 % Required packages: \usepackage{amsmath,amssymb}
 
-\section{The Committed Book and Trader Checks}\label{the-committed-book-and-trader-checks}
+\section{The Committed Book and Trader Checks}
 
 The clearing proof binds the outcome to four committed columns. To connect those columns to the orders traders submitted, the exchange commits to an empty book before trading begins and publishes each subsequent update.
 
-\subsection{Commitment and Opening}\label{commitment-and-opening}
+\subsection{Commitment and Opening}
 
 The reference string holds \([\tau^i]_1\) for a secret \(\tau\), and a short blinding basis \([\gamma\tau^i]_1\), \(i \le 3\), for a second secret \(\gamma\). We write \([x]_1\) for \(x\) times the generator of the first pairing group and \(\Gamma = [\gamma]_1\). Each of the four book columns has a running commitment
 
 \[C = [\mathrm{col}(\tau)]_1 + [\rho_0(\tau)\,Z_H(\tau)]_1 + [\gamma\, r(\tau)]_1,\]
 
-where \(\mathrm{col}(X) = \sum_i \mathrm{col}[i]\, L_i(X)\) holds the column\textquotesingle s values, \(\rho_0\) is a random mask of degree 3, and \(r\) is a blinding polynomial of degree 3. This is a hiding KZG10 commitment {[}29{]} to the masked column of Section 3.7. The mask is fixed when the batch opens, because the clearing proof later opens this polynomial at \(\zeta\).
+where \(\mathrm{col}(X) = \sum_i \mathrm{col}[i]\, L_i(X)\) holds the column\textquotesingle s values, \(\rho_0\) is a random mask of degree 3, and \(r\) is a blinding polynomial of degree 3. This is a hiding KZG10 commitment \cite{kzg2010} to the masked column of Section 3.7. The mask is fixed when the batch opens, because the clearing proof later opens this polynomial at \(\zeta\).
 
-To open a batch, the exchange publishes for each column the commitment \(C_0\) to the zero column, the elements \(C_\rho = [\rho_0(\tau)]_1\) and \(C_r = [\gamma r_0(\tau)]_1\), and a Schnorr proof {[}43{]} that it knows \(r_0\) with \(C_r\) in the span of the blinding basis. The verifier checks the Schnorr proof and
+To open a batch, the exchange publishes for each column the commitment \(C_0\) to the zero column, the elements \(C_\rho = [\rho_0(\tau)]_1\) and \(C_r = [\gamma r_0(\tau)]_1\), and a Schnorr proof \cite{schnorr1991} that it knows \(r_0\) with \(C_r\) in the span of the blinding basis. The verifier checks the Schnorr proof and
 
 \[e(C_0 - C_r,\ [1]_2) = e(C_\rho,\ [Z_H(\tau)]_2).\]
 
 The Schnorr proof accounts for the blinding component \(C_r\). The pairing equation then binds the value component of \(C_0\) to a multiple of \(Z_H\), which vanishes at every tick.
 
-\subsection{Recording an Order}\label{recording-an-order}
+\subsection{Recording an Order}
 
 Additive homomorphism lets the trader check one order by taking the difference between two consecutive commitments.
 
@@ -39,13 +39,13 @@ Additive homomorphism lets the trader check one order by taking the difference b
 \end{enumerate}
 \end{quote}
 
-The difference \(\Phi\) is a Pedersen commitment {[}42{]} to \(q\) at position \(\ell\). Binding and the board check in step 4 tie that contribution to the identified column and log entry. A trader may disclose the receipt to a third party, who can repeat the check.
+The difference \(\Phi\) is a Pedersen commitment \cite{pedersen1991} to \(q\) at position \(\ell\). Binding and the board check in step 4 tie that contribution to the identified column and log entry. A trader may disclose the receipt to a third party, who can repeat the check.
 
 \textbf{Public log.} Fresh uniform blinding makes each of the four steps a uniform group element. Three steps change only the blinding, and all four appear in fixed order. Observers learn when an order arrived. The distribution of the steps hides its side, type, tick, and quantity.
 
 \textbf{Log consistency.} Each entry hashes the previous digest together with its own index, column, and commitment. The first digest binds the opening. For a digest to identify a common history, all parties must see the same published head.
 
-\subsection{Update Validity}\label{update-validity}
+\subsection{Update Validity}
 
 A receipt verifies one addition, while the clearing proof uses the sum of all additions. A later negative step could cancel an acknowledged order without invalidating its receipt. At the close, the exchange therefore proves a statement about every logged step.
 
@@ -71,6 +71,6 @@ The rational identity holds only if, at every tick \(i\), the weighted quantitie
 
 \textbf{Cost.} For the 32-bit quantities in our benchmarks, the update-validity proof contains 17 commitments and occupies 1,700 bytes. Its domain of size \(M\) accommodates four steps per order, hence at most \(M/4\) orders. The verifier computes \(W\) with a multi-scalar multiplication over the logged steps. A layout with four commitments per row could accommodate four times as many orders at the same domain size. Its running time remains unmeasured.
 
-\subsection{Verifying a Batch}\label{verifying-a-batch}
+\subsection{Verifying a Batch}
 
 The verifier checks the four empty-book openings, recomputes the digest from the log, verifies update validity against the logged steps, and checks the clearing or no-cross proof against the final commitments it uses. A trader also checks each update receipt against the log (Protocol 1) and uses the clearing receipt to compute the unrounded fill (Section 3.5).

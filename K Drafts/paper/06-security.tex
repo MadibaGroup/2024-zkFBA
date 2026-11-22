@@ -1,13 +1,13 @@
 % Converted from 06-security.md.
 % Required packages: \usepackage{amsmath,amssymb,longtable,booktabs,array}
 
-\section{Security}\label{security}
+\section{Security}
 
 We compare the protocol with a trusted exchange running the same clearing rule. For integrity, we allow the exchange to deviate arbitrarily. For secrecy, we consider what observers and colluding traders learn from an honest exchange's publications and their own receipts. The exchange receives the orders in plaintext.
 
-\textbf{Assumptions.} We work in the algebraic group model under the \(q\)-discrete-logarithm assumption over BN254. We model SHA-256 as a random oracle for Fiat--Shamir and the board's hash chain. The setup ceremony has at least one honest participant, all parties see the same published head digest, and each opened book yields at most one distinct clearing proof. We assume knowledge soundness and zero knowledge for the PLONK-style argument used here {[}22, 30, 44{]}, binding for KZG {[}29{]}, and soundness for the lookup {[}26{]}. Section 6.3 explains where our protocol differs from the cited constructions.
+\textbf{Assumptions.} We work in the algebraic group model under the \(q\)-discrete-logarithm assumption over BN254. We model SHA-256 as a random oracle for Fiat--Shamir and the board's hash chain. The setup ceremony has at least one honest participant, all parties see the same published head digest, and each opened book yields at most one distinct clearing proof. We assume knowledge soundness and zero knowledge for the PLONK-style argument used here \cite{plonk2019,lipmaa2025,sefranek2024}, binding for KZG \cite{kzg2010}, and soundness for the lookup \cite{habock2022}. Section 6.3 explains where our protocol differs from the cited constructions.
 
-\subsection{Properties}\label{properties}
+\subsection{Properties}
 
 In the \emph{reference auction}, a trusted exchange acknowledges each order to its trader and publishes \(\mathsf{Clear}(\text{book})\) at the close (Definition 2, Appendix A). Observers see the number and timing of arrivals and the outcome. As in end-to-end verifiable voting, the party who submits a private input checks its inclusion, while anyone can check the computation on the recorded inputs (Table 7).
 
@@ -31,7 +31,7 @@ In the \emph{reference auction}, a trusted exchange acknowledges each order to i
 
 \begin{longtable}[]{@{}llll@{}}
 \toprule\noalign{}
-Property & Election counterpart {[}31{]} & Checked by & Rests on \\
+Property & Election counterpart \cite{zeeperio2026} & Checked by & Rests on \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
@@ -43,7 +43,7 @@ No discretion & A unique tally & Anyone & \(\mathsf{Clear}\) is a function defin
 Order secrecy & Ballot secrecy & & Uniform board entries; zero knowledge; masked book columns \\
 \end{longtable}
 
-\subsection{Results}\label{results}
+\subsection{Results}
 
 \textbf{Theorem 3 (integrity).} Under the assumptions above, if the verifier accepts a batch, properties 1 to 4 hold except with probability at most
 
@@ -55,7 +55,7 @@ where \(\varepsilon_{\mathrm{KZG}}\) bounds a break of the commitment, \(\vareps
 
 For integrity, Theorems 1 and 2 relate the polynomial constraints to the integer clearing rule. For secrecy, the book commitments require particular care because the exchange fixes their masks at the opening, before it knows the proof challenges. Appendix C counts the evaluations exposed by a single close and states the proof-system assumptions on which the simulation relies.
 
-\subsection{Scope}\label{scope}
+\subsection{Scope}
 
 \textbf{Exchange orders.} An accepted board can contain contributions for which no trader holds a receipt. Thus \(\text{Book}^*\) can include additional non-negative volume chosen by the exchange. The inclusion guarantee applies to orders whose receipts traders have checked against the board.
 

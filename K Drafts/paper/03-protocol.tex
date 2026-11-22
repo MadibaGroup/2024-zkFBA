@@ -1,9 +1,9 @@
 % Converted from 03-protocol.md.
 % Required packages: \usepackage{amsmath,amssymb,longtable,booktabs,array,svg}
 
-\section{The zk-FBA Protocol}\label{the-zk-fba-protocol}
+\section{The zk-FBA Protocol}
 
-\subsection{Overview}\label{overview}
+\subsection{Overview}
 
 The exchange receives orders, maintains the book, and clears each batch. Traders check receipts for their own orders. Any party with access to the append-only public board can verify the batch outcome.
 
@@ -25,7 +25,7 @@ Figure 1 traces a batch from the empty book to public verification.
 
 \textbf{Public information.} The board records order counts and arrival times. For a crossing batch, the exchange also publishes \((V_{max},c,d,p^*,V_{min\Delta},s,P,J)\). The first three entries give the maximum executable volume and the endpoints of its plateau. The next three give the clearing tick, its imbalance, and the long side (\(s=0\) for demand and \(s=1\) for supply). \(P\) is the long-side volume at exactly \(p^*\), and \(J\) is the eligible IO volume on the short side. A balanced batch uses \(s=P=J=0\).
 
-\subsection{Encoding the Book}\label{encoding-the-book}
+\subsection{Encoding the Book}
 
 \textbf{Domain.} Let \(\mathbb{F}\) be the scalar field of BN254 and \(H = \{1, \omega, \ldots, \omega^{n-1}\} \subset \mathbb{F}\) a multiplicative subgroup, with \(n\) a power of two. The book has \(N \le n\) price ticks, and tick \(i\) sits at \(\omega^i\). Ticks \(N, \ldots, n-1\) are padding. A \emph{column} is a polynomial of degree below \(n\) given by its values on \(H\); we write \(B[i]\) for \(B(\omega^i)\). A constraint \(F(X) = 0\) means that \(F\) vanishes on \(H\), that is, \(Z_H(X) = X^n - 1\) divides \(F\). \(L_i(X)\) is the Lagrange polynomial that is 1 at \(\omega^i\) and 0 on the rest of \(H\).
 
@@ -67,7 +67,7 @@ The verifier derives the public polynomials from the parameters and receipt. The
 
 \textbf{Figure 2.} Bids of 3, 10, and 2 units rest at ticks 2, 5, and 6. Asks of 4, 6, 5, and 3 rest at ticks 1, 2, 6, and 7, and a one-unit sell IO rests at tick 4. Volume reaches 10 at ticks 2 through 5. Demand exceeds supply by five units at tick 2 and by two at ticks 3 through 5. The tertiary rule selects tick 5, giving the receipt \((10,2,5,5,2,0,10,1)\).
 
-\subsection{Walkthrough of a Constraint}\label{walkthrough-of-a-constraint}
+\subsection{Walkthrough of a Constraint}
 
 To constrain \(Min[i]=\min(AccA[i],AccB[i])\) at every tick, we introduce two surpluses. Each is the difference between a depth and the proposed minimum.
 
@@ -87,7 +87,7 @@ Because at least one surplus vanishes, their sum gives the absolute imbalance. T
 
 forces \(\Delta[i] = \lvert AccA[i] - AccB[i] \rvert\).
 
-\subsection{Range Checks}\label{range-checks}
+\subsection{Range Checks}
 
 Every inequality in the protocol is a range check, and we use one gadget for all of them. To prove \(Y[i] \in [0, 2^b)\) for a column \(Y\) at every tick, the prover commits to limb columns \(\ell_0, \ldots, \ell_{m-1}\) with \(m = \lceil b/8 \rceil\) and shows
 
@@ -95,7 +95,7 @@ Every inequality in the protocol is a range check, and we use one gadget for all
 
 together with the claim that every limb value lies in the table \(\{0, \ldots, 255\}\) (for a domain smaller than 256 we use narrower limbs). When \(b\) is not a multiple of 8, the top limb must be below \(2^r\) with \(r = b \bmod 8\); this holds exactly when \(2^{8-r}\) times the top limb is also in the table, so we look that value up as well. The range proved is exactly \([0, 2^b)\).
 
-We prove table membership for all limbs of all nine quantities with one logarithmic-derivative lookup {[}26{]}. Let \(f_1, \ldots, f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\), where \(Mult[v]\) counts the cells equal to \(v\). After a challenge \(\beta\), it commits to helper columns defined on \(H\) by
+We prove table membership for all limbs of all nine quantities with one logarithmic-derivative lookup \cite{habock2022}. Let \(f_1, \ldots, f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\), where \(Mult[v]\) counts the cells equal to \(v\). After a challenge \(\beta\), it commits to helper columns defined on \(H\) by
 
 \[h_j = \frac{1}{\beta - f_{2j-1}} + \frac{1}{\beta - f_{2j}}, \qquad U = \frac{Mult}{\beta - T}, \qquad S[i+1] = S[i] + \sum_j h_j[i] - U[i].\]
 
@@ -111,9 +111,9 @@ The running sum wraps from \(\omega^{n-1}\) to 1. Summing its differences over \
 
 As an identity of rational functions in \(\beta\), this holds only if every \(f_e[i]\) is a table value. The limbs and \(Mult\) are committed before \(\beta\) is drawn, so a prover with a cell outside the table passes with probability at most \((2E+2)\,n/|\mathbb{F}|\) (Appendix C.7). The running sum needs no initial condition, since only its differences are constrained.
 
-A first version of the protocol committed to one column per bit, with a booleanity constraint on each {[}40{]}. For 32-bit volumes that is 351 columns. With limbs and the lookup we have 46 limb columns and 29 lookup columns, and the proof falls from 22.9 KB to 6.1 KB. The lookup costs a second prover round and raises the degree of the quotient from about \(n\) to about \(2n\).
+A first version of the protocol committed to one column per bit, with a booleanity constraint on each \cite{plonkbook}. For 32-bit volumes that is 351 columns. With limbs and the lookup we have 46 limb columns and 29 lookup columns, and the proof falls from 22.9 KB to 6.1 KB. The lookup costs a second prover round and raises the degree of the quotient from about \(n\) to about \(2n\).
 
-\subsection{Clearing Constraints}\label{clearing-constraints}
+\subsection{Clearing Constraints}
 
 Table 2 groups the constraints by their role in clearing. Appendix B gives the full identities.
 
@@ -177,7 +177,7 @@ From the receipt we compute admitted IO volume \(I=\min(J,V_{min\Delta})\), resi
 
 \textbf{Uniqueness.} A crossing book admits exactly one receipt. Theorem 1 in Appendix C shows that an accepted receipt satisfies the clearing rule. Theorem 2 constructs a witness for the receipt that the rule selects.
 
-\subsection{The No-Cross Statement}\label{the-no-cross-statement}
+\subsection{The No-Cross Statement}
 
 When no bid meets an ask, executable volume is zero at every tick. We prove this smaller statement separately. The exchange commits to \(B\), \(A\), \(AccB\), \(AccA\), and the limbs of \(B\) and \(A\). It proves F1--F8, table membership for those limbs, and
 
@@ -185,9 +185,9 @@ When no bid meets an ask, executable volume is zero at every tick. We prove this
 
 Both depths are sums of range-checked entries, so they are non-negative, and the product vanishes at a tick exactly when \(\min(AccA, AccB) = 0\) there. No receipt value is disclosed. Imbalance-only orders take no part, since they cannot create a cross.
 
-\subsection{From Constraints to a Proof}\label{from-constraints-to-a-proof}
+\subsection{From Constraints to a Proof}
 
-Following the PIOP construction {[}22{]}, the prover commits to the witness in two rounds before committing to the quotient.
+Following the PIOP construction \cite{plonk2019}, the prover commits to the witness in two rounds before committing to the quotient.
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -203,6 +203,6 @@ Following the PIOP construction {[}22{]}, the prover commits to the witness in t
   The verifier evaluates the public polynomials at \(\zeta\), recomputes \(F(\zeta)\) from the openings, and checks \(F(\zeta) = Q(\zeta)\, Z_H(\zeta)\).
 \end{enumerate}
 
-We commit with KZG10 {[}29{]} over BN254 in its hiding form, batch all openings at one point into one group element with a random linear combination, and verify both points with two pairings. We remove the verifier\textquotesingle s messages with the Fiat--Shamir transform over a SHA-256 transcript that absorbs the parameters, the receipt, and every commitment. For zero knowledge, the prover adds to each column a random multiple of \(Z_H\), which changes no value on \(H\) and makes the openings at \(\zeta\) and \(\omega\zeta\) independent of the column.
+We commit with KZG10 \cite{kzg2010} over BN254 in its hiding form, batch all openings at one point into one group element with a random linear combination, and verify both points with two pairings. We remove the verifier\textquotesingle s messages with the Fiat--Shamir transform over a SHA-256 transcript that absorbs the parameters, the receipt, and every commitment. For zero knowledge, the prover adds to each column a random multiple of \(Z_H\), which changes no value on \(H\) and makes the openings at \(\zeta\) and \(\omega\zeta\) independent of the column.
 
 The lookup pair identities are cubic in the columns. The remaining identities are at most quadratic. The quotient has degree about \(2n\), and the implementation uses a reference string through degree \(2n+8\). For \(n=1024\) and 32-bit volumes, 88 column commitments, the quotient commitment, and their openings occupy 6,124 bytes. With a fixed column layout, the numbers of commitments and pairings stay fixed. Evaluating public selectors can still depend on the plateau width (Appendix D).

@@ -1,11 +1,11 @@
 % Converted from F-data.md.
 % Required packages: \usepackage{amsmath,longtable,booktabs,array}
 
-\section{Order-Flow Data and Tie Frequency}\label{order-flow-data-and-tie-frequency}
+\section{Order-Flow Data and Tie Frequency}
 
-\subsection{Source and Choice of Days}\label{source-and-choice-of-days}
+\subsection{Source and Choice of Days}
 
-We reconstruct the AAPL book from Nasdaq TotalView-ITCH order and trade messages {[}36{]}. We fixed the following day-selection procedure before measuring tie frequency.
+We reconstruct the AAPL book from Nasdaq TotalView-ITCH order and trade messages \cite{itch}. We fixed the following day-selection procedure before measuring tie frequency.
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -37,7 +37,7 @@ Day & Order messages & Role \\
 27 August 2026 & 5,092,753 & Rejected by the screen (day after NVDA earnings) \\
 \end{longtable}
 
-\subsection{From Messages to Batches}\label{from-messages-to-batches}
+\subsection{From Messages to Batches}
 
 On a one-cent grid, we partition the regular session (09:30 to 16:00 New York time) into intervals of 0.1, 1, 10, or 60 seconds. At each price, bid volume is the sum of resting bids at the close of the interval, displayed bid volume executed during the interval, and buyer-initiated trade volume. We construct ask volume symmetrically. We omit cancelled interest and round sub-cent prices down for buys and up for sells. Crosses and executions against non-displayed orders lack an aggressor side in our reconstruction. We exclude these messages, which account for 24\% to 33\% of trade messages. Each price window extends 300 ticks beyond the batch's trade prices on either side.
 
@@ -45,7 +45,7 @@ Including resting orders changes the result. Using executions alone produces a p
 
 \textbf{Reconstruction checks.} Resting depth stayed non-negative on every day. Across 156,950 crossing batches on the four analysis days, no plateau reached a window boundary and every batch had a candidate clearing tick. The Python replay passes the Rust test cases. To select benchmark books, we take the first plateau with one imbalance minimizer and the first with several, whenever present, for each of the five days and four durations. This gives 32 books with identical Python and Rust receipts.
 
-\subsection{Tie Frequency}\label{tie-frequency}
+\subsection{Tie Frequency}
 
 We classify crossing batches by whether a tie remains after volume maximization and, if so, after imbalance minimization. Table 6 reports means across four days. The plateau frequency at one second is 3.63\%, with a 95\% \(t\) interval of 1.5\% to 5.7\%. At 0.1, 10, and 60 seconds the frequencies are 2.10\% (1.2\% to 3.0\%), 2.85\% (1.6\% to 4.1\%), and 0.71\% (0.5\% to 0.9\%). The intervals use four daily observations, even though each day contains many batches.
 
@@ -86,7 +86,7 @@ At batch lengths up to ten seconds, ties are most frequent in the first half hou
 
 \textbf{Final tie-break.} Across the four durations, 546 crossing batches have several minimum-imbalance ticks. In 462 of those batches two ticks also satisfy the at-price volume condition. The rule selects the lower candidate in those 462 cases.
 
-\subsection{The Generator}\label{the-generator}
+\subsection{The Generator}
 
 We centre each crossing book on its clearing tick and calibrate each batch duration separately. We record occupancy and volume quantiles by tick up to 100 ticks from the centre and in 12 bands out to 10,000 ticks. We also retain the joint volumes within 10 ticks of the centre and the total bid volume above and ask volume below that region. Table 21 compares three generators using 20,000 books of 601 ticks each.
 
@@ -130,13 +130,13 @@ Drawing ticks independently overstates the frequency of plateaus at every durati
 
 The 25 calibrated benchmark books come from the bootstrap generator at one second, five each at 100, 250, 500, 1,000, and 2,000 ticks.
 
-\subsection{Limits}\label{limits}
+\subsection{Limits}
 
 The estimates depend on the replay definition, particularly the inclusion of resting depth. The sample covers four analysis days for one stock in a continuous market, and the feed supplies no IO orders. The bootstrap retains central volumes from a licensed feed. Publication of generated books depends on that licence.
 
-\subsection{The Periodic-Auction Feed of a Deployed Venue}\label{the-periodic-auction-feed-of-a-deployed-venue}
+\subsection{The Periodic-Auction Feed of a Deployed Venue}
 
-\textbf{Feed and instrument.} We use 111,871 BXE messages for Orange SA (ORAp) on 1 September 2020 {[}15{]}. The file includes order-level traffic for the displayed book. For the periodic auctions it supplies the following three message types.
+\textbf{Feed and instrument.} We use 111,871 BXE messages for Orange SA (ORAp) on 1 September 2020 \cite{cboepitch}. The file includes order-level traffic for the displayed book. For the periodic auctions it supplies the following three message types.
 
 \begin{longtable}[]{@{}lll@{}}
 \toprule\noalign{}

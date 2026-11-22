@@ -1,15 +1,15 @@
 % Converted from 05-performance.md.
 % Required packages: \usepackage{amsmath,longtable,booktabs,array,svg}
 
-\section{Implementation and Performance}\label{implementation-and-performance}
+\section{Implementation and Performance}
 
-\subsection{Prototype}\label{prototype}
+\subsection{Prototype}
 
-We implement the prover and verifier in Rust using arkworks {[}2{]}, hiding KZG10 commitments over BN254, and a SHA-256 transcript. Three library crates contain 3,587 lines for shared types, commitments, and the protocol. The prover and verifier call the same constraint function. The prover evaluates it on four cosets of \(H\) to construct the quotient using domain-sized transforms. The verifier evaluates it at the challenge point. We commit in the Lagrange basis because the witness is already in evaluation form. We import a public powers-of-tau reference string {[}39{]} and verify off chain.
+We implement the prover and verifier in Rust using arkworks \cite{arkworks}, hiding KZG10 commitments over BN254, and a SHA-256 transcript. Three library crates contain 3,587 lines for shared types, commitments, and the protocol. The prover and verifier call the same constraint function. The prover evaluates it on four cosets of \(H\) to construct the quotient using domain-sized transforms. The verifier evaluates it at the challenge point. We commit in the Lagrange basis because the witness is already in evaluation form. We import a public powers-of-tau reference string \cite{nikolaenko2024} and verify off chain.
 
-We implement the clearing statement independently in 208 lines of Noir {[}5{]} and prove it with Barretenberg's UltraHonk {[}4{]}. The private input is the book and a salt. The circuit publishes a salted Poseidon2 digest {[}25{]} and the clearing receipt. An unconstrained function proposes the receipt. The circuit checks its values against the rule in Section 3.5, using integer types for range checks.
+We implement the clearing statement independently in 208 lines of Noir \cite{noir} and prove it with Barretenberg's UltraHonk \cite{barretenberg}. The private input is the book and a salt. The circuit publishes a salted Poseidon2 digest \cite{poseidon2} and the clearing receipt. An unconstrained function proposes the receipt. The circuit checks its values against the rule in Section 3.5, using integer types for range checks.
 
-\subsection{Setup}\label{setup}
+\subsection{Setup}
 
 We benchmark both implementations on mains power on an AMD Ryzen 3 7320U laptop with four cores, eight hardware threads, and 13.8 GB of memory. Rust runs natively on Windows 11 and Noir under WSL2. We report medians over 20 Rust runs and 10 Noir runs, using either one or eight threads. Input volumes are 32 bits unless specified. We use four sets of books.
 
@@ -24,7 +24,7 @@ We benchmark both implementations on mains power on an AMD Ryzen 3 7320U laptop 
   \textbf{Outcome books}, 362 books of 101 ticks built from the published outcomes of a deployed periodic auction (Section 5.7).
 \end{itemize}
 
-\subsection{One Batch}\label{one-batch}
+\subsection{One Batch}
 
 \textbf{Table 3.} One batch, \(N = 1000\), 32-bit volumes, 250 orders, single core. Verification includes decoding the proof. The clearing proof is measured on the calibrated books and the other two on uniform books with a generated order stream.
 
@@ -48,7 +48,7 @@ Recording an order takes 0.98 ms and adds 416 bytes to the public log. A trader 
 
 The 32 replayed books span 601 to 662 ticks, all of which round up to a 1,024-row domain. Their clearing proofs take 1.35 s on one core and 0.37 s on eight threads, close to the times for the 1,000-tick synthetic books.
 
-\subsection{Scaling}\label{scaling}
+\subsection{Scaling}
 
 \includesvg{figures/fig3-performance.svg}
 
@@ -74,7 +74,7 @@ Orders & Domain \(M\) & Prove & Verify & Both proofs \\
 
 At 1,000 ticks, proof generation fits within a one-second interval for the 1,000-order benchmark (0.73 s). It takes 1.46 s at 2,200 orders. Even the 250-order case exceeds a 100 ms interval. These are measurements of proving after the batch closes.
 
-\subsection{Comparison with a General-Purpose Proof System}\label{comparison-with-a-general-purpose-proof-system}
+\subsection{Comparison with a General-Purpose Proof System}
 
 The independent implementations return identical receipts on all 32 replayed books and 25 calibrated books. Table 5 compares the cost of proving the clearing statement at 1,000 ticks.
 
@@ -99,9 +99,9 @@ On one thread, the Noir implementation takes 5.5 times as long to generate a cle
 
 The 208-line Noir circuit uses a maintained prover and binds the finished book to a digest. The Rust library also maintains commitments as orders arrive, issues trader receipts, and proves the validity of the update log. Those operations lie outside the clearing comparison in Table 5.
 
-\subsection{Order Flow}\label{order-flow}
+\subsection{Order Flow}
 
-For order-level analysis we replay Nasdaq TotalView-ITCH messages for AAPL {[}36{]}. We divide each regular session into consecutive intervals and clear a book built from resting depth and executed volume on each side. We select four trading days in 2026 using the event and market-condition screens in Appendix F. This replay lets us examine the losing orders that the Cboe auction summaries omit.
+For order-level analysis we replay Nasdaq TotalView-ITCH messages for AAPL \cite{itch}. We divide each regular session into consecutive intervals and clear a book built from resting depth and executed volume on each side. We select four trading days in 2026 using the event and market-condition screens in Appendix F. This replay lets us examine the losing orders that the Cboe auction summaries omit.
 
 Among crossing one-second batches, an average of 3.6\% have several volume-maximizing ticks (95\% interval across days, 1.5\% to 5.7\%). In 0.3\%, more than one tick also minimizes imbalance, or roughly 40 batches per day for AAPL. Of the four durations tested, one second has the highest plateau frequency. At one minute it falls to 0.7\% (Table 6).
 
@@ -120,15 +120,15 @@ Batch length & Crossing batches per day & One maximizing tick & Plateau, one min
 60 s & 390 & 99.29 (0.13) & 0.71 (0.13) & 0.00 (0.00) \\
 \end{longtable}
 
-Muni Toke derives the distribution of the clearing-price range in a model {[}35{]}. We are unaware of an empirical estimate for these ties based on the hidden books of exchange auctions.
+Muni Toke derives the distribution of the clearing-price range in a model \cite{munitoke2015}. We are unaware of an empirical estimate for these ties based on the hidden books of exchange auctions.
 
 Independent draws from the depth distribution at each tick produce a plateau in 14.6\% of one-second synthetic batches. The pooled replay frequency is 3.8\%. Resampling a replayed book's volumes jointly within 10 ticks of its clearing price and calibrating the outer ticks from the observed marginals brings the synthetic frequency to 4.1\%. We also retain 32 replayed books with plateaus 2 to 35 ticks wide. Twelve have a further tie on imbalance.
 
 \textbf{Scope.} The replay measures how our rule clears observed continuous-market order flow for one liquid stock on four analysis days. Traders in an FBA could submit different orders. The feed contains no IO orders, so we exercise that part of the rule in unit tests. All timings are from one laptop.
 
-\subsection{A Deployed Periodic Auction}\label{a-deployed-periodic-auction}
+\subsection{A Deployed Periodic Auction}
 
-We use Cboe Europe's BXE data to examine trading in an operating FBA and to test our Rust and Noir implementations at prices and volumes observed in that market. Zhang and Ibikunle describe Cboe's sub-second periodic auction and its price-setting and allocation rules {[}46, Section 3.2{]}. For Orange SA on 1 September 2020, the BXE feed {[}15{]} reports indicative prices and sizes, final prices and sizes, and individual executions. The underlying auction orders, including those that did not execute, stay private. A participant can observe the outcome but lacks the book needed to recompute it.
+We use Cboe Europe's BXE data to examine trading in an operating FBA and to test our Rust and Noir implementations at prices and volumes observed in that market. Zhang and Ibikunle describe Cboe's sub-second periodic auction and its price-setting and allocation rules \cite[Section~3.2]{zhang2023}. For Orange SA on 1 September 2020, the BXE feed \cite{cboepitch} reports indicative prices and sizes, final prices and sizes, and individual executions. The underlying auction orders, including those that did not execute, stay private. A participant can observe the outcome but lacks the book needed to recompute it.
 
 The 362 auctions traded 238,921 shares, with a median of 434 shares per auction. Of these auctions, 327 had one execution, 32 had two, and three had three. In 320 cases at most 100 ms elapsed between the first indicative update and execution. The median interval between auctions was 44 s (Appendix F.6). These counts describe executions. The number of submitted orders is unobserved.
 

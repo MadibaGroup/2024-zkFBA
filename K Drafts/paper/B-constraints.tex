@@ -1,11 +1,11 @@
 % Converted from B-constraints.md.
 % Required packages: \usepackage{amsmath,longtable,booktabs,array}
 
-\section{The Full Constraint List}\label{the-full-constraint-list}
+\section{The Full Constraint List}
 
 We use the domain and columns of Section 3.2. Each identity holds throughout \(H\). Table 11 identifies the rows on which it imposes a restriction. For limb width \(w\) (\(w=8\) when \(n\ge256\)), let \(m_{in}=\lceil k_{in}/w\rceil\) and \(m=\lceil k/w\rceil\). We set \(\nu=1\) for positive \(V_{min\Delta}\) and \(\nu=0\) otherwise.
 
-\subsection{Scalar Checks}\label{scalar-checks}
+\subsection{Scalar Checks}
 
 The verifier first checks the public receipt against the following bounds and conventions.
 
@@ -13,7 +13,7 @@ The verifier first checks the public receipt against the following bounds and co
 
 \[s \in \{0,1\}, \qquad V_{min\Delta} \le P < 2^k, \qquad 0 \le J < 2^k, \qquad V_{min\Delta} = 0 \Rightarrow s = P = J = 0.\]
 
-\subsection{Clearing Constraints}\label{clearing-constraints}
+\subsection{Clearing Constraints}
 
 \textbf{Table 11.} The constraints of the clearing proof.
 
@@ -66,13 +66,13 @@ F20 is a pair, so the list has 33 identities besides the lookup. The looked-up v
 
 \textbf{Degrees and openings.} The pair identities have degree at most \(3n - 3\) before masking and every other identity at most \(2n - 2\). The quotient has degree at most \(2n + 3\) with masking, and the implementation requests a reference string of degree \(2n + 8\). \(AccB\), \(AccA\), \(IOAccB\), \(IOAccA\), \(A\), \(IOA\), and \(S\) are opened at \(\zeta\) and \(\omega\zeta\); every other column at \(\zeta\).
 
-\subsection{No-Cross Constraints}\label{no-cross-constraints}
+\subsection{No-Cross Constraints}
 
 The no-cross proof uses only ordinary bids and asks, their depth columns, the limbs of \(B\) and \(A\), and the corresponding lookup columns. We impose F1--F8, apply F23 to those limbs, and require
 
 \[AccA(X) \cdot AccB(X) = 0.\]
 
-\subsection{Update-Validity Constraints}\label{update-validity-constraints}
+\subsection{Update-Validity Constraints}
 
 For update validity, let \(\kappa\) generate the domain \(K\) of size \(M\), with \(\kappa^{M/n}=\omega\). The public polynomial \(P_\eta\) takes value \(\eta^j\) on the first \(\mu\) rows, one per logged step, and zero elsewhere. On row \(iM/n\), \(X_H\) equals \(\omega^i\) and \(S_H\) equals one. Both vanish on the other rows. The range table is also public. The witness includes \(Qty\), \(Tick\), \(W\), quantity limbs and their lookup columns. The prover commits to \(G\), \(U_H\), and \(S_2\) after receiving \(\beta\).
 

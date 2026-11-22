@@ -183,3 +183,775 @@ no-cross outcome or a clearing price and allocation.
 % - P is the at-price long-side volume and should not also name a polynomial.
 % - S_i is supply; use a different symbol for the lookup running sum.
 % - N is the number of real price ticks; reserve n for a padded domain size.
+
+
+% Converted from A-clearing-rule.md.
+% Required packages: \usepackage{amsmath,longtable,booktabs,array}
+
+\section{The Clearing Rule}
+
+We define \(\mathsf{Clear}\) on books with ordinary and imbalance-only orders. Its output is either a clearing receipt or a no-cross outcome.
+
+\subsection{Definition}
+
+A \emph{book} on \(n\) ticks, of which the first \(N\) are real, is four sequences of integers \(b_i, a_i, b^{io}_i, a^{io}_i\), \(0 \le i < n\), with every entry in \([0, 2^{k_{in}})\) and zero for \(i \ge N\). \(b_i\) is the bid volume with limit exactly tick \(i\) and \(a_i\) the ask volume; a market buy is recorded at tick \(N-1\) and a market sell at tick 0. The \(io\) sequences hold the imbalance-only orders. For each tick define
+
+\[D_i = \sum_{j \ge i} b_j, \qquad S_i = \sum_{j \le i} a_j, \qquad V_i = \min(D_i, S_i), \qquad g_i = S_i - D_i, \qquad \delta_i = |g_i|,\]
+
+and likewise \(D^{io}_i = \sum_{j \ge i} b^{io}_j\) and \(S^{io}_i = \sum_{j \le i} a^{io}_j\). \(D_i\) is the demand willing to trade at price \(i\), \(S_i\) the supply, and \(V_i\) the volume that can execute. \(D\) is non-increasing; \(S\) and \(g\) are non-decreasing. Tick \(i\) is \emph{demand long} if \(g_i < 0\), \emph{supply long} if \(g_i > 0\), and \emph{balanced} if \(g_i = 0\). Its \emph{at-price long volume} is \(\lambda_i = b_i\) if it is demand long and \(\lambda_i = a_i\) if it is supply long.
+
+\textbf{Definition 2 (\(\mathsf{Clear}\)).} Let \(V = \max_i V_i\). If \(V = 0\), \(\mathsf{Clear}(\text{book}) = \textsf{no-cross}\). Otherwise let
+
+\begin{itemize}
+\item
+  \(\Pi = \{i : V_i = V\}\) be the \emph{plateau}, with \(c = \min \Pi\) and \(d = \max \Pi\);
+\item
+  \(v = \min_{i \in \Pi} \delta_i\) be the minimum imbalance;
+\item
+  a \emph{candidate} be a tick \(i \in \Pi\) with \(\delta_i = v\) and (\(v = 0\) or \(\lambda_i \ge v\));
+\item
+  \(p^*\) be the least candidate.
+\end{itemize}
+
+Then \(\mathsf{Clear}(\text{book}) = (V, c, d, p^*, v, s, P, J)\), where \(s = P = J = 0\) if \(v = 0\), and otherwise \(s = [g_{p^*} > 0]\), \(P = \lambda_{p^*}\), and \(J = S^{io}_{p^*}\) if \(s = 0\), \(J = D^{io}_{p^*}\) if \(s = 1\).
+
+\subsection{Properties}
+
+\textbf{The plateau is an interval.} For \(i < j < l\) we have \(V_j \ge \min(V_i, V_l)\), because \(D_j \ge D_l \ge V_l\) and \(S_j \ge S_i \ge V_i\). Hence \(\Pi = \{c, \ldots, d\}\).
+
+\textbf{Existence.} Lemma C.1 supplies a candidate for every crossing book. Together with the no-cross case, this makes \(\mathsf{Clear}\) a total function.
+
+\textbf{At most two candidates when \(v > 0\).} On \(\Pi\), \(g\) is non-decreasing and takes the values \(-v\) and \(+v\) on the minimizers. Let \(j\) be a demand-long minimizer that is not the highest one. Then \(g_{j+1} = g_j\), and since \(g_{j+1} - g_j = a_{j+1} + b_j\), we get \(b_j = 0 < v\): \(j\) is not a candidate. By symmetry only the lowest supply-long minimizer can be a candidate. The two candidates are therefore the highest demand-long minimizer and the lowest supply-long minimizer, and the first, when it exists, is the lower tick. When \(v = 0\) every balanced plateau tick is a candidate and \(p^*\) is the lowest.
+
+\textbf{At-price volume.} We require better-priced orders to fill in full even when no IO volume is available. In that case all \(v\) unfilled units must come from long-side interest at the clearing tick, so we require \(\lambda_{p^*}\ge v\) when choosing the price. Proposition C.4 shows that this condition yields feasible fill ratios for every eligible IO volume.
+
+\subsection{Fills}
+
+Of the eligible IO volume \(J\), the exchange admits \(I=\min(J,v)\), leaving residual imbalance \(R=v-I\). Both sides trade \(V+I\) units before rounding. Table 8 gives the pro rata entitlement for an order of size \(q\). When \(v=0\), all eligible ordinary orders fill in full and IO orders receive zero. A ratio is used only when its denominator is positive. The venue specifies integer rounding separately.
+
+\textbf{Table 8.} The fill of an order of quantity \(q\), given the receipt.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Order & Fill \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Limit or market order strictly better than \(p^*\), or on the short side at \(p^*\) & \(q\) \\
+Limit order at exactly \(p^*\) on the long side & \(q \cdot (P - R)/P\) \\
+Imbalance-only order on the short side, eligible at \(p^*\) & \(q \cdot I/J\) \\
+Any other order & 0 \\
+\end{longtable}
+
+\subsection{The Running Example}
+
+\textbf{Table 9.} The book of Figure 2, tick by tick.
+
+\begin{longtable}[]{@{}lllllllll@{}}
+\toprule\noalign{}
+Tick \(i\) & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\(b_i\) & 0 & 0 & 3 & 0 & 0 & 10 & 2 & 0 \\
+\(a_i\) & 0 & 4 & 6 & 0 & 0 & 0 & 5 & 3 \\
+\(a^{io}_i\) & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+\(D_i\) & 15 & 15 & 15 & 12 & 12 & 12 & 2 & 0 \\
+\(S_i\) & 0 & 4 & 10 & 10 & 10 & 10 & 15 & 18 \\
+\(V_i\) & 0 & 4 & 10 & 10 & 10 & 10 & 2 & 0 \\
+\(g_i\) & \(-15\) & \(-11\) & \(-5\) & \(-2\) & \(-2\) & \(-2\) & 13 & 18 \\
+\end{longtable}
+
+At ticks 2 through 5 the executable volume is 10, and the respective imbalances are 5, 2, 2, and 2. Demand is long throughout. Of the three minimum-imbalance ticks, only tick 5 has bids resting at the tick itself. Its 10 units cover the two-unit imbalance, so \(p^*=5\), \(s=0\), and \(P=10\). The eligible sell IO contributes one unit (\(J=I=1\)), leaving \(R=1\). Ordinary asks sell 10 units and the IO sells one. Bids at tick 6 buy two units and bids at tick 5 buy nine, for 11 on each side.
+
+\subsection{Relation to the Nasdaq Closing Cross}
+
+Nasdaq Rule 4754(b)(2) first maximizes executed shares, then minimizes imbalance. For remaining ties it considers the entered price at which shares stay unexecuted and finally proximity to the continuous market's bid--ask midpoint [37, Rule 4754(b)(2)]. Table 10 gives the corresponding steps in our rule.
+
+\textbf{Table 10.} The steps of the Closing Cross and of \(\mathsf{Clear}\).
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Closing Cross & \(\mathsf{Clear}\) & Difference \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+(A) maximize executed shares & \(V\) and the plateau \(\Pi\) & None \\
+(B) minimize the imbalance & \(v\) and the minimizers & None \\
+(C) the entered price at which shares remain unexecuted & Candidate: the long side\textquotesingle s volume at the tick covers the imbalance & We state the step as the inequality \(\lambda_i \ge v\) \\
+(D) closest to the bid-ask midpoint & The least candidate & A batch market has no continuous quote to refer to \\
+\end{longtable}
+
+The Closing Cross can draw on the continuous book. Our batch contains only orders represented in its four columns. We admit IO orders after setting the price, so they affect execution volume alone. At the cross price, Nasdaq Rule 4754(b)(3) allocates by order type and time priority. We use pro rata allocation on the long side, consistent with the absence of time priority within an FBA batch \cite{budish2015}.
+
+% Converted from B-constraints.md.
+% Required packages: \usepackage{amsmath,longtable,booktabs,array}
+
+\section{The Full Constraint List}
+
+We use the domain and columns of Section 3.2. Each identity holds throughout \(H\). Table 11 identifies the rows on which it imposes a restriction. For limb width \(w\) (\(w=8\) when \(n\ge256\)), let \(m_{in}=\lceil k_{in}/w\rceil\) and \(m=\lceil k/w\rceil\). We set \(\nu=1\) for positive \(V_{min\Delta}\) and \(\nu=0\) otherwise.
+
+\subsection{Scalar Checks}
+
+The verifier first checks the public receipt against the following bounds and conventions.
+
+\[0 \le c \le p^* \le d \le N-1, \qquad 1 \le V_{max} < 2^k, \qquad 0 \le V_{min\Delta} < 2^k,\]
+
+\[s \in \{0,1\}, \qquad V_{min\Delta} \le P < 2^k, \qquad 0 \le J < 2^k, \qquad V_{min\Delta} = 0 \Rightarrow s = P = J = 0.\]
+
+\subsection{Clearing Constraints}
+
+\textbf{Table 11.} The constraints of the clearing proof.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+\# & Name & Identity & Active at \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+F1 & Bid range & \(B - \sum_{l<m_{in}} 2^{wl} \ell^{B}_l = 0\) & All ticks \\
+F2 & Ask range & \(A - \sum_{l<m_{in}} 2^{wl} \ell^{A}_l = 0\) & All ticks \\
+F3 & Bid padding & \(Pad \cdot B = 0\) & Padding \\
+F4 & Ask padding & \(Pad \cdot A = 0\) & Padding \\
+F5 & Demand start & \(L_{n-1} \cdot (AccB - B) = 0\) & \(\omega^{n-1}\) \\
+F6 & Supply start & \(L_0 \cdot (AccA - A) = 0\) & \(\omega^0\) \\
+F7 & Demand step & \((X - \omega^{n-1})\,[AccB(X) - AccB(\omega X) - B(X)] = 0\) & All but the last \\
+F8 & Supply step & \((X - \omega^{n-1})\,[AccA(\omega X) - AccA(X) - A(\omega X)] = 0\) & All but the last \\
+F9 & Bid surplus & \(SurpB - (AccB - Min) = 0\) & All ticks \\
+F10 & Ask surplus & \(SurpA - (AccA - Min) = 0\) & All ticks \\
+F11 & Minimum selection & \(SurpA \cdot SurpB = 0\) & All ticks \\
+F12 & \(SurpB \ge 0\) & \(SurpB - \sum_{l<m} 2^{wl} \ell^{sB}_l = 0\) & All ticks \\
+F13 & \(SurpA \ge 0\) & \(SurpA - \sum_{l<m} 2^{wl} \ell^{sA}_l = 0\) & All ticks \\
+F14 & Ceiling & \((V_{max} - Min) - \sum_{l<m} 2^{wl} \ell^{ceil}_l = 0\) & All ticks \\
+F15 & Plateau, left end & \(L_c \cdot (Min - V_{max}) = 0\) & \(\omega^c\) \\
+F16 & Plateau, right end & \(L_d \cdot (Min - V_{max}) = 0\) & \(\omega^d\) \\
+F17 & Cliffs & \(Mask_C \cdot (V_{max} - Min - 1 - Slack) = 0\) & \(\omega^{c-1}\), \(\omega^{d+1}\) where they exist \\
+F18 & Imbalance & \(\Delta - (SurpA + SurpB) = 0\) & All ticks \\
+F19 & Imbalance floor & \(Mask_P \cdot [(\Delta - V_{min\Delta}) - \sum_{l<m} 2^{wl} \ell^{flr}_l] = 0\) & Plateau \\
+F20a & Pin, demand side & \(L_{p^*} \cdot (SurpB - (1-s)\,V_{min\Delta}) = 0\) & \(\omega^{p^*}\) \\
+F20b & Pin, supply side & \(L_{p^*} \cdot (SurpA - s\,V_{min\Delta}) = 0\) & \(\omega^{p^*}\) \\
+F21 & Tie-break & \(Mask_T \cdot (\Delta - V_{min\Delta} - 1 - Slack) = 0\) & \(\omega^{p^*-1}\) when \(Mask_T \ne 0\) \\
+F22 & \(Slack \ge 0\) & \(Slack - \sum_{l<m} 2^{wl} \ell^{slk}_l = 0\) & All ticks \\
+F23 & Table membership & The lookup identities of Section 3.4 over all looked-up values & All ticks \\
+F24 & IO bid range & \(IOB - \sum_{l<m_{in}} 2^{wl} \ell^{IOB}_l = 0\) & All ticks \\
+F25 & IO ask range & \(IOA - \sum_{l<m_{in}} 2^{wl} \ell^{IOA}_l = 0\) & All ticks \\
+F26 & IO bid padding & \(Pad \cdot IOB = 0\) & Padding \\
+F27 & IO ask padding & \(Pad \cdot IOA = 0\) & Padding \\
+F28 & IO demand start & \(L_{n-1} \cdot (IOAccB - IOB) = 0\) & \(\omega^{n-1}\) \\
+F29 & IO demand step & \((X - \omega^{n-1})\,[IOAccB(X) - IOAccB(\omega X) - IOB(X)] = 0\) & All but the last \\
+F30 & IO supply start & \(L_0 \cdot (IOAccA - IOA) = 0\) & \(\omega^0\) \\
+F31 & IO supply step & \((X - \omega^{n-1})\,[IOAccA(\omega X) - IOAccA(X) - IOA(\omega X)] = 0\) & All but the last \\
+F32 & At-price long volume & \(\nu\, L_{p^*} \cdot ((1-s)\,B + s\,A - P) = 0\) & \(\omega^{p^*}\) when \(V_{min\Delta} > 0\) \\
+F33 & Eligible IO volume & \(\nu\, L_{p^*} \cdot ((1-s)\,IOAccA + s\,IOAccB - J) = 0\) & \(\omega^{p^*}\) when \(V_{min\Delta} > 0\) \\
+\end{longtable}
+
+F20 is a pair, so the list has 33 identities besides the lookup. The looked-up values are the limbs of the nine range-checked quantities (\(B\), \(A\), \(IOB\), \(IOA\), \(SurpB\), \(SurpA\), \(V_{max} - Min\), \(\Delta - V_{min\Delta}\), \(Slack\)) and, for a width that is not a multiple of \(w\), the scaled top limb of each. Their number is \(E = 4 m_{in} + 5m\), plus 4 if \(w \nmid k_{in}\), plus 5 if \(w \nmid k\). F23 consists of \(\lceil E/2 \rceil\) pair identities, the table-helper identity, and the running-sum identity.
+
+\textbf{Column count.} The first round commits to 13 value columns, \(4m_{in}+5m\) limb columns, and \(Mult\). The second adds \(\lceil E/2\rceil+2\) helper columns. At \(n=1024\), \(k_{in}=32\), and \(k=42\), we have 46 limb columns and \(E=51\) lookup inputs. The 26 pair helpers bring the total, including the other helpers, to 88 columns.
+
+\textbf{Degrees and openings.} The pair identities have degree at most \(3n - 3\) before masking and every other identity at most \(2n - 2\). The quotient has degree at most \(2n + 3\) with masking, and the implementation requests a reference string of degree \(2n + 8\). \(AccB\), \(AccA\), \(IOAccB\), \(IOAccA\), \(A\), \(IOA\), and \(S\) are opened at \(\zeta\) and \(\omega\zeta\); every other column at \(\zeta\).
+
+\subsection{No-Cross Constraints}
+
+The no-cross proof uses only ordinary bids and asks, their depth columns, the limbs of \(B\) and \(A\), and the corresponding lookup columns. We impose F1--F8, apply F23 to those limbs, and require
+
+\[AccA(X) \cdot AccB(X) = 0.\]
+
+\subsection{Update-Validity Constraints}
+
+For update validity, let \(\kappa\) generate the domain \(K\) of size \(M\), with \(\kappa^{M/n}=\omega\). The public polynomial \(P_\eta\) takes value \(\eta^j\) on the first \(\mu\) rows, one per logged step, and zero elsewhere. On row \(iM/n\), \(X_H\) equals \(\omega^i\) and \(S_H\) equals one. Both vanish on the other rows. The range table is also public. The witness includes \(Qty\), \(Tick\), \(W\), quantity limbs and their lookup columns. The prover commits to \(G\), \(U_H\), and \(S_2\) after receiving \(\beta\).
+
+\textbf{Table 12.} The constraints of the update-validity proof, each on all of \(K\).
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+\# & Name & Identity \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+U1 & Quantity range & \(Qty - \sum_{l<m_{in}} 2^{wl} \ell^{Qty}_l = 0\), with every limb in the table \\
+U2 & Step side & \(G(X)\,(\beta - Tick(X)) - P_\eta(X)\,Qty(X) = 0\) \\
+U3 & Tick side & \(U_H(X)\,(\beta - X_H(X)) - S_H(X)\,W(X) = 0\) \\
+U4 & Running sum & \(S_2(\kappa X) - S_2(X) - (G(X) - U_H(X)) = 0\) \\
+\end{longtable}
+
+For 32-bit quantities the proof has 15 columns: \(Qty\), \(Tick\), \(W\), four limbs, the multiplicities, two pair helpers, the table helper, the range running sum, \(G\), \(U_H\), and \(S_2\). With the quotient and \(\Phi_{mask}\) it holds 17 commitments.
+
+
+\section{Security Proofs}
+
+\subsection{Overview}
+
+We analyze one published board and one outcome. Integrity links a trader's checked receipt to a contribution to the book, then links that book to \(\mathsf{Clear}\). Secrecy compares the published transcript with the view available in a trusted auction that discloses the same outcome.
+
+The auction-specific argument begins once the polynomial identities hold on their domains. Section C.2 states the cryptographic assumptions that let us infer this from an accepted proof and simulate the proof transcript.
+
+\subsection{Cryptographic Assumptions}
+
+We use the following as black boxes, in the algebraic group model with the \(q\)-discrete-logarithm assumption and a random oracle.
+
+\begin{itemize}
+\item
+  \textbf{(K1) Knowledge soundness.} Let \(\mathsf{Acc}\) be the event that the verifier accepts a proof of our polynomial protocol and \(\mathsf{Vanish}\) the statement that every constraint polynomial vanishes on the domain for the columns behind the commitments. Then \(\mathsf{Acc} \Rightarrow_\epsilon \mathsf{Vanish}\): an accepted proof implies \(\mathsf{Vanish}\) except with probability \(\epsilon\). This is the soundness guarantee of PLONK-style arguments over KZG \cite{marlin2020,plonk2019}.
+\item
+  \textbf{(K2) Zero knowledge.} There is a simulator that, given a true statement, outputs a transcript indistinguishable from an honest one \cite{lipmaa2025,sefranek2024}. It requires a hiding commitment and, for each committed polynomial, more random off-domain coefficients than opened points.
+\item
+  \textbf{(K3) Binding.} A KZG commitment determines the polynomial behind it, and an equation between commitments that the adversary makes hold is an identity between those polynomials \cite{kzg2010}.
+\item
+  \textbf{(K4) Lookup.} If every identity of the logarithmic-derivative lookup vanishes on the domain, every looked-up value is in the table, except with probability \(\epsilon\) over its challenge \cite{habock2022}.
+\item
+  \textbf{(K5)} The Schnorr proof is a proof of knowledge \cite{schnorr1991}. \textbf{(K6)} The hash is collision resistant.
+\end{itemize}
+
+K1 and K2 must apply to our additional lookup round and to the four column commitments fixed before clearing starts. Section C.8 states this qualification explicitly.
+
+\subsection{The Reference Auction and Its Properties}
+
+\textbf{The reference auction.} A trusted exchange receives orders, acknowledges each one to its trader, and at the close publishes the outcome \(\mathsf{Clear}(\text{book})\) of Definition 2. The public sees the number of orders, when each arrived, and the outcome. A trader also knows their own orders.
+
+Table 7 relates the five properties in Definition 1 to end-to-end election verification. The correspondence is between a private order and a ballot, and between a public clearing result and the published tally.
+
+A trader checks whether their order was recorded as submitted. Anyone with the board can check update validity and clearing, including uniqueness of the outcome. Secrecy concerns the public transcript together with any receipts the colluding traders possess.
+
+\subsection{Integrity}
+
+Let \(\mathsf{Bd}\) be the board, \(\mathsf{Rc}\) the set of receipts that pass their traders\textquotesingle{} checks against \(\mathsf{Bd}\), and \(R\) the published outcome. By K3 each board entry \(\Phi_j\) determines a vector \(u_j\) of values on \(H\), its \emph{contribution}. Let \(\text{Book}^* = \sum_j u_j\), arranged by column.
+
+Write \(R\) for the published outcome. The following predicates express integrity for \((\mathsf{Bd},\mathsf{Rc},R)\).
+
+\[\psi_0:\quad \mathsf{Bd} \text{ is one sequence of commitments starting from an empty book.}\]
+
+One published digest fixes the sequence by K6. For the start, the accepted opening gives a Schnorr proof for \(C_r\) and the pairing equation \(e(C_0 - C_r, [1]_2) = e(C_\rho, [Z_H(\tau)]_2)\). By K5 and K3, \(C_r\) carries no values, and the equation is then the identity that the polynomial behind \(C_0\) is a multiple of \(Z_H\): every tick of every column starts at zero. The last commitment of a column therefore commits, on \(H\), to the sum of that column\textquotesingle s contributions.
+
+\[\psi_1 \text{ (recorded as submitted)}:\quad \forall (\text{column}, \ell, q, \rho, C_{before}, C_{after}) \in \mathsf{Rc}:\ \text{the step } C_{after} - C_{before} \text{ has contribution } q \text{ at tick } \ell \text{ and } 0 \text{ elsewhere.}\]
+
+The trader\textquotesingle s check is the equation \(C_{after} - C_{before} = q\,[L_\ell(\tau)]_1 + \rho\,\Gamma\) between public commitments. By K3 the polynomial behind the step is \(q L_\ell\), up to blinding. The receipt is checked against consecutive entries of \(\mathsf{Bd}\), so the step is one of the \(\Phi_j\).
+
+\[\psi_2 \text{ (no removal)}:\quad \forall j\ \exists\, q_j \in [0, 2^{k_{in}}),\ \ell_j:\quad u_j = q_j\, e_{\ell_j} \ \text{ or } \ u_j = 0.\]
+
+This is the statement of the update-validity proof, and its argument is specific to our construction. Assume the proof is accepted; by K1 the constraints U1--U4 vanish on \(K\). U1 with K4 gives \(Qty[j] \in [0, 2^{k_{in}})\). U2--U4 are a running sum whose two sides telescope to
+
+\[\sum_{j<\mu} \frac{\eta^j\, Qty[j]}{\beta - Tick[j]} = \sum_{i<n} \frac{w[i]}{\beta - \omega^i},\]
+
+where \(w\) is the vector of values on \(H\) behind \(W\). Both sides were fixed before \(\beta\) was drawn, so, except with probability \(2(M+n)/|\mathbb{F}|\), they agree as rational functions: for each tick \(i\), the steps whose \(Tick\) entry is \(\omega^i\) have \(\eta\)-weighted quantities summing to \(w[i]\), and steps whose entry is not a tick contribute nothing. The verifier computes \(W = \Phi_{mask} + \sum_j \eta^j \Phi_j\) from \(\mathsf{Bd}\), and \(\Phi_{mask}\) is empty by the argument of \(\psi_0\), so by K3 \(w = \sum_j \eta^j u_j\). Hence \(\sum_j \eta^j (u_j - Qty[j]\, e_{\ell_j}) = 0\). The \(u_j\), \(Qty\), and \(Tick\) were fixed before \(\eta\) was drawn, so every term is zero, except with probability \(\mu/|\mathbb{F}|\). An exchange that logs a step subtracting an acknowledged order violates \(\psi_2\) and cannot produce this proof.
+
+\[\psi_3 \text{ (cleared as recorded)}:\quad R = \mathsf{Clear}(\text{Book}^*).\]
+
+If a clearing proof verifies against the final commitments, K1 and K4 give F1--F33 on \(H\). By \(\psi_0\), the committed book columns equal \(\text{Book}^*\). Theorem 1 identifies the receipt as \(R=\mathsf{Clear}(\text{Book}^*)\). For a no-cross proof, Proposition C.3 gives \(V=0\).
+
+\[\psi_4 \text{ (no discretion)}:\quad \mathsf{Bd} \text{ determines } R.\]
+
+\(\mathsf{Clear}\) is a function and is defined on every book, because a candidate always exists (Appendix A.2). With \(\psi_3\), two accepted outcomes for one board are equal.
+
+\textbf{Theorem 3 (integrity).} If the verifier accepts a batch, then except with probability at most \(\varepsilon_{\mathrm{KZG}} + \varepsilon_{\mathrm{clear}} + \varepsilon_{\mathrm{upd}} + \varepsilon_{\mathrm{hash}}\) (Section C.7), the predicates \(\psi_0\) to \(\psi_4\) hold. In particular the outcome is the clearing of a book that contains every order with a verified receipt, at its tick and with at least its quantity.
+
+\emph{Proof.} The predicates hold by the arguments above. By \(\psi_1\) a receipted order contributes \(q\) at tick \(\ell\), and by \(\psi_2\) every other contribution to that tick is non-negative, so \(\text{Book}^*\) has at least \(q\) there. By \(\psi_3\) the outcome is the clearing of \(\text{Book}^*\). \(\blacksquare\)
+
+\textbf{Fill feasibility.} Proposition C.4 shows that each applicable pro rata ratio lies in \([0,1]\) and that total purchases equal total sales before rounding.
+
+\subsection{The Constraints and the Clearing Rule}
+
+We now interpret the field constraints over the integers to establish \(\psi_3\).
+
+\textbf{Range fact.} We require \(2^{k+1} < |\mathbb{F}|\). If a field element has a limb decomposition whose limbs are all in the table, it is the image of an integer in \([0, 2^b)\) for the width \(b\) of the constraint. If a field element is the image of an integer \(y\) with \(|y| < 2^k\) and lies in \([0, 2^k)\), then \(y \ge 0\): a negative \(y\) has image \(|\mathbb{F}| + y > 2^k\).
+
+\textbf{Theorem 1 (soundness of the constraints).} Suppose the scalar checks hold for a receipt and a witness satisfies F1--F33 at every point of \(H\). Then the columns \(B, A, IOB, IOA\) of the witness form a book, and the receipt equals \(\mathsf{Clear}\) of that book. In particular the book crosses.
+
+\emph{Proof.} We treat a value that the range fact makes an integer as that integer.
+
+\emph{Step 1: the book.} F1, F2, F24, F25 with F23 put the four book columns in \([0, 2^{k_{in}})\), and F3, F4, F26, F27 make them zero for \(i \ge N\).
+
+\emph{Step 2: depth.} The factor \(X - \omega^{n-1}\) of F7 is non-zero except at \(i = n-1\), so \(AccB_i = AccB_{i+1} + b_i\) for \(i \le n-2\), and F5 gives \(AccB_{n-1} = b_{n-1}\). By induction \(AccB_i = D_i\). In the same way F6, F8 give \(AccA_i = S_i\), and F28--F31 give the two IO depths.
+
+\emph{Step 3: executable volume.} By F9 and F10, \(SurpB_i = D_i - Min_i\) and \(SurpA_i = S_i - Min_i\). By F11 one is zero. If \(SurpB_i = 0\) then \(Min_i = D_i\) and \(SurpA_i = S_i - D_i\); F13 and the range fact give \(S_i \ge D_i\), so \(Min_i = V_i\). The other case is symmetric with F12. Hence \(Min_i = V_i\), \(SurpB_i = D_i - V_i\), \(SurpA_i = S_i - V_i\), and \(\Delta_i = \delta_i\) by F18.
+
+\emph{Step 4: the ceiling.} \(V_{max} < 2^k\) by the scalar checks, so F14 and the range fact give \(V_i \le V_{max}\) for every \(i\).
+
+\emph{Step 5: the plateau.} We use \emph{unimodality}: for \(i < j < l\), \(V_j \ge \min(V_i, V_l)\), since \(D_j \ge D_l \ge V_l\) and \(S_j \ge S_i \ge V_i\). F15 and F16 give \(V_c = V_d = V_{max}\) with \(c \le d\). With Step 4, \(V_{max} = V\), and \(V \ge 1\) by the scalar checks. By unimodality \(V_j = V\) for \(c \le j \le d\). If \(c \ge 1\), \(Mask_C\) is 1 at \(c - 1\) and F17 reads \(V - V_{c-1} - 1 = Slack_{c-1}\); F22 makes the right side non-negative, so \(V_{c-1} \le V - 1\). A tick \(i < c-1\) with \(V_i = V\) would give \(V_{c-1} \ge V\) by unimodality. The right end is symmetric. Hence \(\Pi = \{c, \ldots, d\}\).
+
+\emph{Step 6: the minimum imbalance and the side.} \(Mask_P\) is 1 exactly on \(\Pi\), so F19 gives \(\delta_i \ge v\) on \(\Pi\). The scalar checks put \(p^*\) in \(\Pi\), and F20 gives \(SurpB_{p^*} = (1-s)v\) and \(SurpA_{p^*} = sv\), so \(\delta_{p^*} = v\) and \(v = \min_{i \in \Pi} \delta_i\). If \(v > 0\), the non-zero surplus identifies the long side, so \(s = [g_{p^*} > 0]\). If \(v = 0\), the scalar checks force \(s = P = J = 0\).
+
+\emph{Step 7: \(P\), \(J\), and \(p^*\) is a candidate.} If \(v > 0\) then \(\nu = 1\), F32 gives \(P = \lambda_{p^*}\), and F33 gives \(J\). The scalar check \(v \le P\) says \(\lambda_{p^*} \ge v\). If \(v = 0\), \(p^*\) is a candidate because \(\delta_{p^*} = 0\).
+
+\emph{Step 8: no candidate lies below \(p^*\).} Let \(i \in \Pi\) with \(i < p^*\); recall \(g_{t+1} - g_t = a_{t+1} + b_t\).
+
+\begin{itemize}
+\item
+  \emph{\(v > 0\), \(s = 0\).} \(g_{p^*} = -v\), so \(g_i \le -v\). If \(\delta_i = v\) then \(g\) is constant on \([i, p^*]\), so \(b_i = 0\); tick \(i\) is demand long with \(\lambda_i = 0 < v\). No constraint is needed, and \(Mask_T = 0\).
+\item
+  \emph{\(v > 0\), \(s = 1\).} \(Mask_T\) is 1 at \(p^* - 1\), and F21 with F22 gives \(\delta_{p^*-1} \ge v + 1\). Since \(g_{p^*-1} \le g_{p^*} = v\), this forces \(g_{p^*-1} \le -(v+1)\), so \(\delta_i > v\).
+\item
+  \emph{\(v = 0\).} F21 gives \(\delta_{p^*-1} \ge 1\) with \(g_{p^*-1} \le 0\), so \(g_i \le -1\) and \(\delta_i > v\).
+\end{itemize}
+
+The tick \(p^* - 1\) is in \(\Pi\) and the cliff ticks are not, so \(Slack\) is constrained at most once per tick. \(\blacksquare\)
+
+\textbf{Lemma C.1 (a candidate exists).} For every book that crosses, \(\Pi\) contains a candidate.
+
+\emph{Proof.} If \(v = 0\) every minimizer is a candidate. Let \(v > 0\). For \(i \in \Pi\), a demand-long tick has \(S_i = V\) and \(D_i = V + \delta_i\), and a supply-long tick has \(D_i = V\) and \(S_i = V + \delta_i\). Suppose the set of minimizers contains a demand-long tick and let \(j\) be the highest, so \(D_j = V + v\). If \(j = d\), either \(d = n - 1\) and \(b_d = D_d \ge v\), or \(V_{d+1} < V\) with \(S_{d+1} \ge V\), so \(D_{d+1} < V\) and \(b_d > v\). If \(j < d\), tick \(j + 1 \in \Pi\) is not balanced, and it is not demand long, since it would then be a demand-long minimizer above \(j\); so \(D_{j+1} = V\) and \(b_j = v\). In each case \(j\) is a candidate. If every minimizer is supply long, the lowest one is a candidate by the symmetric argument. \(\blacksquare\)
+
+\textbf{Theorem 2 (completeness of the constraints).} For every book that crosses, \(\mathsf{Clear}\) of the book passes the scalar checks, and there is a witness satisfying F1--F33.
+
+\emph{Proof.} Take \(AccB = D\), \(AccA = S\), \(Min_i = V_i\), the surpluses and \(\Delta\) by their definitions, and \(Slack\) zero except \(Slack_{c-1} = V - V_{c-1} - 1\), \(Slack_{d+1} = V - V_{d+1} - 1\) where those ticks exist, and \(Slack_{p^*-1} = \delta_{p^*-1} - v - 1\) when \(Mask_T \ne 0\). Padding ticks have \(D_i = 0\), so \(\Pi \subseteq [0, N-1]\) and the scalar checks hold; \(P \ge v\) because \(p^*\) is a candidate. Every constraint holds by construction once the three slack values are non-negative. The cliff ticks are outside \(\Pi\). For \(p^* - 1\) with \(v = 0\): it is in \(\Pi\) and not a candidate, so \(\delta_{p^*-1} \ge 1\). For \(p^* - 1\) with \(v > 0\) and \(s = 1\), suppose \(\delta_{p^*-1} = v\). If \(g_{p^*-1} = v\) then \(a_{p^*} = 0 < v\), contradicting that \(p^*\) is a candidate. If \(g_{p^*-1} = -v\) then \(p^* - 1\) is a demand-long minimizer whose upper neighbour is supply long, so \(b_{p^*-1} = v\) as in Lemma C.1, and \(p^* - 1\) is a lower candidate. \(\blacksquare\)
+
+\textbf{Proposition C.3 (no-cross).} A witness satisfies F1--F8, F23, and \(AccA \cdot AccB = 0\) if and only if its \(B\) and \(A\) form a book with \(V = 0\).
+
+\emph{Proof.} As in Steps 1 and 2, \(AccB = D\) and \(AccA = S\) are integers in \([0, 2^k)\). A field has no zero divisors, so the product vanishes at \(i\) exactly when \(\min(D_i, S_i) = 0\). \(\blacksquare\)
+
+\textbf{Proposition C.4 (execution).} If the receipt is \(\mathsf{Clear}\) of the book, no fill ratio of Section 3.5 lies outside \([0,1]\), and before rounding the volume bought equals the volume sold equals \(V + \min(J, v)\).
+
+\emph{Proof.} Let \(I = \min(J, v)\) and \(R = v - I\). If \(v = 0\), \(D_{p^*} = S_{p^*} = V\) and both sides fill \(V\). If demand is long, \(S_{p^*} = V\) and \(D_{p^*} = V + v\). Sold: the asks at or below \(p^*\), \(V\), plus the admitted IO, \(I\). Bought: the bids strictly above \(p^*\), \(V + v - P\), plus the at-price bids at ratio \((P - R)/P\), that is \(P - v + I\); in total \(V + I\). The ratio lies in \([0, 1]\) exactly because \(P \ge v \ge R\), which is the candidate condition. The supply-long case is symmetric. \(\blacksquare\)
+
+\subsection{Order Secrecy}
+
+Following Zeeperio \cite{zeeperio2026}, we express secrecy as non-expansivity relative to the reference auction. The simulator may use everything that the reference auction already discloses.
+
+\textbf{Lemma C.2 (non-expansive secrecy under transcript augmentation).} Let \(\Pi\) be a protocol with adversary view \(T\), and \(\Pi^+\) an augmentation with view \((T, Z)\) on the same execution. If there is an efficient \(\mathsf{Sim}\) such that \((T, Z)\) and \((T, \mathsf{Sim}(T))\) are indistinguishable, then for any secrecy experiment that depends on the protocol only through the adversary\textquotesingle s view, an adversary against \(\Pi^+\) yields one against \(\Pi\) with negligibly different success.
+
+\textbf{Theorem 4 (order secrecy).} Let \(\Pi\) be the reference auction and \(T\) the view of the observers and of a set of colluding traders: the number and arrival times of the orders, the outcome, and the colluding traders\textquotesingle{} own orders. Let \(Z\) be what the zk-FBA adds: the opening, the board, the colluding traders\textquotesingle{} receipts, and the proofs. If the exchange publishes one clearing proof per opened book, the zk-FBA is a non-expansive augmentation of \(\Pi\).
+
+\emph{Proof.} \(\mathsf{Sim}(T)\) produces \(Z\) in three parts.
+
+\emph{Opening.} The opening does not depend on any order. The simulator generates it as the exchange does.
+
+\emph{Board.} A step is \(\Phi = q\,[L_\ell(\tau)]_1 + \rho\,\Gamma\) on the order\textquotesingle s column and \(\rho'\Gamma\) on each other column, with fresh uniform \(\rho, \rho'\). Each is a uniform group element whatever the order is. For every order of an honest trader, the simulator outputs four uniform elements, at the time given in \(T\). For every order of a colluding trader, it computes the steps and the receipt from the order in \(T\). Because all four columns move at every order, the simulator does not need the order\textquotesingle s side.
+
+\emph{Proofs.} The outcome in \(T\) is a true statement about some book, so by K2 the simulator of the polynomial protocol outputs transcripts for the clearing proof and the update-validity proof. K2 has two conditions, and they hold for columns committed inside a proof by fresh randomness. For the four book columns the randomness was fixed at the opening, and part of it is already public. The mask \(\rho_0\) has four coefficients, and the public values that depend on it are \(C_\rho\) and the column\textquotesingle s evaluations at \(\zeta\) and, for \(A\) and \(IOA\), at \(\omega\zeta\): at most three linear functionals at distinct points, which are jointly uniform. The blinding polynomial likewise has four coefficients against at most three functionals, and the blindings known to colluding traders only shift its constant term by known amounts. Both conditions therefore hold with one coefficient to spare. \(\blacksquare\)
+
+\textbf{Reuse of a book mask.} For a column opened at both \(\zeta\) and \(\omega\zeta\), a fresh proof can expose two more evaluations of the same mask. Together with the opening and the first proof, that can exceed the four coefficients available for masking. The one-proof condition in Theorem 4 limits this exposure.
+
+\textbf{Reference disclosure.} The reference view includes the entire receipt, including the plateau \([c,d]\) and the volumes \(P\) and \(J\). A venue that wishes to keep these values private would need a different public statement (Section 7).
+
+\subsection{Error Terms}
+
+We bound the algebraic error terms in K1 and K4 for the domains and challenges used here.
+
+\emph{Lookup.} If a looked-up cell is outside the table, the difference of the two sides of the lookup sum is a non-zero rational function of \(\beta\) whose numerator has degree below \((E+1)n\). The identities can hold only if \(\beta\) is a root of it, or equals one of at most \(En\) cell values, or one of at most \(n\) table values, where a vanishing denominator frees a helper. The error is at most \((2E+2)\,n/|\mathbb{F}|\).
+
+\emph{Clearing proof.} With \(t_F\) combined identities and \(t_C\) commitments: the evaluation point contributes \((3n+9)/|\mathbb{F}|\), the combination \(t_F/|\mathbb{F}|\), the opening batch \(t_C/|\mathbb{F}|\), and the lookup the term above. For \(t_F + t_C + 9 \le 2n\) this gives \(\varepsilon_{\mathrm{clear}} \le (2E+7)\,n/|\mathbb{F}|\).
+
+\emph{Update-validity proof.} The polynomial protocol on \(K\) contributes at most \(5M/|\mathbb{F}|\), the range lookup of \(Qty\) \((2E_Q+2)\,M/|\mathbb{F}|\), the challenge \(\beta\) of the histogram identity \(2(M+n)/|\mathbb{F}|\), and the challenge \(\eta\) \(\mu/|\mathbb{F}|\). With \(n, \mu \le M\) this gives \(\varepsilon_{\mathrm{upd}} \le (2E_Q+12)\,M/|\mathbb{F}|\).
+
+Each term is per random-oracle query. With \(|\mathbb{F}| \approx 2^{254}\), \(n = 2^{10}\), \(M = 2^{14}\), \(E = 51\), and \(E_Q = 4\), both are below \(2^{-230}\).
+
+\subsection{What Is Assumed and What Is Open}
+
+\begin{itemize}
+\item
+  \textbf{K1 and K2 for our variant.} The cited results are for PLONK. Our protocol uses the same technique with a second round and with externally committed columns. We have not proved K1 and K2 for this exact variant; Section C.7 gives the error terms we expect.
+\item
+  \textbf{The exchange\textquotesingle s own orders.} \(\text{Book}^*\) may contain contributions with no receipt holder. \(\psi_2\) makes them non-negative: the exchange can trade in its own auction, and it cannot remove an acknowledged order.
+\item
+  \textbf{A refused order.} No predicate covers an order the exchange never logs. The trader holds no receipt and knows it.
+\item
+  \textbf{One board.} \(\psi_0\) needs the digest published where all parties read the same value.
+\item
+  \textbf{Rounding.} The fill ratios are proved; the rounding of individual fills is a venue rule.
+\end{itemize}
+
+\section{The Noir Circuit}
+
+We wrote the Noir circuit directly from the clearing constraints. It supplies an independent implementation of the rule and the general-purpose benchmark in Section 5.5.
+
+\textbf{Statement.} The witness consists of four arrays of \(N\) unsigned 32-bit volumes and a salt. The crossing circuit publishes nine field elements (288 bytes) for the book digest and eight receipt values. The no-cross circuit publishes only the digest.
+
+\textbf{Circuit model.} Noir constrains the result of ordinary arithmetic, including the sums used to compute depth. Its unsigned integer types enforce bounds, so a subtraction that would underflow cannot satisfy the circuit. An unconstrained function can supply a witness value, but the circuit must still check that value. The backend implements the polynomial domain, quotient, openings, and lookups.
+
+\textbf{Executable volume.} An unconstrained function proposes the minimum of the two depths. The circuit subtracts this value from each depth in unsigned 64-bit arithmetic, enforcing the differences and their non-negativity (F9, F10, F12, F13). It then checks that their product is zero (F11). Together the checks force the proposed value to equal the smaller depth.
+
+\textbf{Types.} Table 16 maps Noir types to the constraints they enforce. Arrays have exactly \(N\) entries. Native comparisons implement the inequalities in F14 and F19 without an explicit slack column or limb witnesses at the circuit-language level.
+
+\textbf{Table 16.} Types of the circuit and the constraints they replace.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Quantity & Type & Replaces \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Volume at one tick & 32-bit unsigned & F1, F2, F24, F25 \\
+Depths, \(Min\), surpluses, \(\Delta\) & 64-bit unsigned & F12, F13, and the range of every accumulated value \\
+\(c\), \(d\), \(p^*\) & 32-bit unsigned & \\
+Side & Boolean & \\
+Array of length \(N\) & & F3, F4, F26, F27 \\
+\end{longtable}
+
+\textbf{Receipt.} An unconstrained function computes a candidate receipt from the book. The circuit then applies the scalar and per-tick checks in Table 17. By Theorem 1, every accepted candidate equals the rule's receipt. The backend handles reads at \(c\), \(d\), \(p^*\), and their neighbours as memory lookups because those positions depend on the witness.
+
+\textbf{Table 17.} Steps of the clearing check in the circuit.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Step & Assertion & Constraints \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Receipt & \(c \le p^* \le d < N\); \(V_{max} \ge 1\); \(V_{min\Delta} \le P\); \(s\), \(P\), \(J\) zero when balanced & Scalar checks \\
+Depth & Running sums from the top tick and from the bottom tick & F5--F8, F28--F31 \\
+Each tick & The minimum; \(\Delta = SurpA + SurpB\); \(Min \le V_{max}\); \(\Delta \ge V_{min\Delta}\) on \([c,d]\) & F9--F14, F18, F19 \\
+Plateau & \(Min[c] = Min[d] = V_{max}\); \(Min\) strictly lower at \(c - 1\) and \(d + 1\) where they exist & F15--F17 \\
+Clearing tick & The surpluses at \(p^*\) are \(V_{min\Delta}\) on the long side and 0 on the other & F20 \\
+Tie-break & If \(p^* > c\) and supply is long or the batch is balanced, \(\Delta[p^* - 1] > V_{min\Delta}\) & F21 \\
+Rationing & \(P\) is the long side\textquotesingle s volume at \(p^*\); \(J\) is the short side\textquotesingle s eligible IO depth at \(p^*\) & F32, F33 \\
+\end{longtable}
+
+\textbf{Digest.} We pack the four volumes at each tick into \(b+2^{32}a+2^{64}b^{io}+2^{96}a^{io}\). A width-four Poseidon2 sponge with rate three and capacity one absorbs the resulting field elements. We initialize the state to \((\text{salt},0,0,N)\), permute once before absorption, and take the first state element as the output after absorption. The private salt prevents an observer from testing a guessed low-volume book against the digest without also guessing the salt. At 1,000 ticks a Pedersen hash of the unpacked volumes required 1.78 million gates. Our sponge uses about 25,000. This arrangement of the standard permutation has not received a separate security analysis.
+
+\textbf{Size.} The circuit has 12,757 gates at 100 ticks, 100,357 at 1,000, and 197,666 at 2,000, about 100 per tick. The proof is 14,656 bytes and the verification key 3,680 bytes at every size. The number of ticks is a compile-time constant, so each book size has its own verification key.
+
+\textbf{Tests.} Four of 20 library tests check hand-computed receipts for a demand-long book, a supply-long book, a balanced book, and a book with one maximizing tick and IO interest. Twelve tests submit false receipts and check which constraint rejects them. The remaining tests cover no-cross and the dependence of the digest on the book and salt. The Noir and Rust receipts agree on all 57 calibrated and replayed benchmark books and on the 362 books constructed from Cboe outcomes in Section 5.7.
+
+\textbf{Toolchain.} We compile with \texttt{nargo} 1.0.0 and prove with Barretenberg 6.0.0 in its zero-knowledge UltraHonk mode with a Poseidon2 transcript. The circuit is 208 lines and its tests 161.
+
+\section{Order-Flow Data and Tie Frequency}
+
+\subsection{Source and Choice of Days}
+
+We reconstruct the AAPL book from Nasdaq TotalView-ITCH order and trade messages \cite{itch}. We fixed the following day-selection procedure before measuring tie frequency.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Frame.} The 219 trading days from 2 January to 13 November 2026.
+\item
+  \textbf{Exclusions.} We remove days within one day of an FOMC decision, a CPI release, or an employment report, monthly option expiries, the index reconstitution day, the days around the election, early closes, and days next to holidays. 119 days remain.
+\item
+  \textbf{Order.} We shuffle the remaining days with a fixed seed.
+\item
+  \textbf{Screen.} We take the days in that order and keep a day unless it has a further scheduled event (other macro releases, central-bank minutes, month ends, earnings days of AAPL and NVDA and the day after, AAPL\textquotesingle s ex-dividend and product-event days), an unusual session in the stock or in the market (a return beyond 2 standard deviations of the last 60 days, volume above twice or below half the 20-day median, a range above twice the median), or a shock in six large technology stocks or in semiconductor, oil, Treasury, or gold funds. 62 of the 119 days pass.
+\end{enumerate}
+
+We analyze the first four passing days in the shuffled sequence. Table 18 also includes one rejected day, which we replay for a separate comparison.
+
+\textbf{Table 18.} Days replayed.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Day & Order messages & Role \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+23 January 2026 & 3,176,565 & Analysis \\
+4 May 2026 & 5,629,415 & Analysis \\
+9 July 2026 & 6,065,233 & Analysis \\
+20 July 2026 & 11,064,805 & Analysis \\
+27 August 2026 & 5,092,753 & Rejected by the screen (day after NVDA earnings) \\
+\end{longtable}
+
+\subsection{From Messages to Batches}
+
+On a one-cent grid, we partition the regular session (09:30 to 16:00 New York time) into intervals of 0.1, 1, 10, or 60 seconds. At each price, bid volume is the sum of resting bids at the close of the interval, displayed bid volume executed during the interval, and buyer-initiated trade volume. We construct ask volume symmetrically. We omit cancelled interest and round sub-cent prices down for buys and up for sells. Crosses and executions against non-displayed orders lack an aggressor side in our reconstruction. We exclude these messages, which account for 24\% to 33\% of trade messages. Each price window extends 300 ticks beyond the batch's trade prices on either side.
+
+Including resting orders changes the result. Using executions alone produces a plateau in nearly every batch. With resting depth included, most crossing batches have one maximizing price.
+
+\textbf{Reconstruction checks.} Resting depth stayed non-negative on every day. Across 156,950 crossing batches on the four analysis days, no plateau reached a window boundary and every batch had a candidate clearing tick. The Python replay passes the Rust test cases. To select benchmark books, we take the first plateau with one imbalance minimizer and the first with several, whenever present, for each of the five days and four durations. This gives 32 books with identical Python and Rust receipts.
+
+\subsection{Tie Frequency}
+
+We classify crossing batches by whether a tie remains after volume maximization and, if so, after imbalance minimization. Table 6 reports means across four days. The plateau frequency at one second is 3.63\%, with a 95\% \(t\) interval of 1.5\% to 5.7\%. At 0.1, 10, and 60 seconds the frequencies are 2.10\% (1.2\% to 3.0\%), 2.85\% (1.6\% to 4.1\%), and 0.71\% (0.5\% to 0.9\%). The intervals use four daily observations, even though each day contains many batches.
+
+\textbf{Table 19.} Per day: percentage of crossing batches with a plateau / with several minimum-imbalance ticks.
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Day & 0.1 s & 1 s & 10 s & 60 s \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+23 January & 1.30 / 0.09 & 2.16 / 0.07 & 2.11 / 0.00 & 0.77 / 0.00 \\
+4 May & 2.25 / 0.14 & 3.62 / 0.13 & 2.44 / 0.00 & 0.77 / 0.00 \\
+9 July & 2.14 / 0.35 & 3.38 / 0.35 & 3.91 / 0.17 & 0.77 / 0.00 \\
+20 July & 2.72 / 0.72 & 5.37 / 0.75 & 2.95 / 0.09 & 0.51 / 0.00 \\
+27 August (rejected) & 1.80 / 0.39 & 3.33 / 0.48 & 3.25 / 0.00 & 0.51 / 0.00 \\
+\end{longtable}
+
+At all four batch lengths, the rejected day's overall plateau frequency falls within the range observed on the four analysis days.
+
+\textbf{Table 20.} By time of day, four analysis days pooled: plateau / several minimum-imbalance ticks, in percent.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Batch length & First 30 minutes & Middle & Last 30 minutes \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+0.1 s & 3.62 / 0.87 & 2.04 / 0.31 & 1.29 / 0.17 \\
+1 s & 5.92 / 0.86 & 3.70 / 0.32 & 2.01 / 0.13 \\
+10 s & 3.33 / 0.28 & 2.94 / 0.05 & 1.39 / 0.00 \\
+60 s & 0.00 / 0.00 & 0.76 / 0.00 & 0.83 / 0.00 \\
+\end{longtable}
+
+At batch lengths up to ten seconds, ties are most frequent in the first half hour and least frequent in the last.
+
+\textbf{Final tie-break.} Across the four durations, 546 crossing batches have several minimum-imbalance ticks. In 462 of those batches two ticks also satisfy the at-price volume condition. The rule selects the lower candidate in those 462 cases.
+
+\subsection{The Generator}
+
+We centre each crossing book on its clearing tick and calibrate each batch duration separately. We record occupancy and volume quantiles by tick up to 100 ticks from the centre and in 12 bands out to 10,000 ticks. We also retain the joint volumes within 10 ticks of the centre and the total bid volume above and ask volume below that region. Table 21 compares three generators using 20,000 books of 601 ticks each.
+
+\begin{itemize}
+\item
+  \textbf{Independent ticks.} Each tick is drawn on its own from the measured occupancy and volume distribution.
+\item
+  \textbf{Core occupancy.} Which ticks within 5 of the centre hold volume is copied jointly from a real batch; the sizes are independent.
+\item
+  \textbf{Bootstrap.} The volumes within 10 ticks of the centre are those of a real batch, the periphery is drawn from the marginals, and its totals are rescaled to that batch\textquotesingle s.
+\end{itemize}
+
+\textbf{Table 21.} Tie classes of real and generated batches, in percent of crossing batches, and the median \(V_{max}\). The real rows pool all crossing batches, so they differ slightly from the means over days in Table 6.
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule\noalign{}
+Batch length & Source & One maximizing tick & Plateau, one minimum & Plateau, several & Median \(V_{max}\) \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+0.1 s & Real & 97.81 & 1.82 & 0.38 & 80 \\
+& Independent ticks & 91.17 & 7.60 & 1.23 & 67 \\
+& Core occupancy & 97.44 & 2.48 & 0.09 & 63 \\
+& Bootstrap & 97.77 & 1.87 & 0.36 & 80 \\
+1 s & Real & 96.21 & 3.43 & 0.36 & 120 \\
+& Independent ticks & 85.40 & 12.45 & 2.15 & 132 \\
+& Core occupancy & 93.89 & 5.91 & 0.20 & 119 \\
+& Bootstrap & 95.94 & 3.74 & 0.32 & 120 \\
+10 s & Real & 97.15 & 2.79 & 0.06 & 804 \\
+& Independent ticks & 92.03 & 7.43 & 0.55 & 1,034 \\
+& Core occupancy & 93.67 & 6.21 & 0.11 & 1,028 \\
+& Bootstrap & 97.22 & 2.73 & 0.05 & 801 \\
+60 s & Real & 99.29 & 0.71 & 0.00 & 4,852 \\
+& Independent ticks & 98.26 & 1.70 & 0.04 & 6,562 \\
+& Core occupancy & 98.52 & 1.43 & 0.05 & 6,546 \\
+& Bootstrap & 99.31 & 0.69 & 0.00 & 4,859 \\
+\end{longtable}
+
+Drawing ticks independently overstates the frequency of plateaus at every duration. Copying the central occupancy pattern narrows the discrepancy at 0.1 s, but independent sizes can still shift the crossing price. The bootstrap preserves both the volumes near the clearing tick and the outer totals that enter the depth calculation there. Its one-second plateau frequency is 4.06\%, close to the pooled replay frequency of 3.79\%. This agreement assesses how well resampling preserves the observed frequencies.
+
+The 25 calibrated benchmark books come from the bootstrap generator at one second, five each at 100, 250, 500, 1,000, and 2,000 ticks.
+
+\subsection{Limits}
+
+The estimates depend on the replay definition, particularly the inclusion of resting depth. The sample covers four analysis days for one stock in a continuous market, and the feed supplies no IO orders. The bootstrap retains central volumes from a licensed feed. Publication of generated books depends on that licence.
+
+\subsection{The Periodic-Auction Feed of a Deployed Venue}
+
+\textbf{Feed and instrument.} We use 111,871 BXE messages for Orange SA (ORAp) on 1 September 2020 \cite{cboepitch}. The file includes order-level traffic for the displayed book. For the periodic auctions it supplies the following three message types.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Message & Fields we use & Count \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Auction update, type periodic & Indicative price and size of the auction now forming & 924 \\
+Auction summary, type periodic & Final price and size & 362 \\
+Trade, flagged as auction execution & Quantity and price of one execution & 400 \\
+\end{longtable}
+
+We assign a flagged execution to an auction when its timestamp matches the auction summary. For each of the 362 summaries, the assigned execution quantities sum to the reported size. Individual auction orders, including unexecuted interest, are absent from the file.
+
+\textbf{Table 29.} The periodic auctions of ORAp on BXE, 1 September 2020.
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Quantity & Value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Auctions & 362, between 08:02 and 16:30 \\
+Shares traded in auctions & 238,921 \\
+Shares per auction & Median 434; quartiles 305 and 878; minimum 9, maximum 5,116 \\
+Executions per auction & One: 327; two: 32; three: 3 \\
+Indicative updates per auction & One: 282; two: 56; three or more: 24 \\
+Time from first indicative update to execution & At most 100 ms: 320; above 1 s: 35 \\
+Time between auctions & Median 44 s \\
+Auction prices & EUR 9.193 to 9.359, on a grid of EUR 0.001; 126 distinct \\
+\end{longtable}
+
+For comparison, the executions against the venue\textquotesingle s displayed book for this symbol that day total about 0.57 million shares.
+
+\textbf{Constructed books.} For each summary we centre a grid of 101 ticks, spaced EUR 0.001 apart, on the published price. We put the reported executed volume on each side at the centre and leave every other tick empty. The centre is then the unique maximizing tick and has zero imbalance. Both implementations generate a proof for each of the 362 books. In every case, the receipt's price and volume match the published fields.
+
+\textbf{Interpretation.} These tests exercise the venue's observed prices, grid, and volumes. By construction the books have no price ties. The feed cannot establish how many orders entered a given auction or which tie-break, if any, determined the observed price. The venue also runs short auctions at irregular times, whereas the FBA proposal uses fixed intervals.
+
+\textbf{Scope.} The sample covers one stock on one day. Our interpretation of the message fields still requires confirmation against the specification in force on that date. Permission to publish derived figures depends on the data licence.
+
+\section{Extended Benchmarks}
+
+All timings are in milliseconds and use the laptop and thread settings in Section 5.2. We report medians of 20 Rust runs and 10 Noir runs per book, collected in a single sitting. Rust measurements time function calls and report decoding separately from proof verification. Noir measurements time whole commands.
+
+\subsection{The Clearing Proof Against Ticks and Volume Width}
+
+\textbf{Table 22.} Uniform books, 250 orders per batch, one thread.
+
+\begin{longtable}[]{@{}lllllllllll@{}}
+\toprule\noalign{}
+\(N\) & \(n\) & \(k_{in}\) & Commitments & Proof (B) & Prove & Verify & Decode & Update-validity prove & No-cross prove & Batch check \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+100 & 128 & 16 & 70 & 4,908 & 264 & 9.2 & 15.3 & 378 & 92 & 77 \\
+100 & 128 & 32 & 97 & 6,636 & 349 & 10.2 & 21.1 & 415 & 111 & 78 \\
+250 & 256 & 16 & 52 & 3,756 & 298 & 8.7 & 11.5 & 384 & 118 & 78 \\
+250 & 256 & 32 & 79 & 5,484 & 448 & 9.6 & 17.5 & 449 & 152 & 80 \\
+500 & 512 & 16 & 62 & 4,396 & 582 & 9.0 & 13.5 & 381 & 190 & 77 \\
+500 & 512 & 32 & 89 & 6,124 & 781 & 9.7 & 19.0 & 422 & 234 & 78 \\
+1,000 & 1,024 & 16 & 62 & 4,396 & 998 & 9.3 & 14.0 & 382 & 320 & 78 \\
+1,000 & 1,024 & 32 & 89 & 6,124 & 1,366 & 10.0 & 19.3 & 424 & 402 & 79 \\
+2,000 & 2,048 & 16 & 62 & 4,396 & 1,803 & 9.2 & 14.1 & 625 & 568 & 80 \\
+2,000 & 2,048 & 32 & 89 & 6,124 & 2,462 & 10.0 & 19.6 & 693 & 715 & 81 \\
+4,000 & 4,096 & 16 & 62 & 4,396 & 3,330 & 9.1 & 13.7 & 1,102 & 1,047 & 85 \\
+4,000 & 4,096 & 32 & 89 & 6,124 & 4,506 & 10.1 & 19.2 & 1,218 & 1,303 & 87 \\
+8,000 & 8,192 & 16 & 62 & 4,396 & 6,367 & 8.9 & 13.6 & 1,950 & 1,950 & 95 \\
+8,000 & 8,192 & 32 & 89 & 6,124 & 8,723 & 9.8 & 18.9 & 2,196 & 2,484 & 95 \\
+\end{longtable}
+
+\textbf{Table 23.} The same runs on eight threads.
+
+\begin{longtable}[]{@{}llllllll@{}}
+\toprule\noalign{}
+\(N\) & \(k_{in}\) & Prove & Verify & Decode & Update-validity prove & No-cross prove & Batch check \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+100 & 16 & 98 & 6.4 & 3.6 & 122 & 41 & 52 \\
+100 & 32 & 117 & 6.7 & 5.0 & 131 & 50 & 53 \\
+250 & 16 & 115 & 6.2 & 2.9 & 113 & 56 & 51 \\
+250 & 32 & 154 & 6.4 & 3.9 & 122 & 72 & 51 \\
+500 & 16 & 192 & 6.4 & 3.3 & 115 & 84 & 51 \\
+500 & 32 & 236 & 6.7 & 4.6 & 123 & 102 & 52 \\
+1,000 & 16 & 291 & 6.4 & 3.6 & 114 & 114 & 52 \\
+1,000 & 32 & 376 & 6.7 & 4.8 & 122 & 128 & 52 \\
+2,000 & 16 & 484 & 6.5 & 3.7 & 174 & 178 & 54 \\
+2,000 & 32 & 615 & 6.8 & 4.7 & 190 & 215 & 54 \\
+4,000 & 16 & 865 & 6.6 & 3.6 & 314 & 314 & 60 \\
+4,000 & 32 & 1,081 & 6.6 & 4.6 & 314 & 354 & 60 \\
+8,000 & 16 & 1,590 & 6.7 & 3.6 & 532 & 533 & 70 \\
+8,000 & 32 & 2,026 & 6.8 & 4.6 & 549 & 618 & 69 \\
+\end{longtable}
+
+At \(n=256\), the accumulated widths of 24 and 40 bits are multiples of eight, so the proof needs no scaled top limbs. This explains the smaller column count than at \(n=512\). At \(n=128\) the prover uses seven-bit limbs and needs more columns. With 250 orders the update-validity domain has \(\max(n,1024)\) rows. Timings vary little up to \(n=1024\) and increase at larger \(n\). Using eight threads on four physical cores speeds up clearing-proof generation by a factor of 3.6 at \(n=1024\) and 4.3 at \(n=8192\).
+
+\subsection{Spread}
+
+\textbf{Table 24.} \(N = 1000\), 32-bit volumes, 250 orders: median and interquartile range over 20 runs.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Metric & One thread & Eight threads \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Clearing proof, prove & 1,366 [1,356--1,377] & 376 [359--384] \\
+Clearing proof, verify & 10.0 [9.5--10.3] & 6.7 [6.6--6.8] \\
+Clearing proof, decode & 19.3 [18.8--19.6] & 4.8 [4.5--5.2] \\
+Update-validity proof, prove & 424 [419--428] & 122 [121--123] \\
+Update-validity proof, verify & 43.0 [42.4--44.0] & 20.5 [20.0--20.8] \\
+Batch check & 79.3 [77.5--80.3] & 52.0 [51.5--52.3] \\
+\end{longtable}
+
+\subsection{Calibrated and Real Books}
+
+\textbf{Table 25.} The clearing proof on the calibrated books (five per size) and on the 32 real books, 32-bit volumes. Brackets give the range of the per-book medians.
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule\noalign{}
+Books & \(N\) & \(n\) & Prove, one thread & Prove, eight threads & Verify + decode, one thread \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Calibrated & 100 & 128 & 343 [341--345] & 117 [111--130] & 30.6 \\
+Calibrated & 250 & 256 & 414 [408--420] & 150 [134--156] & 26.3 \\
+Calibrated & 500 & 512 & 769 [765--771] & 232 [228--235] & 28.6 \\
+Calibrated & 1,000 & 1,024 & 1,343 [1,339--1,351] & 373 [363--382] & 28.8 \\
+Calibrated & 2,000 & 2,048 & 2,437 [2,433--2,447] & 626 [608--633] & 28.6 \\
+Real & 601--662 & 1,024 & 1,348 [1,334--1,363] & 367 [353--381] & 29.5 \\
+\end{longtable}
+
+At a domain size of 1,024, median clearing-proof generation times for the uniform, calibrated, and replayed books differ by less than 3\%.
+
+\subsection{Operations Outside the Proofs}
+
+\textbf{Table 26.} Per-order and per-batch operations, \(N = 1000\), 32-bit volumes.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Operation & One thread & Eight threads & Published size \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Record an order (exchange) & 0.98 & 0.99 & 416 B on the board \\
+Check a receipt (trader) & 0.24 & 0.24 & 192 B receipt \\
+Open a batch & 13.3 & 9.6 & 1,576 B \\
+Check an opening & 19.1 & 18.5 & \\
+Run the clearing rule & 0.07 & 0.08 & \\
+\end{longtable}
+
+The single-thread recording time of 0.98 ms per order corresponds to roughly 1,000 order updates per second for this operation alone.
+
+\subsection{The Noir Circuit}
+
+\textbf{Table 27.} The circuit on the calibrated books (median over five books and ten runs each, interquartile range in brackets) and on the 32 real books. The proof is 14,656 bytes and verification takes 27 to 30 ms in every row.
+
+\begin{longtable}[]{@{}llllllll@{}}
+\toprule\noalign{}
+Books & \(N\) & Gates & Threads & Witness & Key & Prove & Prover memory \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Calibrated & 100 & 12,757 & 1 & 720 & 344 & 1,052 [1,044--1,064] & 36 MB \\
+& & & 8 & 702 & 191 & 525 [518--540] & 45 MB \\
+Calibrated & 250 & 27,357 & 1 & 764 & 683 & 1,994 [1,981--2,012] & 57 MB \\
+& & & 8 & 739 & 288 & 764 [754--777] & 68 MB \\
+Calibrated & 500 & 51,666 & 1 & 844 & 1,181 & 3,541 [3,532--3,567] & 96 MB \\
+& & & 8 & 820 & 456 & 1,159 [1,145--1,173] & 106 MB \\
+Calibrated & 1,000 & 100,357 & 1 & 1,001 & 2,213 & 6,427 [6,396--6,480] & 157 MB \\
+& & & 8 & 989 & 763 & 1,898 [1,879--1,927] & 180 MB \\
+Calibrated & 2,000 & 197,666 & 1 & 1,337 & 4,260 & 12,478 [12,400--12,716] & 305 MB \\
+& & & 8 & 1,315 & 1,470 & 3,359 [3,333--3,420] & 326 MB \\
+Real & 601--662 & 61,521--67,434 & 1 & 877 & 1,439 & 4,195 [4,115--4,300] & 116 MB \\
+& & & 8 & 858 & 537 & 1,316 [1,297--1,352] & 129 MB \\
+\end{longtable}
+
+The key column reports verification-key generation, performed once per book size. Additional threads accelerate proving, while witness generation remains sequential.
+
+\textbf{Table 28.} Ratio of the circuit\textquotesingle s proving time, with witness generation, to ours, on the same books.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+\(N\) & One thread & Eight threads \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+100 & 5.2 & 10.5 \\
+250 & 6.7 & 10.0 \\
+500 & 5.7 & 8.5 \\
+1,000 & 5.5 & 7.7 \\
+2,000 & 5.7 & 7.5 \\
+Real, 601--662 & 3.8 & 5.9 \\
+\end{longtable}
+
+The Noir measurements include process startup under WSL2. The Rust measurements time native Windows function calls. The implementations also use different transcript hashes. We did not isolate these effects or benchmark another backend configuration.
+
+
+
+

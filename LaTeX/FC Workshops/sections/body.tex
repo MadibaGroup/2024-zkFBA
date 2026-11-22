@@ -35,3 +35,506 @@ Improving prover time in zk-SNARKs through custom arithmetization has been explo
 To our knowledge, we present the first custom zk-SNARK arithmetization for verifiable frequent batch auctions. Unlike prior approaches, our protocol supports the three principal order types used in NASDAQ's Closing Cross—market-on-close, limit-on-close, and imbalance-only orders—while keeping individual orders private. By encoding the clearing and allocation rules directly into the arithmetization, we optimize proof generation for frequent auction clearing.
 
 \paragraph{Batch Auctions.} The NYSE and NASDAQ use batch auctions before trading hours to set opening prices and during trading hours to set closing prices. They are also known as call markets or crosses. An FBA runs such a market frequently during the day, such as every 1s or 100 ms. They may also run only when an order arrives, which triggers the auction (\eg Cboe US). Batch auctions support three main types of trade types, which can be further configured with additional instructions. We use the terminology established for trades submitted to the closing market (``on close'' trades) although they will be used in an FBAs that is not necessarily closing the market. A limit-on-close (LOC) order specifies if it is a buy (bid) or sell (ask/offer), a price and a volume. A market-on-close (MOC) order specifies if it is a bid or sell and a volume, but no price. It will execute at the price set by the market. An imbalance only (IO) order specifies if it is a buy or sell and a volume. It will execute at the market price and will only execute if the final market clearing has more bids than asks, or vice versa. 
+
+
+% = = = = = = = = = 
+
+% Converted from 03-protocol.md.
+% Required packages: \usepackage{amsmath,amssymb,longtable,booktabs,array,svg}
+
+\section{The zk-FBA Protocol}
+
+\subsection{Overview}
+
+The exchange receives orders, maintains the book, and clears each batch. Traders check receipts for their own orders. Any party with access to the append-only public board can verify the batch outcome.
+
+Figure 1 traces a batch from the empty book to public verification.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Open.} The exchange publishes commitments to an empty book and a proof that it is empty.
+\item
+  \textbf{Collect.} For each order, the exchange updates the commitments, appends the change to the board, and returns an update receipt to the trader. The trader checks the receipt against the board.
+\item
+  \textbf{Close.} The exchange runs the clearing rule of Section 2.1 on the book. It publishes either a clearing receipt with a \emph{clearing proof}, or a \emph{no-cross proof} if no bid meets an ask. It also publishes an \emph{update-validity proof} that every logged change is a valid order.
+\item
+  \textbf{Verify.} The verifier checks the opening, the chain of updates, and the two proofs against the final commitments.
+\end{enumerate}
+
+\textbf{Figure 1.} Messages exchanged during a batch. Dashed arrows indicate reads from the public board.
+
+\textbf{Public information.} The board records order counts and arrival times. For a crossing batch, the exchange also publishes \((V_{max},c,d,p^*,V_{min\Delta},s,P,J)\). The first three entries give the maximum executable volume and the endpoints of its plateau. The next three give the clearing tick, its imbalance, and the long side (\(s=0\) for demand and \(s=1\) for supply). \(P\) is the long-side volume at exactly \(p^*\), and \(J\) is the eligible IO volume on the short side. A balanced batch uses \(s=P=J=0\).
+
+\subsection{Encoding the Book}
+
+\textbf{Domain.} Let \(\mathbb{F}\) be the scalar field of BN254 and \(H = \{1, \omega, \ldots, \omega^{n-1}\} \subset \mathbb{F}\) a multiplicative subgroup, with \(n\) a power of two. The book has \(N \le n\) price ticks, and tick \(i\) sits at \(\omega^i\). Ticks \(N, \ldots, n-1\) are padding. A \emph{column} is a polynomial of degree below \(n\) given by its values on \(H\); we write \(B[i]\) for \(B(\omega^i)\). A constraint \(F(X) = 0\) means that \(F\) vanishes on \(H\), that is, \(Z_H(X) = X^n - 1\) divides \(F\). \(L_i(X)\) is the Lagrange polynomial that is 1 at \(\omega^i\) and 0 on the rest of \(H\).
+
+\textbf{Orders.} We store ordinary bids \(B\), ordinary asks \(A\), IO bids \(IOB\), and IO asks \(IOA\) in four columns. An order of size \(q\) at tick \(i\) adds \(q\) to one cell. We encode a market buy at tick \(N-1\) and a market sell at tick 0, making each eligible across the grid.
+
+\textbf{Widths.} We fix two bit widths at setup. Every entry of the book is below \(2^{k_{in}}\), and every accumulated quantity is below \(2^k\) with \(k \ge k_{in} + \lceil \log_2 N \rceil\). We use \(k_{in} = 32\) and \(k = 42\) for \(N = 1000\).
+
+\textbf{Derived columns.} The exchange computes nine value columns from the four book columns. Table 1 lists these alongside the lookup witnesses and public polynomials. Figure 2 follows the calculation on eight ticks.
+
+\textbf{Table 1.} Committed columns and public polynomials. For \(n = 1024\) and \(k_{in} = 32\) there are 88 columns.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Column & Value at tick \(i\) & Count \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\(B\), \(A\), \(IOB\), \(IOA\) & The book & 4 \\
+\(AccB\), \(IOAccB\) & Demand depth: sum of bids at ticks \(\ge i\) & 2 \\
+\(AccA\), \(IOAccA\) & Supply depth: sum of asks at ticks \(\le i\) & 2 \\
+\(Min\) & Executable volume \(\min(AccA[i], AccB[i])\) & 1 \\
+\(SurpB\), \(SurpA\) & \(AccB[i] - Min[i]\) and \(AccA[i] - Min[i]\) & 2 \\
+\(\Delta\) & Imbalance \(\lvert AccA[i] - AccB[i] \rvert\) & 1 \\
+\(Slack\) & Gap witnesses for strict inequalities & 1 \\
+Limbs & 8-bit limbs of the nine range-checked quantities & 46 \\
+\(Mult\), \(h_1, \ldots, h_{26}\), \(U\), \(S\) & Lookup columns (Section 3.4) & 29 \\
+\textbf{Public polynomial} & \textbf{Definition} & \\
+\(Pad\) & \(\sum_{i=N}^{n-1} L_i\) & \\
+\(Mask_P\) & \(\sum_{i=c}^{d} L_i\), the plateau & \\
+\(Mask_C\) & \(L_{c-1} + L_{d+1}\), omitting a term whose index leaves \([0, n-1]\) & \\
+\(Mask_T\) & \(L_{p^*-1}\) if \(p^* > c\) and (\(s = 1\) or \(V_{min\Delta} = 0\)), else 0 & \\
+\(T\) & \(\sum_{i < 256} i \cdot L_i\), the range table & \\
+\end{longtable}
+
+The verifier derives the public polynomials from the parameters and receipt. They require no additional commitments.
+
+%\includesvg{figures/fig2-worked-book.svg}
+
+\textbf{Figure 2.} Bids of 3, 10, and 2 units rest at ticks 2, 5, and 6. Asks of 4, 6, 5, and 3 rest at ticks 1, 2, 6, and 7, and a one-unit sell IO rests at tick 4. Volume reaches 10 at ticks 2 through 5. Demand exceeds supply by five units at tick 2 and by two at ticks 3 through 5. The tertiary rule selects tick 5, giving the receipt \((10,2,5,5,2,0,10,1)\).
+
+\subsection{Walkthrough of a Constraint}
+
+To constrain \(Min[i]=\min(AccA[i],AccB[i])\) at every tick, we introduce two surpluses. Each is the difference between a depth and the proposed minimum.
+
+\[SurpB(X) - \big(AccB(X) - Min(X)\big) = 0, \qquad SurpA(X) - \big(AccA(X) - Min(X)\big) = 0 \tag{F9, F10}\]
+
+\[SurpA(X) \cdot SurpB(X) = 0 \tag{F11}\]
+
+\[SurpB[i] \in [0, 2^k), \qquad SurpA[i] \in [0, 2^k) \quad \text{for all } i \tag{F12, F13}\]
+
+F11 sets at least one surplus to zero, so \(Min\) equals one of the depths. F12 and F13 bound both differences to \([0,2^k)\). Under the width bound in Appendix C.5, a negative difference maps to a field element above this range. At tick 3 in Figure 2, demand is 12 and supply is 10. The only possible witnesses are \(Min=10\), \(SurpB=2\), and \(SurpA=0\).
+
+F9 and F10 bind those differences to the book. Without them, both surplus witnesses could be zero regardless of the proposed minimum.
+
+Because at least one surplus vanishes, their sum gives the absolute imbalance. The identity
+
+\[\Delta(X) - \big(SurpA(X) + SurpB(X)\big) = 0 \tag{F18}\]
+
+forces \(\Delta[i] = \lvert AccA[i] - AccB[i] \rvert\).
+
+\subsection{Range Checks}
+
+Every inequality in the protocol is a range check, and we use one gadget for all of them. To prove \(Y[i] \in [0, 2^b)\) for a column \(Y\) at every tick, the prover commits to limb columns \(\ell_0, \ldots, \ell_{m-1}\) with \(m = \lceil b/8 \rceil\) and shows
+
+\[Y(X) - \sum_{l=0}^{m-1} 2^{8l}\, \ell_l(X) = 0,\]
+
+together with the claim that every limb value lies in the table \(\{0, \ldots, 255\}\) (for a domain smaller than 256 we use narrower limbs). When \(b\) is not a multiple of 8, the top limb must be below \(2^r\) with \(r = b \bmod 8\); this holds exactly when \(2^{8-r}\) times the top limb is also in the table, so we look that value up as well. The range proved is exactly \([0, 2^b)\).
+
+We prove table membership for all limbs of all nine quantities with one logarithmic-derivative lookup \cite{habock2022}. Let \(f_1, \ldots, f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\), where \(Mult[v]\) counts the cells equal to \(v\). After a challenge \(\beta\), it commits to helper columns defined on \(H\) by
+
+\[h_j = \frac{1}{\beta - f_{2j-1}} + \frac{1}{\beta - f_{2j}}, \qquad U = \frac{Mult}{\beta - T}, \qquad S[i+1] = S[i] + \sum_j h_j[i] - U[i].\]
+
+We constrain the helpers by the following identities.
+
+\[h_j \,(\beta - f_{2j-1})(\beta - f_{2j}) - (\beta - f_{2j-1}) - (\beta - f_{2j}) = 0, \qquad U\,(\beta - T) - Mult = 0,\]
+
+\[S(\omega X) - S(X) - \Big(\sum_j h_j(X) - U(X)\Big) = 0. \tag{F23}\]
+
+The running sum wraps from \(\omega^{n-1}\) to 1. Summing its differences over \(H\) cancels every term of \(S\), yielding
+
+\[\sum_{i=0}^{n-1} \sum_{e=1}^{E} \frac{1}{\beta - f_e[i]} = \sum_{i=0}^{n-1} \frac{Mult[i]}{\beta - T[i]}.\]
+
+As an identity of rational functions in \(\beta\), this holds only if every \(f_e[i]\) is a table value. The limbs and \(Mult\) are committed before \(\beta\) is drawn, so a prover with a cell outside the table passes with probability at most \((2E+2)\,n/|\mathbb{F}|\) (Appendix C.7). The running sum needs no initial condition, since only its differences are constrained.
+
+A first version of the protocol committed to one column per bit, with a booleanity constraint on each \cite{plonkbook}. For 32-bit volumes that is 351 columns. With limbs and the lookup we have 46 limb columns and 29 lookup columns, and the proof falls from 22.9 KB to 6.1 KB. The lookup costs a second prover round and raises the degree of the quotient from about \(n\) to about \(2n\).
+
+\subsection{Clearing Constraints}
+
+Table 2 groups the constraints by their role in clearing. Appendix B gives the full identities.
+
+\textbf{Table 2.} The clearing constraints. A range check is a limb decomposition whose limbs enter the lookup F23.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Group & Constraints & What they force \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Book & F1, F2, F24, F25 (range); F3, F4, F26, F27 (\(Pad \cdot B = 0\), and likewise) & Entries in \([0, 2^{k_{in}})\); padding ticks empty \\
+Depth & F5--F8, F28--F31 & \(AccB\), \(IOAccB\) are suffix sums; \(AccA\), \(IOAccA\) are prefix sums \\
+Executable volume & F9--F13 & \(Min = \min(AccA, AccB)\) \\
+Phase 1: plateau & F14 (range of \(V_{max} - Min\)); F15, F16 (\(Min = V_{max}\) at \(c\) and \(d\)); F17 (cliffs) & \(V_{max}\) is the maximum of \(Min\) and \([c,d]\) is exactly where it is attained \\
+Phase 2: clearing tick & F18 (\(\Delta\)); F19 (range of \(\Delta - V_{min\Delta}\) on the plateau); F20 (pins at \(p^*\)); F21 (tie-break); F22 (range of \(Slack\)) & \(V_{min\Delta}\) is the minimum imbalance on the plateau, attained at \(p^*\) on side \(s\); no lower tick qualifies \\
+Phase 3: rationing & F32, F33 (pins at \(p^*\)) & \(P\) and \(J\) are the at-price long volume and the eligible IO volume \\
+Lookup & F23 & Every limb is in \(\{0, \ldots, 255\}\) \\
+\end{longtable}
+
+\textbf{Depth.} The two accumulators run in opposite directions:
+
+\[L_{n-1}(X)\big(AccB(X) - B(X)\big) = 0, \qquad (X - \omega^{n-1})\big[AccB(X) - AccB(\omega X) - B(X)\big] = 0, \tag{F5, F7}\]
+
+\[L_{0}(X)\big(AccA(X) - A(X)\big) = 0, \qquad (X - \omega^{n-1})\big[AccA(\omega X) - AccA(X) - A(\omega X)\big] = 0. \tag{F6, F8}\]
+
+The factor \(X-\omega^{n-1}\) disables both recurrences at the wraparound. Demand adds the current tick's bids to demand at the next tick. Supply adds the next tick's asks to supply at the current tick. The recurrences include padding rows, where F3 and F4 set the book entries to zero. A bid in a padding row would otherwise contribute to demand at every real price.
+
+\textbf{Phase 1.} F14 gives \(Min \le V_{max}\) everywhere, and F15 and F16 pin \(Min = V_{max}\) at the two endpoints. The cliff constraint makes the ticks just outside strictly lower:
+
+\[Mask_C(X) \cdot \big(V_{max} - Min(X) - 1 - Slack(X)\big) = 0, \tag{F17}\]
+
+with \(Slack \ge 0\) by F22. These four constraints pin the whole plateau, because \(Min\) is the pointwise minimum of a non-increasing and a non-decreasing sequence: for \(i < j < l\) we have \(Min[j] \ge \min(Min[i], Min[l])\). Every tick between \(c\) and \(d\) therefore attains \(V_{max}\), and a tick beyond a cliff that attained it would lift the cliff to \(V_{max}\) as well. The executable volume at the cliffs stays hidden behind \(Slack\); opening it would disclose depth that the receipt does not contain. \(Mask_C\) drops a cliff that does not exist (\(c = 0\) or \(d = n-1\)), so no index wraps around the domain.
+
+\textbf{Phase 2.} F19 proves \(\Delta \ge V_{min\Delta}\) on the plateau, and the two pins
+
+\[L_{p^*}(X)\big(SurpB(X) - (1-s)\,V_{min\Delta}\big) = 0, \qquad L_{p^*}(X)\big(SurpA(X) - s\,V_{min\Delta}\big) = 0 \tag{F20}\]
+
+show that the minimum is attained at \(p^*\) and fix which side is long.
+
+Ticks 3 through 5 in Figure 2 all minimize imbalance. At tick 3 the bids strictly above the clearing price would total 12 units, yet ordinary supply is only 10. To fill better-priced orders in full even when no IO orders arrive, we require long-side volume at the clearing tick to cover the entire initial imbalance, \(V_{min\Delta}\le P\). This yields the tertiary rule.
+
+\begin{quote}
+Among the plateau ticks with minimum imbalance, \(p^*\) is the lowest one whose long-side volume at that tick covers the imbalance.
+\end{quote}
+
+In Figure 2, only tick 5 has sufficient at-price volume (\(P=10\) for an imbalance of 2). For a positive minimum imbalance, at most two ticks qualify, the highest demand-long minimizer and the lowest supply-long minimizer. At least one exists. When the imbalance is zero, every balanced plateau tick qualifies (Appendix A). The verifier checks \(V_{min\Delta}\le P\) on the receipt. For a supply-long or balanced outcome above \(c\), the following identity excludes a lower candidate.
+
+\[Mask_T(X) \cdot \big(\Delta(X) - V_{min\Delta} - 1 - Slack(X)\big) = 0. \tag{F21}\]
+
+The tick \(p^* - 1\) lies inside the plateau and the cliffs lie outside it, so one \(Slack\) column serves F17 and F21.
+
+\textbf{Phase 3.} Two pins bind the remaining receipt values to the book, with \(\nu = 1\) if \(V_{min\Delta} > 0\) and 0 otherwise:
+
+\[\nu\, L_{p^*}(X)\big((1-s)\,B(X) + s\,A(X) - P\big) = 0, \qquad \nu\, L_{p^*}(X)\big((1-s)\,IOAccA(X) + s\,IOAccB(X) - J\big) = 0. \tag{F32, F33}\]
+
+From the receipt we compute admitted IO volume \(I=\min(J,V_{min\Delta})\), residual imbalance \(R=V_{min\Delta}-I\), and traded volume \(V_{max}+I\). With positive imbalance, long-side volume at \(p^*\) fills at \((P-R)/P\). Eligible short-side IO volume fills at \(I/J\) when \(J>0\). All other eligible ordinary volume fills in full. In Figure 2, one IO unit trades and one unit of demand remains unfilled. Bids at tick 5 fill at \(9/10\), bringing total traded volume to 11. Traders can apply these ratios to their own orders before integer rounding.
+
+\textbf{Scalar checks.} Before checking polynomial identities, the verifier requires \(0\le c\le p^*\le d\le N-1\), \(1\le V_{max}<2^k\), \(s\in\{0,1\}\), \(0\le V_{min\Delta}\le P<2^k\), and \(0\le J<2^k\). A zero imbalance also requires \(s=P=J=0\). The first check places the clearing tick inside the claimed plateau.
+
+\textbf{Uniqueness.} A crossing book admits exactly one receipt. Theorem 1 in Appendix C shows that an accepted receipt satisfies the clearing rule. Theorem 2 constructs a witness for the receipt that the rule selects.
+
+\subsection{The No-Cross Statement}
+
+When no bid meets an ask, executable volume is zero at every tick. We prove this smaller statement separately. The exchange commits to \(B\), \(A\), \(AccB\), \(AccA\), and the limbs of \(B\) and \(A\). It proves F1--F8, table membership for those limbs, and
+
+\[AccA(X) \cdot AccB(X) = 0.\]
+
+Both depths are sums of range-checked entries, so they are non-negative, and the product vanishes at a tick exactly when \(\min(AccA, AccB) = 0\) there. No receipt value is disclosed. Imbalance-only orders take no part, since they cannot create a cross.
+
+\subsection{From Constraints to a Proof}
+
+Following the PIOP construction \cite{plonk2019}, the prover commits to the witness in two rounds before committing to the quotient.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  The prover commits to the value columns, the limb columns, and \(Mult\). The book columns are already committed on the board (Section 4).
+\item
+  The verifier sends \(\beta\). The prover commits to the lookup helpers.
+\item
+  The verifier sends \(\alpha\). The prover combines all identities into \(F(X) = \sum_t \alpha^t F_t(X)\), computes the quotient \(Q(X) = F(X)/Z_H(X)\), and commits to it.
+\item
+  The verifier sends \(\zeta\). The prover opens every column at \(\zeta\), and the columns that appear shifted (\(AccB\), \(AccA\), \(IOAccB\), \(IOAccA\), \(A\), \(IOA\), \(S\)) at \(\omega\zeta\) as well.
+\item
+  The verifier evaluates the public polynomials at \(\zeta\), recomputes \(F(\zeta)\) from the openings, and checks \(F(\zeta) = Q(\zeta)\, Z_H(\zeta)\).
+\end{enumerate}
+
+We commit with KZG10 \cite{kzg2010} over BN254 in its hiding form, batch all openings at one point into one group element with a random linear combination, and verify both points with two pairings. We remove the verifier\textquotesingle s messages with the Fiat--Shamir transform over a SHA-256 transcript that absorbs the parameters, the receipt, and every commitment. For zero knowledge, the prover adds to each column a random multiple of \(Z_H\), which changes no value on \(H\) and makes the openings at \(\zeta\) and \(\omega\zeta\) independent of the column.
+
+The lookup pair identities are cubic in the columns. The remaining identities are at most quadratic. The quotient has degree about \(2n\), and the implementation uses a reference string through degree \(2n+8\). For \(n=1024\) and 32-bit volumes, 88 column commitments, the quotient commitment, and their openings occupy 6,124 bytes. With a fixed column layout, the numbers of commitments and pairings stay fixed. Evaluating public selectors can still depend on the plateau width (Appendix D).
+
+\section{The Committed Book and Trader Checks}
+
+The clearing proof binds the outcome to four committed columns. To connect those columns to the orders traders submitted, the exchange commits to an empty book before trading begins and publishes each subsequent update.
+
+\subsection{Commitment and Opening}
+
+The reference string holds \([\tau^i]_1\) for a secret \(\tau\), and a short blinding basis \([\gamma\tau^i]_1\), \(i \le 3\), for a second secret \(\gamma\). We write \([x]_1\) for \(x\) times the generator of the first pairing group and \(\Gamma = [\gamma]_1\). Each of the four book columns has a running commitment
+
+\[C = [\mathrm{col}(\tau)]_1 + [\rho_0(\tau)\,Z_H(\tau)]_1 + [\gamma\, r(\tau)]_1,\]
+
+where \(\mathrm{col}(X) = \sum_i \mathrm{col}[i]\, L_i(X)\) holds the column\textquotesingle s values, \(\rho_0\) is a random mask of degree 3, and \(r\) is a blinding polynomial of degree 3. This is a hiding KZG10 commitment \cite{kzg2010} to the masked column of Section 3.7. The mask is fixed when the batch opens, because the clearing proof later opens this polynomial at \(\zeta\).
+
+To open a batch, the exchange publishes for each column the commitment \(C_0\) to the zero column, the elements \(C_\rho = [\rho_0(\tau)]_1\) and \(C_r = [\gamma r_0(\tau)]_1\), and a Schnorr proof \cite{schnorr1991} that it knows \(r_0\) with \(C_r\) in the span of the blinding basis. The verifier checks the Schnorr proof and
+
+\[e(C_0 - C_r,\ [1]_2) = e(C_\rho,\ [Z_H(\tau)]_2).\]
+
+The Schnorr proof accounts for the blinding component \(C_r\). The pairing equation then binds the value component of \(C_0\) to a multiple of \(Z_H\), which vanishes at every tick.
+
+\subsection{Recording an Order}
+
+Additive homomorphism lets the trader check one order by taking the difference between two consecutive commitments.
+
+\begin{quote}
+\textbf{Protocol 1 (order update).} The trader sends an order of quantity \(q\) at tick \(\ell\) for one column (a market buy uses \(\ell = N-1\), a market sell \(\ell = 0\)).
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  The exchange draws \(\rho, \rho_1', \rho_2', \rho_3'\) at random. It moves the order\textquotesingle s column by \(\Phi = q\,[L_\ell(\tau)]_1 + \rho\,\Gamma\) and each other column by \(\rho_t'\,\Gamma\).
+\item
+  The exchange appends the four new commitments to the board, in a fixed column order.
+\item
+  The exchange returns the receipt \((\text{column}, \ell, q, \rho, C_{before}, C_{after})\) to the trader.
+\item
+  The trader checks \(C_{after} = C_{before} + q\,[L_\ell(\tau)]_1 + \rho\,\Gamma\) and that \(C_{before}\) and \(C_{after}\) are consecutive commitments of that column on the board.
+\end{enumerate}
+\end{quote}
+
+The difference \(\Phi\) is a Pedersen commitment \cite{pedersen1991} to \(q\) at position \(\ell\). Binding and the board check in step 4 tie that contribution to the identified column and log entry. A trader may disclose the receipt to a third party, who can repeat the check.
+
+\textbf{Public log.} Fresh uniform blinding makes each of the four steps a uniform group element. Three steps change only the blinding, and all four appear in fixed order. Observers learn when an order arrived. The distribution of the steps hides its side, type, tick, and quantity.
+
+\textbf{Log consistency.} Each entry hashes the previous digest together with its own index, column, and commitment. The first digest binds the opening. For a digest to identify a common history, all parties must see the same published head.
+
+\subsection{Update Validity}
+
+A receipt verifies one addition, while the clearing proof uses the sum of all additions. A later negative step could cancel an acknowledged order without invalidating its receipt. At the close, the exchange therefore proves a statement about every logged step.
+
+\textbf{Statement.} Let \(\Phi_0, \ldots, \Phi_{\mu-1}\) be the \(\mu\) logged steps, four per order. For every \(j\) there are a quantity \(q_j \in [0, 2^{k_{in}})\) and a tick \(\ell_j\) such that \(\Phi_j\) commits to \(q_j L_{\ell_j}\), up to a multiple of \(Z_H\).
+
+\textbf{Construction.} We use a second domain \(K \supseteq H\) of size \(M\), a power of two fixed at setup, with one row per step.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  The exchange commits to a column \(Qty\) with \(Qty[j] = q_j\) and a column \(Tick\) with \(Tick[j] = \omega^{\ell_j}\), and to a masked empty commitment \(\Phi_{mask}\) with the opening proof of Section 4.1.
+\item
+  A challenge \(\eta\) is derived from every \(\Phi_j\), \(\Phi_{mask}\), and the commitments to \(Qty\) and \(Tick\).
+\item
+  Both sides compute \(W = \Phi_{mask} + \sum_j \eta^j \Phi_j\) from the board. The exchange knows the column behind it: \(w[i] = \sum_{j : \ell_j = i} \eta^j q_j\), a histogram of the steps weighted by powers of \(\eta\).
+\item
+  The exchange proves, with the proof system of Section 3.7 run on \(K\), that \(Qty\) is in range (limbs and the lookup of Section 3.4) and that
+  \[\sum_{j<\mu} \frac{\eta^j\, q_j}{\beta - Tick[j]} = \sum_{i<n} \frac{w[i]}{\beta - \omega^i}\]
+  for a challenge \(\beta\) drawn after the commitments. This is the lookup argument again, with two helper columns and a running sum, and the quantities in place of unit numerators.
+\end{enumerate}
+
+The rational identity holds only if, at every tick \(i\), the weighted quantities of the steps that name tick \(i\) sum to \(w[i]\), and a step that names no tick contributes nothing. Since \(W\) is computed by the verifier from the log, \(w\) is also the weighted sum of what the steps actually commit to. The two agree for a random \(\eta\) only if they agree step by step. Every logged step therefore adds \(q_j \ge 0\) at one tick and nothing elsewhere, except with probability at most \((2E_Q + 12)\,M/|\mathbb{F}|\), where \(E_Q\) is the number of looked-up values of \(Qty\) (Appendix C.7). A step that adds zero is valid, which is what the three blinding-only steps of each order are.
+
+\textbf{Cost.} For the 32-bit quantities in our benchmarks, the update-validity proof contains 17 commitments and occupies 1,700 bytes. Its domain of size \(M\) accommodates four steps per order, hence at most \(M/4\) orders. The verifier computes \(W\) with a multi-scalar multiplication over the logged steps. A layout with four commitments per row could accommodate four times as many orders at the same domain size. Its running time remains unmeasured.
+
+\subsection{Verifying a Batch}
+
+The verifier checks the four empty-book openings, recomputes the digest from the log, verifies update validity against the logged steps, and checks the clearing or no-cross proof against the final commitments it uses. A trader also checks each update receipt against the log (Protocol 1) and uses the clearing receipt to compute the unrounded fill (Section 3.5).
+
+\section{Implementation and Performance}
+
+\subsection{Prototype}
+
+We implement the prover and verifier in Rust using arkworks \cite{arkworks}, hiding KZG10 commitments over BN254, and a SHA-256 transcript. Three library crates contain 3,587 lines for shared types, commitments, and the protocol. The prover and verifier call the same constraint function. The prover evaluates it on four cosets of \(H\) to construct the quotient using domain-sized transforms. The verifier evaluates it at the challenge point. We commit in the Lagrange basis because the witness is already in evaluation form. We import a public powers-of-tau reference string \cite{nikolaenko2024} and verify off chain.
+
+We implement the clearing statement independently in 208 lines of Noir \cite{noir} and prove it with Barretenberg's UltraHonk \cite{barretenberg}. The private input is the book and a salt. The circuit publishes a salted Poseidon2 digest \cite{poseidon2} and the clearing receipt. An unconstrained function proposes the receipt. The circuit checks its values against the rule in Section 3.5, using integer types for range checks.
+
+\subsection{Setup}
+
+We benchmark both implementations on mains power on an AMD Ryzen 3 7320U laptop with four cores, eight hardware threads, and 13.8 GB of memory. Rust runs natively on Windows 11 and Noir under WSL2. We report medians over 20 Rust runs and 10 Noir runs, using either one or eight threads. Input volumes are 32 bits unless specified. We use four sets of books.
+
+\begin{itemize}
+\item
+  \textbf{Uniform books}, generated by the benchmark tool, from 100 to 8,000 ticks. We use them for scaling and for the order stream of the update-validity proof.
+\item
+  \textbf{Calibrated books}, 25 books of 100 to 2,000 ticks from a generator fitted to real order flow (Section 5.6).
+\item
+  \textbf{Real books}, 32 batches of Nasdaq order flow for AAPL, each a window of 601 to 662 ticks (Section 5.6).
+\item
+  \textbf{Outcome books}, 362 books of 101 ticks built from the published outcomes of a deployed periodic auction (Section 5.7).
+\end{itemize}
+
+\subsection{One Batch}
+
+\textbf{Table 3.} One batch, \(N = 1000\), 32-bit volumes, 250 orders, single core. Verification includes decoding the proof. The clearing proof is measured on the calibrated books and the other two on uniform books with a generated order stream.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+& Clearing proof & Update-validity proof & No-cross proof \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Proof generation & 1.34 s & 0.42 s & 0.40 s \\
+Commitments & 89 & 17 & 20 \\
+Opening points & 2 & 2 & 2 \\
+Proof size & 6,124 B & 1,700 B & 1,612 B \\
+Verification & 29 ms & 48 ms & 12 ms \\
+\end{longtable}
+
+A crossing batch requires the clearing and update-validity proofs. Together they occupy 7,824 bytes and contain 106 commitments. Generating both takes about 1.8 s on one core and 0.50 s on eight threads. On one core the full batch check takes 79 ms. Decoding 89 compressed curve points accounts for about two thirds of clearing-proof verification time. The remaining check takes 10 ms.
+
+Recording an order takes 0.98 ms and adds 416 bytes to the public log. A trader checks the receipt in 0.24 ms. Once the book closes, the plaintext clearing calculation takes 0.07 ms.
+
+The 32 replayed books span 601 to 662 ticks, all of which round up to a 1,024-row domain. Their clearing proofs take 1.35 s on one core and 0.37 s on eight threads, close to the times for the 1,000-tick synthetic books.
+
+\subsection{Scaling}
+
+%\includesvg{figures/fig3-performance.svg}
+
+\textbf{Figure 3.} The clearing proof against the number of price ticks, for this work and for the Noir circuit. (a) Prover time; the circuit\textquotesingle s time includes witness generation. (b) Verifier time on one thread. (c) Proof size.
+
+Increasing a uniform book from 1,000 to 8,000 ticks raises clearing-proof generation time from 1.37 to 8.7 s on one core and from 0.38 to 2.0 s on eight threads (Figure 3a). Across the tested books with at least 500 ticks, the 16-bit proof has 62 commitments and occupies 4,396 bytes. The 32-bit proof has 89 commitments and occupies 6,124 bytes. Verification times vary little across this range (Figures 3b and 3c). Smaller domains use different limb layouts (Appendix G).
+
+At 1,000 price ticks, the cost of update validity increases with the number of logged orders (Table 4). Each order adds four rows, and the verifier combines every logged step. At 1,000 orders the update-validity prover takes about as long as the clearing prover. Its proof occupies 1,700 bytes at all three tested log lengths.
+
+\textbf{Table 4.} The update-validity proof against the number of orders in the batch, \(N = 1000\), eight threads. The last column is the time to generate both proofs.
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Orders & Domain \(M\) & Prove & Verify & Both proofs \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+250 & 1,024 & 122 ms & 23 ms & 0.50 s \\
+1,000 & 4,096 & 347 ms & 43 ms & 0.73 s \\
+2,200 & 16,384 & 1,083 ms & 69 ms & 1.46 s \\
+\end{longtable}
+
+At 1,000 ticks, proof generation fits within a one-second interval for the 1,000-order benchmark (0.73 s). It takes 1.46 s at 2,200 orders. Even the 250-order case exceeds a 100 ms interval. These are measurements of proving after the batch closes.
+
+\subsection{Comparison with a General-Purpose Proof System}
+
+The independent implementations return identical receipts on all 32 replayed books and 25 calibrated books. Table 5 compares the cost of proving the clearing statement at 1,000 ticks.
+
+\textbf{Table 5.} The clearing proof, \(N = 1000\), 32-bit volumes, single core.
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+& This work & Noir with UltraHonk \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Size of the statement & 88 columns, 1,024 rows & 100,357 gates \\
+Proof generation & 1.34 s & 7.43 s (1.00 s witness, 6.43 s proof) \\
+Proof size & 6,124 B & 14,656 B \\
+Verification & 29 ms & 27 ms \\
+Prover memory (peak, whole process) & 19 MB & 157 MB \\
+Lines of code & 3,587 & 208 \\
+\end{longtable}
+
+On one thread, the Noir implementation takes 5.5 times as long to generate a clearing proof at 1,000 ticks, including witness generation. Its proof occupies 2.4 times as many bytes. Verification takes 27 ms for Noir and 29 ms for Rust. Across the calibrated book sizes, the one-thread timing ratio ranges from 5.2 to 6.7 (Appendix G). At 1,000 ticks it reaches 7.7 on eight threads, where Noir witness generation remains sequential. On the replayed books the one-thread ratio falls to 3.8. The Rust prover pads those books to 1,024 rows, while the circuit size follows the tick count. The circuit uses about 100 gates per tick, roughly a quarter for the digest. The ratios include command startup for Noir, while the Rust benchmarks time function calls.
+
+The 208-line Noir circuit uses a maintained prover and binds the finished book to a digest. The Rust library also maintains commitments as orders arrive, issues trader receipts, and proves the validity of the update log. Those operations lie outside the clearing comparison in Table 5.
+
+\subsection{Order Flow}
+
+For order-level analysis we replay Nasdaq TotalView-ITCH messages for AAPL \cite{itch}. We divide each regular session into consecutive intervals and clear a book built from resting depth and executed volume on each side. We select four trading days in 2026 using the event and market-condition screens in Appendix F. This replay lets us examine the losing orders that the Cboe auction summaries omit.
+
+Among crossing one-second batches, an average of 3.6\% have several volume-maximizing ticks (95\% interval across days, 1.5\% to 5.7\%). In 0.3\%, more than one tick also minimizes imbalance, or roughly 40 batches per day for AAPL. Of the four durations tested, one second has the highest plateau frequency. At one minute it falls to 0.7\% (Table 6).
+
+\textbf{Table 6.} Tie frequency in replayed AAPL order flow, as a percentage of crossing batches; mean over four days, standard deviation across days in parentheses.
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Batch length & Crossing batches per day & One maximizing tick & Plateau, one minimum-imbalance tick & Plateau, several \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+0.1 s & 23,131 & 97.90 (0.59) & 1.78 (0.40) & 0.33 (0.29) \\
+1 s & 13,386 & 96.37 (1.32) & 3.31 (1.05) & 0.32 (0.31) \\
+10 s & 2,331 & 97.15 (0.78) & 2.79 (0.70) & 0.06 (0.08) \\
+60 s & 390 & 99.29 (0.13) & 0.71 (0.13) & 0.00 (0.00) \\
+\end{longtable}
+
+Muni Toke derives the distribution of the clearing-price range in a model \cite{munitoke2015}. We are unaware of an empirical estimate for these ties based on the hidden books of exchange auctions.
+
+Independent draws from the depth distribution at each tick produce a plateau in 14.6\% of one-second synthetic batches. The pooled replay frequency is 3.8\%. Resampling a replayed book's volumes jointly within 10 ticks of its clearing price and calibrating the outer ticks from the observed marginals brings the synthetic frequency to 4.1\%. We also retain 32 replayed books with plateaus 2 to 35 ticks wide. Twelve have a further tie on imbalance.
+
+\textbf{Scope.} The replay measures how our rule clears observed continuous-market order flow for one liquid stock on four analysis days. Traders in an FBA could submit different orders. The feed contains no IO orders, so we exercise that part of the rule in unit tests. All timings are from one laptop.
+
+\subsection{A Deployed Periodic Auction}
+
+We use Cboe Europe's BXE data to examine trading in an operating FBA and to test our Rust and Noir implementations at prices and volumes observed in that market. Zhang and Ibikunle describe Cboe's sub-second periodic auction and its price-setting and allocation rules \cite[Section~3.2]{zhang2023}. For Orange SA on 1 September 2020, the BXE feed \cite{cboepitch} reports indicative prices and sizes, final prices and sizes, and individual executions. The underlying auction orders, including those that did not execute, stay private. A participant can observe the outcome but lacks the book needed to recompute it.
+
+The 362 auctions traded 238,921 shares, with a median of 434 shares per auction. Of these auctions, 327 had one execution, 32 had two, and three had three. In 320 cases at most 100 ms elapsed between the first indicative update and execution. The median interval between auctions was 44 s (Appendix F.6). These counts describe executions. The number of submitted orders is unobserved.
+
+For each published outcome we construct a 101-tick book on a EUR 0.001 grid centred on the reported price. We place the executed volume on both sides at the centre and leave all other ticks empty. Both implementations produce verifiable proofs for all 362 constructed books, and the price and volume fields agree with the feed in every case. At the corresponding domain size, the Rust benchmark gives a 6,636-byte proof and proving times of 0.35 s on one core and 0.12 s on eight threads (Appendix G). Verifying how BXE matched the actual orders would require evidence about its private book.
+
+\section{Security}
+
+We compare the protocol with a trusted exchange running the same clearing rule. For integrity, we allow the exchange to deviate arbitrarily. For secrecy, we consider what observers and colluding traders learn from an honest exchange's publications and their own receipts. The exchange receives the orders in plaintext.
+
+\textbf{Assumptions.} We work in the algebraic group model under the \(q\)-discrete-logarithm assumption over BN254. We model SHA-256 as a random oracle for Fiat--Shamir and the board's hash chain. The setup ceremony has at least one honest participant, all parties see the same published head digest, and each opened book yields at most one distinct clearing proof. We assume knowledge soundness and zero knowledge for the PLONK-style argument used here \cite{plonk2019,lipmaa2025,sefranek2024}, binding for KZG \cite{kzg2010}, and soundness for the lookup \cite{habock2022}. Section 6.3 explains where our protocol differs from the cited constructions.
+
+\subsection{Properties}
+
+In the \emph{reference auction}, a trusted exchange acknowledges each order to its trader and publishes \(\mathsf{Clear}(\text{book})\) at the close (Definition 2, Appendix A). Observers see the number and timing of arrivals and the outcome. As in end-to-end verifiable voting, the party who submits a private input checks its inclusion, while anyone can check the computation on the recorded inputs (Table 7).
+
+\textbf{Definition 1 (verifiable private batch clearing).} Let \(\text{Book}^*\) be the sum of what the entries of the board commit to. A protocol between an exchange, traders, and a public verifier is a \emph{verifiable private batch clearing} if an honest exchange is always accepted and, whenever the verifier accepts, the following hold except with negligible probability.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Recorded as submitted.} Every order for which a trader holds a receipt that passes the trader\textquotesingle s check is in \(\text{Book}^*\), at its tick and with its quantity.
+\item
+  \textbf{No removal.} Every entry of the board adds a non-negative quantity at a single tick.
+\item
+  \textbf{Cleared as recorded.} The published outcome is \(\mathsf{Clear}(\text{Book}^*)\).
+\item
+  \textbf{No discretion.} The board determines the outcome.
+\item
+  \textbf{Order secrecy.} The view of the observers and of any set of colluding traders can be simulated from their view of the reference auction: the number and arrival times of the orders, the outcome, and the colluding traders\textquotesingle{} own orders.
+\end{enumerate}
+
+\textbf{Table 7.} The properties of Definition 1.
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Property & Election counterpart \cite{zeeperio2026} & Checked by & Rests on \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Recorded as submitted & Recorded as cast & Each trader & The receipt equation; binding \\
+No removal & No ballot removed & Anyone & The update-validity proof \\
+Cleared as recorded & Counted as recorded & Anyone & The clearing proof; Theorem 1 \\
+No discretion & A unique tally & Anyone & \(\mathsf{Clear}\) is a function defined on every book \\
+Order secrecy & Ballot secrecy & & Uniform board entries; zero knowledge; masked book columns \\
+\end{longtable}
+
+\subsection{Results}
+
+\textbf{Theorem 3 (integrity).} Under the assumptions above, if the verifier accepts a batch, properties 1 to 4 hold except with probability at most
+
+\[\varepsilon \le \varepsilon_{\mathrm{KZG}} + \varepsilon_{\mathrm{clear}} + \varepsilon_{\mathrm{upd}} + \varepsilon_{\mathrm{hash}},\]
+
+where \(\varepsilon_{\mathrm{KZG}}\) bounds a break of the commitment, \(\varepsilon_{\mathrm{hash}}\) a collision in the chain, and \(\varepsilon_{\mathrm{clear}} \le (2E + 7)\,n/|\mathbb{F}|\) and \(\varepsilon_{\mathrm{upd}} \le (2E_Q + 12)\,M/|\mathbb{F}|\) are the errors of the two polynomial protocols per random-oracle query. For our parameters the last two are below \(2^{-230}\) (Appendix C.7).
+
+\textbf{Theorem 4 (order secrecy).} Under the stated assumptions, the reference view suffices to simulate the additional information available to observers and colluding traders, including the opening, log, colluding traders' receipts, and proof transcripts.
+
+For integrity, Theorems 1 and 2 relate the polynomial constraints to the integer clearing rule. For secrecy, the book commitments require particular care because the exchange fixes their masks at the opening, before it knows the proof challenges. Appendix C counts the evaluations exposed by a single close and states the proof-system assumptions on which the simulation relies.
+
+\subsection{Scope}
+
+\textbf{Exchange orders.} An accepted board can contain contributions for which no trader holds a receipt. Thus \(\text{Book}^*\) can include additional non-negative volume chosen by the exchange. The inclusion guarantee applies to orders whose receipts traders have checked against the board.
+
+\textbf{Repeated closes.} A second proof at fresh challenge points could expose more evaluations than the fixed book mask covers. The implementation derives proving randomness from the private batch state so that closing the same batch twice reproduces the same proof.
+
+\textbf{Scope of the proof-system assumptions.} Our variant adds a lookup round and carries four existing book commitments into the proof. Knowledge soundness and zero knowledge for this exact variant are assumptions in our analysis. Simulation extractability is outside its scope.
+
+\section{Discussion}
+
+\textbf{Proof latency.} On the benchmark laptop, the exchange computes the clearing receipt in 0.07 ms. It can announce the outcome at the close and generate its proofs while collecting the next batch. Traders can observe the reported price immediately. Public verification becomes possible once both proofs arrive. A delayed or missing proof leaves a publicly observable, unverified receipt. To sustain this schedule, the prover must keep pace with incoming batches on average.
+
+\textbf{Throughput.} Each asset has its own book, so the exchange can assign separate proving resources to different assets. Within one asset, update validity becomes more expensive as the order log grows (Table 4). Using one row per order could increase the number of orders represented in a fixed domain fourfold (Section 4.3). The resulting proving time has yet to be measured.
+
+\textbf{Public disclosure.} Before the Closing Cross, Nasdaq disseminates paired volume, imbalance size and side, and indicative prices \cite{itch,nasdaq4754}. Cboe's periodic-auction feed reports an indicative price and size \cite{cboepitch}. Our final receipt also publishes the plateau \([c,d]\), long-side volume \(P\) at the clearing tick, and eligible IO volume \(J\). Traders use \(P\) and \(J\) to compute fill ratios. The verifier uses the plateau endpoints to construct \(Mask_P\) and \(Mask_C\). Keeping the plateau private would require commitments to these selectors and constraints on their shape.
+
+\textbf{Exchange discretion.} The exchange sees the order flow. It can refuse an order before issuing a receipt and can submit orders of its own. After acknowledging an order, it must clear a book consistent with the verified log. The protocol specifies pro rata fills before rounding. The venue must define how it distributes whole units. The reference string also requires an honest contribution to the setup ceremony.
+
+\textbf{On-chain verification.} Our verifier runs off chain. A contract in the style of Zeeperio \cite{zeeperio2026} would check the pairings and compute \(W\) from the logged steps. The latter operation grows linearly with the log. Our experiments cover the implementation choices in Section 5.1 on one laptop. They do not establish a gas cost.
+
+\section{Conclusion}
+
+We adapt a closing-cross rule to a private order book and encode its price and rationing decisions in 33 constraint groups. Traders can check their own recorded orders, and anyone can verify the clearing receipt and the non-negative updates to the book. In the 1,000-tick, 1,000-order benchmark, the two proofs occupy 7.8 KB and take 0.73 s to generate on eight laptop threads. The reported batch check takes 0.12 s. Across four days of replayed AAPL trading, 3.6\% of crossing one-second batches required a tie-break after volume maximization. Hiding orders from the exchange and proving integer fill rounding remain open.
+
+
+
+
+
+

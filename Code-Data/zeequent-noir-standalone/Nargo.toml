@@ -1,0 +1,3 @@
+[workspace]
+members = ["lib", "clearing", "no_cross"]
+default-member = "clearing"

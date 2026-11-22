@@ -1,0 +1,17 @@
+[package]
+name = "zeequent-kzg"
+version.workspace = true
+edition.workspace = true
+
+[features]
+# Multi-threaded MSMs and FFTs.
+parallel = ["ark-ec/parallel", "ark-ff/parallel", "ark-poly/parallel", "ark-std/parallel"]
+
+[dependencies]
+ark-bn254 = "0.4"
+ark-ec = "0.4"
+ark-ff = "0.4"
+ark-poly = "0.4"
+ark-serialize = "0.4"
+ark-std = "0.4"
+sha2 = "0.10"

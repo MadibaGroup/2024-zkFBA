@@ -1,0 +1,17 @@
+[package]
+name = "zeequent-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "zeequent"
+path = "src/main.rs"
+
+[features]
+parallel = ["zeequent-core/parallel", "zeequent-kzg/parallel"]
+
+[dependencies]
+zeequent-types = { path = "../zeequent-types" }
+zeequent-kzg = { path = "../zeequent-kzg" }
+zeequent-core = { path = "../zeequent-core" }
+ark-std = { version = "0.4", features = ["getrandom"] }

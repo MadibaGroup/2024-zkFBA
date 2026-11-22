@@ -1,0 +1,7 @@
+[package]
+name = "no_cross"
+type = "bin"
+authors = []
+
+[dependencies]
+zeequent_lib = { path = "../lib" }

@@ -1,0 +1,7 @@
+[package]
+name = "clearing"
+type = "bin"
+authors = []
+
+[dependencies]
+zeequent_lib = { path = "../lib" }

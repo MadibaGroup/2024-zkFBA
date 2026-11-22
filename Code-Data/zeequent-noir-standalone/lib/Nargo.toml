@@ -1,0 +1,6 @@
+[package]
+name = "zeequent_lib"
+type = "lib"
+authors = []
+
+[dependencies]

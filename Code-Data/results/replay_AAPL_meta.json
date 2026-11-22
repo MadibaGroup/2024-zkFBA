@@ -1,0 +1,197 @@
+{
+  "2026-01-23": {
+    "counts": {
+      "records": 3176565,
+      "adds": 1469048,
+      "cancels": 1481301,
+      "fills": 95591,
+      "trades": 130623,
+      "trades_without_side": 35038,
+      "clears": 2
+    },
+    "0.1": {
+      "batches": 234000,
+      "batches_with_aggressor_trade": 19125,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "1.0": {
+      "batches": 23400,
+      "batches_with_aggressor_trade": 11800,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "10.0": {
+      "batches": 2340,
+      "batches_with_aggressor_trade": 2324,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "60.0": {
+      "batches": 390,
+      "batches_with_aggressor_trade": 390,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    }
+  },
+  "2026-05-04": {
+    "counts": {
+      "records": 5629415,
+      "adds": 2681165,
+      "cancels": 2696685,
+      "fills": 109199,
+      "trades": 142365,
+      "trades_without_side": 33166,
+      "clears": 1
+    },
+    "0.1": {
+      "batches": 234000,
+      "batches_with_aggressor_trade": 21884,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "1.0": {
+      "batches": 23400,
+      "batches_with_aggressor_trade": 12605,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "10.0": {
+      "batches": 2340,
+      "batches_with_aggressor_trade": 2333,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "60.0": {
+      "batches": 390,
+      "batches_with_aggressor_trade": 390,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    }
+  },
+  "2026-07-09": {
+    "counts": {
+      "records": 6065233,
+      "adds": 2903143,
+      "cancels": 2919453,
+      "fills": 99312,
+      "trades": 143323,
+      "trades_without_side": 44027,
+      "clears": 2
+    },
+    "0.1": {
+      "batches": 234000,
+      "batches_with_aggressor_trade": 19890,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "1.0": {
+      "batches": 23400,
+      "batches_with_aggressor_trade": 12337,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "10.0": {
+      "batches": 2340,
+      "batches_with_aggressor_trade": 2328,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "60.0": {
+      "batches": 390,
+      "batches_with_aggressor_trade": 390,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    }
+  },
+  "2026-07-20": {
+    "counts": {
+      "records": 11064805,
+      "adds": 5367263,
+      "cancels": 5387406,
+      "fills": 124836,
+      "trades": 185299,
+      "trades_without_side": 60471,
+      "clears": 1
+    },
+    "0.1": {
+      "batches": 234000,
+      "batches_with_aggressor_trade": 31623,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "1.0": {
+      "batches": 23400,
+      "batches_with_aggressor_trade": 16801,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "10.0": {
+      "batches": 2340,
+      "batches_with_aggressor_trade": 2340,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "60.0": {
+      "batches": 390,
+      "batches_with_aggressor_trade": 390,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    }
+  },
+  "2026-08-27": {
+    "counts": {
+      "records": 5092753,
+      "adds": 2437830,
+      "cancels": 2447182,
+      "fills": 88248,
+      "trades": 119491,
+      "trades_without_side": 31243,
+      "clears": 2
+    },
+    "0.1": {
+      "batches": 234000,
+      "batches_with_aggressor_trade": 23400,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "1.0": {
+      "batches": 23400,
+      "batches_with_aggressor_trade": 14055,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "10.0": {
+      "batches": 2340,
+      "batches_with_aggressor_trade": 2340,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    },
+    "60.0": {
+      "batches": 390,
+      "batches_with_aggressor_trade": 390,
+      "window_spot_check_violations": 0,
+      "min_depth_bid": 0,
+      "min_depth_ask": 0
+    }
+  }
+}

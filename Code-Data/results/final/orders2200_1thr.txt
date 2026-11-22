@@ -1,0 +1,6 @@
+threads = 1, runs = 20, orders per batch = 2200
+SRS: local insecure setup. Median times in milliseconds.
+
+| N | k_in | step domain | prove | verify+decode | proof B | upd prove | upd verify+decode | upd B | no-cross prove | no-cross B | whole batch check | order update |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1000 | 32 | 16384 | 1375.0 | 29.1 | 6124 | 4404.8 | 212.4 | 1700 | 410.5 | 1612 | 298.3 | 0.992 |

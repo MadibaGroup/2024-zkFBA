@@ -1,121 +1,52 @@
-# G Extended Benchmarks
+# Appendix G. Benchmark measurements
 
-All timings are in milliseconds and use the laptop and thread settings in Section 5.2. We report medians of 20 Rust runs and 10 Noir runs per book, collected in a single sitting. Rust measurements time function calls and report decoding separately from proof verification. Noir measurements time whole commands.
+## Timing conventions
 
-## G.1 The Clearing Proof Against Ticks and Volume Width
+We report three distinct experiments. Calibrated books compare our two clearing implementations across grid sizes. Selected replays exercise the same price rule on books with observed price ties. Uniform books vary the grid, entry width or order count under controlled inputs. The measurements below use the machine and software environments in [Section 7](07-implementations-and-evaluation.md).
 
-**Table 22.** Uniform books, 250 orders per batch, one thread.
+**Table G.1.** Clearing generation in seconds on one and eight threads, five calibrated books at each size. For our Rust implementation each cell is the median of the five per-book proving medians, with 20 repetitions per book. For our Noir implementation each cell adds the median witness-command time to the median proof-command time across 50 runs (ten per book). Verification-key generation is timed separately.
 
-| $N$ | $n$ | $k_{in}$ | Commitments | Proof (B) | Prove | Verify | Decode | Update-validity prove | No-cross prove | Batch check |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 100 | 128 | 16 | 70 | 4,908 | 264 | 9.2 | 15.3 | 378 | 92 | 77 |
-| 100 | 128 | 32 | 97 | 6,636 | 349 | 10.2 | 21.1 | 415 | 111 | 78 |
-| 250 | 256 | 16 | 52 | 3,756 | 298 | 8.7 | 11.5 | 384 | 118 | 78 |
-| 250 | 256 | 32 | 79 | 5,484 | 448 | 9.6 | 17.5 | 449 | 152 | 80 |
-| 500 | 512 | 16 | 62 | 4,396 | 582 | 9.0 | 13.5 | 381 | 190 | 77 |
-| 500 | 512 | 32 | 89 | 6,124 | 781 | 9.7 | 19.0 | 422 | 234 | 78 |
-| 1,000 | 1,024 | 16 | 62 | 4,396 | 998 | 9.3 | 14.0 | 382 | 320 | 78 |
-| 1,000 | 1,024 | 32 | 89 | 6,124 | 1,366 | 10.0 | 19.3 | 424 | 402 | 79 |
-| 2,000 | 2,048 | 16 | 62 | 4,396 | 1,803 | 9.2 | 14.1 | 625 | 568 | 80 |
-| 2,000 | 2,048 | 32 | 89 | 6,124 | 2,462 | 10.0 | 19.6 | 693 | 715 | 81 |
-| 4,000 | 4,096 | 16 | 62 | 4,396 | 3,330 | 9.1 | 13.7 | 1,102 | 1,047 | 85 |
-| 4,000 | 4,096 | 32 | 89 | 6,124 | 4,506 | 10.1 | 19.2 | 1,218 | 1,303 | 87 |
-| 8,000 | 8,192 | 16 | 62 | 4,396 | 6,367 | 8.9 | 13.6 | 1,950 | 1,950 | 95 |
-| 8,000 | 8,192 | 32 | 89 | 6,124 | 8,723 | 9.8 | 18.9 | 2,196 | 2,484 | 95 |
+| Ticks | Padded rows (Rust) | Our Rust implementation, 1 thread | Our Rust implementation, 8 threads | Our Noir implementation, 1 thread | Our Noir implementation, 8 threads |
+| --- | --- | --- | --- | --- | --- |
+| 100 | 128 | 0.343 | 0.117 | 1.772 | 1.227 |
+| 250 | 256 | 0.413 | 0.150 | 2.758 | 1.502 |
+| 500 | 512 | 0.768 | 0.232 | 4.385 | 1.979 |
+| 1,000 | 1,024 | 1.343 | 0.373 | 7.428 | 2.887 |
+| 2,000 | 2,048 | 2.437 | 0.626 | 13.815 | 4.674 |
 
-**Table 23.** The same runs on eight threads.
+At 1,000 ticks on one thread the witness median was 1,000.5 ms and the proof-command median was 6,427 ms. Their sum was 7,427.5 ms. Summing the two durations within each run first gives a median of 7,442.5 ms. The former convention reproduces the reported 7.43 s. The separate verification-key command had a median of 2,213 ms. Process startup is included in the command times. Our Rust implementation times native function calls.
 
-| $N$ | $k_{in}$ | Prove | Verify | Decode | Update-validity prove | No-cross prove | Batch check |
-|---|---|---|---|---|---|---|---|
-| 100 | 16 | 98 | 6.4 | 3.6 | 122 | 41 | 52 |
-| 100 | 32 | 117 | 6.7 | 5.0 | 131 | 50 | 53 |
-| 250 | 16 | 115 | 6.2 | 2.9 | 113 | 56 | 51 |
-| 250 | 32 | 154 | 6.4 | 3.9 | 122 | 72 | 51 |
-| 500 | 16 | 192 | 6.4 | 3.3 | 115 | 84 | 51 |
-| 500 | 32 | 236 | 6.7 | 4.6 | 123 | 102 | 52 |
-| 1,000 | 16 | 291 | 6.4 | 3.6 | 114 | 114 | 52 |
-| 1,000 | 32 | 376 | 6.7 | 4.8 | 122 | 128 | 52 |
-| 2,000 | 16 | 484 | 6.5 | 3.7 | 174 | 178 | 54 |
-| 2,000 | 32 | 615 | 6.8 | 4.7 | 190 | 215 | 54 |
-| 4,000 | 16 | 865 | 6.6 | 3.6 | 314 | 314 | 60 |
-| 4,000 | 32 | 1,081 | 6.6 | 4.6 | 314 | 354 | 60 |
-| 8,000 | 16 | 1,590 | 6.7 | 3.6 | 532 | 533 | 70 |
-| 8,000 | 32 | 2,026 | 6.8 | 4.6 | 549 | 618 | 69 |
+The 32 selected replays span 601–662 ticks. All use 1,024 rows in our Rust implementation, whose one-thread median of per-book proving medians was 1.348 s. The 362 Cboe-derived books were measured separately, with five Rust runs per book and thread configuration and one eight-thread Noir run per book. Their balanced, single-price construction makes them a different workload from the plateau-enriched replays.
 
-At $n=256$, the accumulated widths of 24 and 40 bits are multiples of eight, so the proof needs no scaled top limbs. This explains the smaller column count than at $n=512$. At $n=128$ the prover uses seven-bit limbs and needs more columns. With 250 orders the update-validity domain has $\max(n,1024)$ rows. Timings vary little up to $n=1024$ and increase at larger $n$. Using eight threads on four physical cores speeds up clearing-proof generation by a factor of 3.6 at $n=1024$ and 4.3 at $n=8192$.
+## Variation across repeated measurements
 
-## G.2 Spread
+**Table G.2.** Lower quartile / median / upper quartile in milliseconds for our Rust implementation. The uniform-book configuration has 1,000 ticks, 32-bit entries and 250 orders, with 20 runs per thread count.
 
-**Table 24.** $N = 1000$, 32-bit volumes, 250 orders: median and interquartile range over 20 runs.
+| Operation | One thread (ms) | Eight threads (ms) |
+| --- | --- | --- |
+| Crossing proof generation | 1,355.5 / 1,365.9 / 1,376.8 | 358.6 / 375.6 / 384.3 |
+| Crossing proof decoding | 18.8 / 19.3 / 19.6 | 4.5 / 4.8 / 5.2 |
+| Crossing proof verification after decoding | 9.5 / 10.0 / 10.3 | 6.6 / 6.7 / 6.8 |
+| Update proof generation | 419.3 / 423.8 / 427.8 | 120.6 / 121.5 / 122.7 |
+| Update proof verification after decoding | 42.4 / 43.0 / 44.0 | 20.0 / 20.5 / 20.8 |
+| Full check on decoded artifacts | 77.5 / 79.3 / 80.3 | 51.5 / 52.0 / 52.3 |
 
-| Metric | One thread | Eight threads |
-|---|---|---|
-| Clearing proof, prove | 1,366 [1,356–1,377] | 376 [359–384] |
-| Clearing proof, verify | 10.0 [9.5–10.3] | 6.7 [6.6–6.8] |
-| Clearing proof, decode | 19.3 [18.8–19.6] | 4.8 [4.5–5.2] |
-| Update-validity proof, prove | 424 [419–428] | 122 [121–123] |
-| Update-validity proof, verify | 43.0 [42.4–44.0] | 20.5 [20.0–20.8] |
-| Batch check | 79.3 [77.5–80.3] | 52.0 [51.5–52.3] |
+The crossing-verification row assumes decoded points, whereas the 29 ms crossing-verification figure in the main text includes decoding and uses calibrated books. The full batch-check row includes the empty opening, log replay and both proof checks on decoded inputs. It excludes network distribution and agreement on a common final digest.
 
-## G.3 Calibrated and Real Books
+## Grid size and entry width
 
-**Table 25.** The clearing proof on the calibrated books (five per size) and on the 32 real books, 32-bit volumes. Brackets give the range of the per-book medians.
+**Table G.3.** Crossing-proof size and median proving time for our Rust implementation. These uniform-book runs use 250 orders, one thread and the stated per-cell quantity width.
 
-| Books | $N$ | $n$ | Prove, one thread | Prove, eight threads | Verify + decode, one thread |
-|---|---|---|---|---|---|
-| Calibrated | 100 | 128 | 343 [341–345] | 117 [111–130] | 30.6 |
-| Calibrated | 250 | 256 | 414 [408–420] | 150 [134–156] | 26.3 |
-| Calibrated | 500 | 512 | 769 [765–771] | 232 [228–235] | 28.6 |
-| Calibrated | 1,000 | 1,024 | 1,343 [1,339–1,351] | 373 [363–382] | 28.8 |
-| Calibrated | 2,000 | 2,048 | 2,437 [2,433–2,447] | 626 [608–633] | 28.6 |
-| Real | 601–662 | 1,024 | 1,348 [1,334–1,363] | 367 [353–381] | 29.5 |
+| Ticks | 16-bit proof (B) | 32-bit proof (B) | 16-bit proving (s) | 32-bit proving (s) |
+| --- | --- | --- | --- | --- |
+| 100 | 4,908 | 6,636 | 0.264 | 0.349 |
+| 250 | 3,756 | 5,484 | 0.298 | 0.448 |
+| 500 | 4,396 | 6,124 | 0.582 | 0.781 |
+| 1,000 | 4,396 | 6,124 | 0.998 | 1.366 |
+| 2,000 | 4,396 | 6,124 | 1.803 | 2.462 |
+| 4,000 | 4,396 | 6,124 | 3.330 | 4.506 |
+| 8,000 | 4,396 | 6,124 | 6.367 | 8.723 |
 
-At a domain size of 1,024, median clearing-proof generation times for the uniform, calibrated, and replayed books differ by less than 3%.
+The size decreases from 100 to 250 ticks because the change in domain also changes limb width and the number of lookup expressions. At 250 ticks the domain has 256 rows, eight-bit limbs and accumulated widths of 24 or 40 bits, both multiples of eight. Above 500 ticks the rows shown keep the same column count within each width even as the number of domain evaluations increases. Proof size is constant over those configurations with the same layout; proving time grows.
 
-## G.4 Operations Outside the Proofs
-
-**Table 26.** Per-order and per-batch operations, $N = 1000$, 32-bit volumes.
-
-| Operation | One thread | Eight threads | Published size |
-|---|---|---|---|
-| Record an order (exchange) | 0.98 | 0.99 | 416 B on the board |
-| Check a receipt (trader) | 0.24 | 0.24 | 192 B receipt |
-| Open a batch | 13.3 | 9.6 | 1,576 B |
-| Check an opening | 19.1 | 18.5 | |
-| Run the clearing rule | 0.07 | 0.08 | |
-
-The single-thread recording time of 0.98 ms per order corresponds to roughly 1,000 order updates per second for this operation alone.
-
-## G.5 The Noir Circuit
-
-**Table 27.** The circuit on the calibrated books (median over five books and ten runs each, interquartile range in brackets) and on the 32 real books. The proof is 14,656 bytes and verification takes 27 to 30 ms in every row.
-
-| Books | $N$ | Gates | Threads | Witness | Key | Prove | Prover memory |
-|---|---|---|---|---|---|---|---|
-| Calibrated | 100 | 12,757 | 1 | 720 | 344 | 1,052 [1,044–1,064] | 36 MB |
-| | | | 8 | 702 | 191 | 525 [518–540] | 45 MB |
-| Calibrated | 250 | 27,357 | 1 | 764 | 683 | 1,994 [1,981–2,012] | 57 MB |
-| | | | 8 | 739 | 288 | 764 [754–777] | 68 MB |
-| Calibrated | 500 | 51,666 | 1 | 844 | 1,181 | 3,541 [3,532–3,567] | 96 MB |
-| | | | 8 | 820 | 456 | 1,159 [1,145–1,173] | 106 MB |
-| Calibrated | 1,000 | 100,357 | 1 | 1,001 | 2,213 | 6,427 [6,396–6,480] | 157 MB |
-| | | | 8 | 989 | 763 | 1,898 [1,879–1,927] | 180 MB |
-| Calibrated | 2,000 | 197,666 | 1 | 1,337 | 4,260 | 12,478 [12,400–12,716] | 305 MB |
-| | | | 8 | 1,315 | 1,470 | 3,359 [3,333–3,420] | 326 MB |
-| Real | 601–662 | 61,521–67,434 | 1 | 877 | 1,439 | 4,195 [4,115–4,300] | 116 MB |
-| | | | 8 | 858 | 537 | 1,316 [1,297–1,352] | 129 MB |
-
-The key column reports verification-key generation, performed once per book size. Additional threads accelerate proving, while witness generation remains sequential.
-
-**Table 28.** Ratio of the circuit's proving time, with witness generation, to ours, on the same books.
-
-| $N$ | One thread | Eight threads |
-|---|---|---|
-| 100 | 5.2 | 10.5 |
-| 250 | 6.7 | 10.0 |
-| 500 | 5.7 | 8.5 |
-| 1,000 | 5.5 | 7.7 |
-| 2,000 | 5.7 | 7.5 |
-| Real, 601–662 | 3.8 | 5.9 |
-
-The Noir measurements include process startup under WSL2. The Rust measurements time native Windows function calls. The implementations also use different transcript hashes. We did not isolate these effects or benchmark another backend configuration.
+For the 1,000-tick, 32-bit no-cross configuration the separate outcome proof has 20 column-and-quotient commitments, occupies 1,612 bytes and takes a median of 402 ms to generate on one thread. IO deposits can be present in a no-cross batch; the update proof still processes them. [Table 4](07-implementations-and-evaluation.md#table-4) reports the cost of increasing the log length at fixed price resolution. Its sum of component medians describes after-close proving work and does not measure sustained exchange throughput.

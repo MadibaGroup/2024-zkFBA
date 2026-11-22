@@ -1,129 +1,54 @@
-# F Order-Flow Data and Tie Frequency
+# Appendix F. Sampling, reconstruction and generator validation
 
-## F.1 Source and Choice of Days
+## Sampling frame
 
-We reconstruct the AAPL book from Nasdaq TotalView-ITCH order and trade messages [36]. We fixed the following day-selection procedure before measuring tie frequency.
+The initial frame runs from 2 January through 13 November 2026. Calendar exclusions cover FOMC decisions, CPI and employment releases with their neighbouring trading sessions, monthly option expiries, index reconstitution, the election window, early closes and days adjacent to holidays. The study’s sampling plan uses the Federal Reserve calendar for FOMC events and the Bureau of Labor Statistics calendar for the specified labour and inflation releases ([4](references.md#ref-4), [31](references.md#ref-31)). The remaining 119 dates were shuffled with seed 20261117. The final screen also considers selected macro releases, central-bank minutes, month ends, earnings of AAPL and NVDA, AAPL ex-dividend dates and product events.
 
-1. **Frame.** The 219 trading days from 2 January to 13 November 2026.
-2. **Exclusions.** We remove days within one day of an FOMC decision, a CPI release, or an employment report, monthly option expiries, the index reconstitution day, the days around the election, early closes, and days next to holidays. 119 days remain.
-3. **Order.** We shuffle the remaining days with a fixed seed.
-4. **Screen.** We take the days in that order and keep a day unless it has a further scheduled event (other macro releases, central-bank minutes, month ends, earnings days of AAPL and NVDA and the day after, AAPL's ex-dividend and product-event days), an unusual session in the stock or in the market (a return beyond 2 standard deviations of the last 60 days, volume above twice or below half the 20-day median, a range above twice the median), or a shock in six large technology stocks or in semiconductor, oil, Treasury, or gold funds. 62 of the 119 days pass.
+The market screen compares the absolute AAPL and QQQ returns with two historical standard deviations over a 60-day lookback. AAPL volume below half or above twice its 20-day median also flags a day, as does an AAPL or QQQ range above twice its 20-day median. Peer-stock and cross-asset checks flag large moves in six technology stocks and four sector or asset funds. The full rules and draw order are retained with the data scripts. The final screen passed 62 dates and excluded 57. We analyzed 23 January, 4 May, 9 July and 20 July. The 27 August comparison failed the final screen and is excluded from calibration and four-day rate estimates.
 
-We analyze the first four passing days in the shuffled sequence. Table 18 also includes one rejected day, which we replay for a separate comparison.
+**Table F.1.** Feed records and one-second replay results for the four calibration dates. The last two columns use crossing intervals on the indicated day as their denominator.
 
-**Table 18.** Days replayed.
+| Date | Feed records | Crossing intervals | Volume plateau (%) | Tied minimum (%) |
+| --- | --- | --- | --- | --- |
+| 2026-01-23 | 3,176,565 | 11,800 | 2.16 | 0.07 |
+| 2026-05-04 | 5,629,415 | 12,605 | 3.62 | 0.13 |
+| 2026-07-09 | 6,065,233 | 12,337 | 3.38 | 0.35 |
+| 2026-07-20 | 11,064,805 | 16,801 | 5.37 | 0.75 |
 
-| Day | Order messages | Role |
-|---|---|---|
-| 23 January 2026 | 3,176,565 | Analysis |
-| 4 May 2026 | 5,629,415 | Analysis |
-| 9 July 2026 | 6,065,233 | Analysis |
-| 20 July 2026 | 11,064,805 | Analysis |
-| 27 August 2026 | 5,092,753 | Rejected by the screen (day after NVDA earnings) |
+## Which observations enter each estimate
 
-## F.2 From Messages to Batches
+The unit of analysis for a daily rate is a crossing interval with at least one trade of identified aggressor side. Across the four interval partitions there were 156,950 crossings. No maximizing interval reached the boundary of its reconstructed price window, which extended 300 ticks beyond the interval trade-price range on each side. Every crossing had a qualifying price. These checks address truncation at the chosen window and implementation of the price rule. The messages originated in a continuous market.
 
-On a one-cent grid, we partition the regular session (09:30 to 16:00 New York time) into intervals of 0.1, 1, 10, or 60 seconds. At each price, bid volume is the sum of resting bids at the close of the interval, displayed bid volume executed during the interval, and buyer-initiated trade volume. We construct ask volume symmetrically. We omit cancelled interest and round sub-cent prices down for buys and up for sells. Crosses and executions against non-displayed orders lack an aggressor side in our reconstruction. We exclude these messages, which account for 24% to 33% of trade messages. Each price window extends 300 ticks beyond the batch’s trade prices on either side.
+**Table F.2.** Mean of four daily rates, giving each date equal weight. A tied minimum requires several maximizing ticks with the same minimum absolute imbalance.
 
-Including resting orders changes the result. Using executions alone produces a plateau in nearly every batch. With resting depth included, most crossing batches have one maximizing price.
+| Interval | Mean crossing batches per day | Volume plateau (%) | Tied minimum (%) |
+| --- | --- | --- | --- |
+| 0.1 s | 23,131 | 2.10 | 0.33 |
+| 1 s | 13,386 | 3.63 | 0.32 |
+| 10 s | 2,331 | 2.85 | 0.06 |
+| 60 s | 390 | 0.71 | 0.00 |
 
-**Reconstruction checks.** Resting depth stayed non-negative on every day. Across 156,950 crossing batches on the four analysis days, no plateau reached a window boundary and every batch had a candidate clearing tick. The Python replay passes the Rust test cases. To select benchmark books, we take the first plateau with one imbalance minimizer and the first with several, whenever present, for each of the five days and four durations. This gives 32 books with identical Python and Rust receipts.
+For the one-second plateau rate, the four-day mean was 3.63%. A descriptive Student $t$ interval using four daily observations gives approximately 1.5% to 5.7%. Pooling all one-second crossings instead gives 3.79% because more active days contribute more intervals. Neither calculation corrects for restricting the dates to screened sessions.
 
-## F.3 Tie Frequency
+For prover evaluation we selected the first available volume plateau with one imbalance minimizer and the first with multiple minimizers for each day and duration. The selection includes the screened-out comparison day and yielded 32 books. This deliberately enriches the timing corpus for cases in which the price rule must resolve ties. Only the four analysis days enter the prevalence and calibration estimates.
 
-We classify crossing batches by whether a tie remains after volume maximization and, if so, after imbalance minimization. Table 6 reports means across four days. The plateau frequency at one second is 3.63%, with a 95% $t$ interval of 1.5% to 5.7%. At 0.1, 10, and 60 seconds the frequencies are 2.10% (1.2% to 3.0%), 2.85% (1.6% to 4.1%), and 0.71% (0.5% to 0.9%). The intervals use four daily observations, even though each day contains many batches.
+## Generator validation by duration
 
-**Table 19.** Per day: percentage of crossing batches with a plateau / with several minimum-imbalance ticks.
+Calibration retains up to 20,000 near-centre observations per duration. For occupied cells it interpolates empirical conditional quantiles, rounds to an integer and imposes a minimum of one unit. Outside the near region, 12 distance bands extend to 10,000 ticks. The default bootstrap preserves actual volume configurations in the central 21 ticks. For that reason, the generator code, aggregate validation statistics and the public worked example can be distributed separately from the calibration library and the generated volume files. The timing inputs use one-second calibration, seed 2027, and five draws per grid width.
 
-| Day | 0.1 s | 1 s | 10 s | 60 s |
-|---|---|---|---|---|
-| 23 January | 1.30 / 0.09 | 2.16 / 0.07 | 2.11 / 0.00 | 0.77 / 0.00 |
-| 4 May | 2.25 / 0.14 | 3.62 / 0.13 | 2.44 / 0.00 | 0.77 / 0.00 |
-| 9 July | 2.14 / 0.35 | 3.38 / 0.35 | 3.91 / 0.17 | 0.77 / 0.00 |
-| 20 July | 2.72 / 0.72 | 5.37 / 0.75 | 2.95 / 0.09 | 0.51 / 0.00 |
-| 27 August (rejected) | 1.80 / 0.39 | 3.33 / 0.48 | 3.25 / 0.00 | 0.51 / 0.00 |
+**Table F.3.** Volume plateaus as a percentage of crossing books. The replay column pools intervals across the four analysis days. Each model drew 20,000 books of 601 ticks per duration. Each column uses its own crossing count.
 
-At all four batch lengths, the rejected day’s overall plateau frequency falls within the range observed on the four analysis days.
+| Interval (s) | Nasdaq replay | Independent cells | Joint occupancy | Joint volumes and outer totals |
+| --- | --- | --- | --- | --- |
+| 0.1 | 2.19 | 8.83 | 2.56 | 2.24 |
+| 1.0 | 3.79 | 14.60 | 6.11 | 4.06 |
+| 10.0 | 2.85 | 7.98 | 6.33 | 2.78 |
+| 60.0 | 0.71 | 1.74 | 1.48 | 0.70 |
 
-**Table 20.** By time of day, four analysis days pooled: plateau / several minimum-imbalance ticks, in percent.
+The independent model generates more volume plateaus than the replay at every duration. Preserving the central volumes and the outer totals gives the closest plateau rate of the three models at one second. [Section 6](06-data-and-generator.md) reports the corresponding imbalance ties and median executable volumes. The comparison measures preservation of calibration statistics on the sampled stock and dates.
 
-| Batch length | First 30 minutes | Middle | Last 30 minutes |
-|---|---|---|---|
-| 0.1 s | 3.62 / 0.87 | 2.04 / 0.31 | 1.29 / 0.17 |
-| 1 s | 5.92 / 0.86 | 3.70 / 0.32 | 2.01 / 0.13 |
-| 10 s | 3.33 / 0.28 | 2.94 / 0.05 | 1.39 / 0.00 |
-| 60 s | 0.00 / 0.00 | 0.76 / 0.00 | 0.83 / 0.00 |
+## Matching the Cboe observations
 
-At batch lengths up to ten seconds, ties are most frequent in the first half hour and least frequent in the last.
+Cboe’s participant FAQ describes the BXE auction update and summary messages and specifies that a summary is published when volume executes ([11](references.md#ref-11)). In our sample we matched flagged executions to periodic summaries by timestamp and compared the sum of execution sizes with each summary. The 362 summaries account for 400 executions. We also associated each of the 493 positive-price indicative updates with the next summary, out of 922 periodic updates. In 320 auctions the earliest associated positive-price update was within 100 ms of the summary. This interval is measured between messages. Interpreting it as the full auction duration would require the actual trigger time. Interpretation of historical fields is subject to the feed specification in force on the observation date.
 
-**Final tie-break.** Across the four durations, 546 crossing batches have several minimum-imbalance ticks. In 462 of those batches two ticks also satisfy the at-price volume condition. The rule selects the lower candidate in those 462 cases.
-
-## F.4 The Generator
-
-We centre each crossing book on its clearing tick and calibrate each batch duration separately. We record occupancy and volume quantiles by tick up to 100 ticks from the centre and in 12 bands out to 10,000 ticks. We also retain the joint volumes within 10 ticks of the centre and the total bid volume above and ask volume below that region. Table 21 compares three generators using 20,000 books of 601 ticks each.
-
-- **Independent ticks.** Each tick is drawn on its own from the measured occupancy and volume distribution.
-- **Core occupancy.** Which ticks within 5 of the centre hold volume is copied jointly from a real batch; the sizes are independent.
-- **Bootstrap.** The volumes within 10 ticks of the centre are those of a real batch, the periphery is drawn from the marginals, and its totals are rescaled to that batch's.
-
-**Table 21.** Tie classes of real and generated batches, in percent of crossing batches, and the median $V_{max}$. The real rows pool all crossing batches, so they differ slightly from the means over days in Table 6.
-
-| Batch length | Source | One maximizing tick | Plateau, one minimum | Plateau, several | Median $V_{max}$ |
-|---|---|---|---|---|---|
-| 0.1 s | Real | 97.81 | 1.82 | 0.38 | 80 |
-| | Independent ticks | 91.17 | 7.60 | 1.23 | 67 |
-| | Core occupancy | 97.44 | 2.48 | 0.09 | 63 |
-| | Bootstrap | 97.77 | 1.87 | 0.36 | 80 |
-| 1 s | Real | 96.21 | 3.43 | 0.36 | 120 |
-| | Independent ticks | 85.40 | 12.45 | 2.15 | 132 |
-| | Core occupancy | 93.89 | 5.91 | 0.20 | 119 |
-| | Bootstrap | 95.94 | 3.74 | 0.32 | 120 |
-| 10 s | Real | 97.15 | 2.79 | 0.06 | 804 |
-| | Independent ticks | 92.03 | 7.43 | 0.55 | 1,034 |
-| | Core occupancy | 93.67 | 6.21 | 0.11 | 1,028 |
-| | Bootstrap | 97.22 | 2.73 | 0.05 | 801 |
-| 60 s | Real | 99.29 | 0.71 | 0.00 | 4,852 |
-| | Independent ticks | 98.26 | 1.70 | 0.04 | 6,562 |
-| | Core occupancy | 98.52 | 1.43 | 0.05 | 6,546 |
-| | Bootstrap | 99.31 | 0.69 | 0.00 | 4,859 |
-
-Drawing ticks independently overstates the frequency of plateaus at every duration. Copying the central occupancy pattern narrows the discrepancy at 0.1 s, but independent sizes can still shift the crossing price. The bootstrap preserves both the volumes near the clearing tick and the outer totals that enter the depth calculation there. Its one-second plateau frequency is 4.06%, close to the pooled replay frequency of 3.79%. This agreement assesses how well resampling preserves the observed frequencies.
-
-The 25 calibrated benchmark books come from the bootstrap generator at one second, five each at 100, 250, 500, 1,000, and 2,000 ticks.
-
-## F.5 Limits
-
-The estimates depend on the replay definition, particularly the inclusion of resting depth. The sample covers four analysis days for one stock in a continuous market, and the feed supplies no IO orders. The bootstrap retains central volumes from a licensed feed. Publication of generated books depends on that licence.
-
-## F.6 The Periodic-Auction Feed of a Deployed Venue
-
-**Feed and instrument.** We use 111,871 BXE messages for Orange SA (ORAp) on 1 September 2020 [15]. The file includes order-level traffic for the displayed book. For the periodic auctions it supplies the following three message types.
-
-| Message | Fields we use | Count |
-|---|---|---|
-| Auction update, type periodic | Indicative price and size of the auction now forming | 924 |
-| Auction summary, type periodic | Final price and size | 362 |
-| Trade, flagged as auction execution | Quantity and price of one execution | 400 |
-
-We assign a flagged execution to an auction when its timestamp matches the auction summary. For each of the 362 summaries, the assigned execution quantities sum to the reported size. Individual auction orders, including unexecuted interest, are absent from the file.
-
-**Table 29.** The periodic auctions of ORAp on BXE, 1 September 2020.
-
-| Quantity | Value |
-|---|---|
-| Auctions | 362, between 08:02 and 16:30 |
-| Shares traded in auctions | 238,921 |
-| Shares per auction | Median 434; quartiles 305 and 878; minimum 9, maximum 5,116 |
-| Executions per auction | One: 327; two: 32; three: 3 |
-| Indicative updates per auction | One: 282; two: 56; three or more: 24 |
-| Time from first indicative update to execution | At most 100 ms: 320; above 1 s: 35 |
-| Time between auctions | Median 44 s |
-| Auction prices | EUR 9.193 to 9.359, on a grid of EUR 0.001; 126 distinct |
-
-For comparison, the executions against the venue's displayed book for this symbol that day total about 0.57 million shares.
-
-**Constructed books.** For each summary we centre a grid of 101 ticks, spaced EUR 0.001 apart, on the published price. We put the reported executed volume on each side at the centre and leave every other tick empty. The centre is then the unique maximizing tick and has zero imbalance. Both implementations generate a proof for each of the 362 books. In every case, the receipt’s price and volume match the published fields.
-
-**Interpretation.** These tests exercise the venue’s observed prices, grid, and volumes. By construction the books have no price ties. The feed cannot establish how many orders entered a given auction or which tie-break, if any, determined the observed price. The venue also runs short auctions at irregular times, whereas the FBA proposal uses fixed intervals.
-
-**Scope.** The sample covers one stock on one day. Our interpretation of the message fields still requires confirmation against the specification in force on that date. Permission to publish derived figures depends on the data licence.
+For the 101-tick test books the reported price sets the centre, and the reported size sets both ordinary quantities there. This gives a check on quantity handling and the external tick-to-price conversion at observed venue outcomes. Neither losing orders nor the venue's choice among candidate prices can be inferred from these constructed books. The public release excludes raw feeds and the bootstrap library of licensed central volumes.

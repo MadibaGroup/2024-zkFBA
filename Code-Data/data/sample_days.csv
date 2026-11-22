@@ -1,0 +1,120 @@
+draw,date,weekday,screen,reasons
+1,2026-01-23,Friday,pass,
+2,2026-08-27,Thursday,fail,day after NVDA earnings; Jackson Hole symposium
+3,2026-07-20,Monday,pass,
+4,2026-05-04,Monday,pass,
+5,2026-07-09,Thursday,pass,
+6,2026-04-21,Tuesday,pass,
+7,2026-09-24,Thursday,pass,
+8,2026-05-05,Tuesday,fail,JOLTS release
+9,2026-08-19,Wednesday,fail,FOMC minutes
+10,2026-03-24,Tuesday,pass,
+11,2026-10-21,Wednesday,fail,AAPL high-low range 2.1x its 20-day median
+12,2026-10-07,Wednesday,fail,FOMC minutes
+13,2026-06-15,Monday,pass,
+14,2026-01-07,Wednesday,fail,JOLTS release
+15,2026-04-01,Wednesday,pass,
+16,2026-05-06,Wednesday,pass,
+17,2026-02-26,Thursday,fail,day after NVDA earnings
+18,2026-10-30,Friday,fail,Employment Cost Index; last trading day of the month
+19,2026-05-28,Thursday,fail,GDP release; PCE release
+20,2026-10-26,Monday,pass,
+21,2026-05-20,Wednesday,fail,NVDA earnings (after close); FOMC minutes
+22,2026-11-12,Thursday,fail,AAPL ex-dividend; peer NVDA volume 6.0x its 20-day median
+23,2026-01-22,Thursday,fail,PCE release; peer META move +5.2% (> 3 s.d. = 4.2%); gold (GLD) move +3.7% (> 3 s.d. = 3.4%)
+24,2026-09-30,Wednesday,fail,GDP release; PCE release; last trading day of the month
+25,2026-01-30,Friday,fail,day after AAPL earnings; PPI release; last trading day of the month; AAPL high-low range 2.1x its 20-day median; gold (GLD) move -10.3% (> 3 s.d. = 4.3%)
+26,2026-10-09,Friday,pass,
+27,2026-03-16,Monday,pass,
+28,2026-05-14,Thursday,pass,
+29,2026-06-30,Tuesday,fail,JOLTS release; last trading day of the month
+30,2026-04-16,Thursday,pass,
+31,2026-02-09,Monday,fail,AAPL ex-dividend
+32,2026-03-31,Tuesday,fail,JOLTS release; last trading day of the month; AAPL move +4.0% (> 2 s.d. = 3.0%); QQQ move +4.3% (> 2 s.d. = 2.3%); peer NVDA move +7.0% (> 3 s.d. = 6.6%); peer GOOGL move +6.4% (> 3 s.d. = 4.4%); peer META move +8.0% (> 3 s.d. = 6.8%); peer TSLA move +6.5% (> 3 s.d. = 6.1%); semiconductors (SMH) move +7.3% (> 3 s.d. = 6.4%)
+33,2026-05-27,Wednesday,pass,
+34,2026-10-19,Monday,pass,
+35,2026-07-24,Friday,fail,AAPL move +3.9% (> 2 s.d. = 3.3%)
+36,2026-03-03,Tuesday,fail,crude oil (USO) move +6.5% (> 3 s.d. = 5.9%)
+37,2026-09-09,Wednesday,fail,Apple product event
+38,2026-01-05,Monday,pass,
+39,2026-09-25,Friday,pass,
+40,2026-04-07,Tuesday,fail,AAPL high-low range 2.3x its 20-day median; QQQ move +3.1% (> 2 s.d. = 2.6%); QQQ high-low range 2.4x its 20-day median; crude oil (USO) move -12.2% (> 3 s.d. = 11.4%)
+41,2026-06-29,Monday,pass,
+42,2026-02-06,Friday,fail,QQQ move +3.3% (> 2 s.d. = 1.8%); QQQ high-low range 3.0x its 20-day median; peer NVDA move +8.8% (> 3 s.d. = 5.2%); peer AMZN volume 3.5x its 20-day median; semiconductors (SMH) move +6.8% (> 3 s.d. = 5.1%)
+43,2026-10-06,Tuesday,pass,
+44,2026-02-25,Wednesday,fail,NVDA earnings (after close)
+45,2026-11-13,Friday,fail,PPI release
+46,2026-03-30,Monday,pass,
+47,2026-09-22,Tuesday,pass,
+48,2026-10-23,Friday,pass,
+49,2026-06-01,Monday,pass,
+50,2026-05-01,Friday,fail,day after AAPL earnings
+51,2026-10-08,Thursday,pass,
+52,2026-08-03,Monday,pass,
+53,2026-03-27,Friday,fail,AAPL move -3.0% (> 2 s.d. = 2.9%); QQQ move -2.7% (> 2 s.d. = 2.2%)
+54,2026-08-14,Friday,pass,
+55,2026-06-23,Tuesday,pass,
+56,2026-05-29,Friday,fail,last trading day of the month; peer MSFT move +5.2% (> 3 s.d. = 5.1%); peer MSFT volume 3.8x its 20-day median
+57,2026-04-20,Monday,pass,
+58,2026-08-20,Thursday,pass,
+59,2026-02-03,Tuesday,fail,QQQ move -2.0% (> 2 s.d. = 1.6%); QQQ high-low range 2.4x its 20-day median
+60,2026-05-21,Thursday,fail,day after NVDA earnings
+61,2026-05-19,Tuesday,pass,
+62,2026-09-28,Monday,pass,
+63,2026-01-21,Wednesday,fail,QQQ high-low range 2.3x its 20-day median
+64,2026-08-04,Tuesday,fail,JOLTS release
+65,2026-04-22,Wednesday,pass,
+66,2026-08-28,Friday,fail,Jackson Hole symposium
+67,2026-08-05,Wednesday,fail,gold (GLD) move +5.1% (> 3 s.d. = 4.6%)
+68,2026-09-29,Tuesday,fail,JOLTS release
+69,2026-07-16,Thursday,pass,
+70,2026-09-01,Tuesday,fail,JOLTS release
+71,2026-06-24,Wednesday,pass,
+72,2026-07-23,Thursday,fail,peer TSLA move -9.6% (> 3 s.d. = 9.3%); peer TSLA volume 3.8x its 20-day median
+73,2026-09-23,Wednesday,pass,
+74,2026-02-04,Wednesday,fail,AAPL high-low range 2.0x its 20-day median; QQQ high-low range 2.2x its 20-day median
+75,2026-07-22,Wednesday,pass,
+76,2026-02-02,Monday,fail,AAPL move +3.7% (> 2 s.d. = 1.9%); AAPL high-low range 2.9x its 20-day median; crude oil (USO) move -5.7% (> 3 s.d. = 5.1%)
+77,2026-09-21,Monday,fail,QQQ move +2.9% (> 2 s.d. = 2.6%); QQQ high-low range 2.1x its 20-day median; peer META move +10.7% (> 3 s.d. = 8.8%)
+78,2026-02-05,Thursday,fail,JOLTS release; QQQ move -2.9% (> 2 s.d. = 1.7%); QQQ high-low range 2.6x its 20-day median; peer GOOGL volume 3.1x its 20-day median; peer AMZN move -15.2% (> 3 s.d. = 4.0%); long Treasuries (TLT) move +1.5% (> 3 s.d. = 1.4%)
+79,2026-08-25,Tuesday,pass,
+80,2026-03-04,Wednesday,pass,
+81,2026-07-31,Friday,fail,day after AAPL earnings; Employment Cost Index; last trading day of the month; AAPL volume 2.9x its 20-day median
+82,2026-08-24,Monday,pass,
+83,2026-02-27,Friday,fail,PPI release; last trading day of the month; AAPL move -2.9% (> 2 s.d. = 2.7%); AAPL volume 2.2x its 20-day median
+84,2026-07-10,Friday,pass,
+85,2026-03-26,Thursday,fail,peer META move -7.2% (> 3 s.d. = 5.9%)
+86,2026-07-27,Monday,pass,
+87,2026-02-23,Monday,pass,
+88,2026-07-08,Wednesday,fail,FOMC minutes
+89,2026-07-21,Tuesday,pass,
+90,2026-07-07,Tuesday,pass,
+91,2026-08-18,Tuesday,pass,
+92,2026-08-17,Monday,pass,
+93,2026-10-20,Tuesday,pass,
+94,2026-02-19,Thursday,pass,
+95,2026-03-02,Monday,pass,
+96,2026-06-03,Wednesday,pass,
+97,2026-05-18,Monday,pass,
+98,2026-08-31,Monday,fail,last trading day of the month
+99,2026-06-25,Thursday,fail,GDP release; PCE release; AAPL move -5.0% (> 2 s.d. = 2.7%); AAPL high-low range 2.9x its 20-day median
+100,2026-02-18,Wednesday,fail,FOMC minutes
+101,2026-08-26,Wednesday,fail,NVDA earnings (after close); GDP release; PCE release
+102,2026-06-12,Friday,pass,
+103,2026-04-08,Wednesday,fail,FOMC minutes
+104,2026-04-14,Tuesday,fail,PPI release
+105,2026-04-27,Monday,pass,
+106,2026-09-02,Wednesday,pass,
+107,2026-01-06,Tuesday,fail,AAPL high-low range 2.1x its 20-day median
+108,2026-01-26,Monday,fail,AAPL move +3.5% (> 2 s.d. = 1.7%); AAPL high-low range 2.0x its 20-day median
+109,2026-06-02,Tuesday,fail,JOLTS release; AAPL move +3.1% (> 2 s.d. = 2.5%)
+110,2026-04-24,Friday,pass,
+111,2026-10-22,Thursday,fail,peer META move -9.4% (> 3 s.d. = 9.0%)
+112,2026-04-15,Wednesday,fail,AAPL move +3.2% (> 2 s.d. = 2.9%); peer TSLA move +7.5% (> 3 s.d. = 7.2%)
+113,2026-04-23,Thursday,pass,
+114,2026-03-23,Monday,fail,QQQ high-low range 2.1x its 20-day median
+115,2026-03-13,Friday,fail,GDP release; PCE release; JOLTS release
+116,2026-03-25,Wednesday,pass,
+117,2026-01-15,Thursday,pass,
+118,2026-02-24,Tuesday,pass,
+119,2026-10-12,Monday,pass,

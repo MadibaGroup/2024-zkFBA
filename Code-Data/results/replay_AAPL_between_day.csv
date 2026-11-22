@@ -1,0 +1,13 @@
+delta_s,days,category,mean_pct,sd_pp,t_halfwidth_pp,days_for_1pp
+0.1,4,no_tie,97.897,0.589,0.938,2
+0.1,4,plateau_unique_valley,1.777,0.401,0.638,2
+0.1,4,plateau_tied_valley,0.327,0.287,0.456,2
+1.0,4,no_tie,96.367,1.325,2.108,7
+1.0,4,plateau_unique_valley,3.31,1.052,1.674,5
+1.0,4,plateau_tied_valley,0.323,0.309,0.492,2
+10.0,4,no_tie,97.148,0.785,1.248,3
+10.0,4,plateau_unique_valley,2.788,0.704,1.12,2
+10.0,4,plateau_tied_valley,0.064,0.082,0.131,2
+60.0,4,no_tie,99.295,0.128,0.204,2
+60.0,4,plateau_unique_valley,0.705,0.128,0.204,2
+60.0,4,plateau_tied_valley,0.0,0.0,0.0,2

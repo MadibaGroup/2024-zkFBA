@@ -449,7 +449,13 @@ with \(Slack \ge 0\) by F22. These four constraints pin the whole plateau, becau
 
 \textbf{Phase 2.} F19 proves \(\Delta \ge V_{min\Delta}\) on the plateau, and the two pins
 
-\[L_{p^*}(X)\big(SurpB(X) - (1-s)\,V_{min\Delta}\big) = 0, \qquad L_{p^*}(X)\big(SurpA(X) - s\,V_{min\Delta}\big) = 0 \tag{F20}\]
+\begin{equation}
+\begin{gathered}
+L_{p^*}(X)\bigl(SurpB(X) - (1-s)\,V_{min\Delta}\bigr) = 0, \\
+L_{p^*}(X)\bigl(SurpA(X) - s\,V_{min\Delta}\bigr) = 0
+\end{gathered}
+\tag{F20}
+\end{equation}
 
 show that the minimum is attained at \(p^*\) and fix which side is long.
 
@@ -467,7 +473,13 @@ The tick \(p^* - 1\) lies inside the plateau and the cliffs lie outside it, so o
 
 \textbf{Phase 3.} Two pins bind the remaining receipt values to the book, with \(\nu = 1\) if \(V_{min\Delta} > 0\) and 0 otherwise:
 
-\[\nu\, L_{p^*}(X)\big((1-s)\,B(X) + s\,A(X) - P\big) = 0, \qquad \nu\, L_{p^*}(X)\big((1-s)\,IOAccA(X) + s\,IOAccB(X) - J\big) = 0. \tag{F32, F33}\]
+\begin{equation}
+\begin{gathered}
+\nu\,L_{p^*}(X)\bigl((1-s)\,B(X) + s\,A(X) - P\bigr) = 0, \\
+\nu\,L_{p^*}(X)\bigl((1-s)\,IOAccA(X) + s\,IOAccB(X) - J\bigr) = 0.
+\end{gathered}
+\tag{F32, F33}
+\end{equation}
 
 From the receipt we compute admitted IO volume \(I=\min(J,V_{min\Delta})\), residual imbalance \(R=V_{min\Delta}-I\), and traded volume \(V_{max}+I\). With positive imbalance, long-side volume at \(p^*\) fills at \((P-R)/P\). Eligible short-side IO volume fills at \(I/J\) when \(J>0\). All other eligible ordinary volume fills in full. In Figure 2, one IO unit trades and one unit of demand remains unfilled. Bids at tick 5 fill at \(9/10\), bringing total traded volume to 11. Traders can apply these ratios to their own orders before integer rounding.
 

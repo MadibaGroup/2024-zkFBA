@@ -622,17 +622,25 @@ Of the eligible IO volume \(J\), the exchange admits \(I=\min(J,v)\), leaving re
 
 \textbf{Table 8.} The fill of an order of quantity \(q\), given the receipt.
 
-\begin{longtable}[]{@{}ll@{}}
-\toprule\noalign{}
+\begin{longtable}{@{}
+  >{\raggedright\arraybackslash}p{\dimexpr0.75\linewidth-\tabcolsep\relax}
+  >{\raggedright\arraybackslash}p{\dimexpr0.25\linewidth-\tabcolsep\relax}
+@{}}
+\toprule
 Order & Fill \\
-\midrule\noalign{}
+\midrule
 \endhead
-\bottomrule\noalign{}
+\bottomrule
 \endlastfoot
-Limit or market order strictly better than \(p^*\), or on the short side at \(p^*\) & \(q\) \\
-Limit order at exactly \(p^*\) on the long side & \(q \cdot (P - R)/P\) \\
-Imbalance-only order on the short side, eligible at \(p^*\) & \(q \cdot I/J\) \\
-Any other order & 0 \\
+
+Limit or market order strictly better than \(p^*\), or on the short side at \(p^*\)
+  & \(q\) \\
+Limit order at exactly \(p^*\) on the long side
+  & \(q \cdot (P - R)/P\) \\
+Imbalance-only order on the short side, eligible at \(p^*\)
+  & \(q \cdot I/J\) \\
+Any other order
+  & 0 \\
 \end{longtable}
 
 \subsection{The Running Example}

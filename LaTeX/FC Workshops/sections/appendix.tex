@@ -316,7 +316,13 @@ The verifier derives the public polynomials from the parameters and receipt. The
 
 To constrain \(Min[i]=\min(AccA[i],AccB[i])\) at every tick, we introduce two surpluses. Each is the difference between a depth and the proposed minimum.
 
-\[SurpB(X) - \big(AccB(X) - Min(X)\big) = 0, \qquad SurpA(X) - \big(AccA(X) - Min(X)\big) = 0 \tag{F9, F10}\]
+\begin{equation}
+\begin{gathered}
+SurpB(X) - \bigl(AccB(X) - Min(X)\bigr) = 0, \\
+SurpA(X) - \bigl(AccA(X) - Min(X)\bigr) = 0.
+\end{gathered}
+\tag{F9, F10}
+\end{equation}
 
 \[SurpA(X) \cdot SurpB(X) = 0 \tag{F11}\]
 
@@ -417,9 +423,21 @@ Lookup
 
 \textbf{Depth.} The two accumulators run in opposite directions:
 
-\[L_{n-1}(X)\big(AccB(X) - B(X)\big) = 0, \qquad (X - \omega^{n-1})\big[AccB(X) - AccB(\omega X) - B(X)\big] = 0, \tag{F5, F7}\]
+\begin{equation}
+\begin{gathered}
+L_{n-1}(X)\bigl(AccB(X) - B(X)\bigr) = 0, \\
+(X - \omega^{n-1})\bigl[AccB(X) - AccB(\omega X) - B(X)\bigr] = 0,
+\end{gathered}
+\tag{F5, F7}
+\end{equation}
 
-\[L_{0}(X)\big(AccA(X) - A(X)\big) = 0, \qquad (X - \omega^{n-1})\big[AccA(\omega X) - AccA(X) - A(\omega X)\big] = 0. \tag{F6, F8}\]
+\begin{equation}
+\begin{gathered}
+L_{0}(X)\bigl(AccA(X) - A(X)\bigr) = 0, \\
+(X - \omega^{n-1})\bigl[AccA(\omega X) - AccA(X) - A(\omega X)\bigr] = 0.
+\end{gathered}
+\tag{F6, F8}
+\end{equation}
 
 The factor \(X-\omega^{n-1}\) disables both recurrences at the wraparound. Demand adds the current tick's bids to demand at the next tick. Supply adds the next tick's asks to supply at the current tick. The recurrences include padding rows, where F3 and F4 set the book entries to zero. A bid in a padding row would otherwise contribute to demand at every real price.
 

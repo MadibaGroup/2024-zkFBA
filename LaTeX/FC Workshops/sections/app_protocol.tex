@@ -8,7 +8,7 @@
 \subsection{The Clearing Rule}
 \label{app:zq-clearing-rule}
 
-We define \(\mathsf{Clear}\) for books containing ordinary and imbalance-only (IO) orders. A book has \(N\) real price ticks, padded to \(n\) rows, and consists of four nonnegative integer sequences \(b_i,a_i,b_i^{io},a_i^{io}\), with zero entries for \(i\ge N\). A market buy is recorded at tick \(N-1\) and a market sell at tick 0. For each tick, let
+We define \(\mathsf{Clear}\) for a book with \(N\) tradable price ticks, indexed from \(0\) to \(N-1\). At tick \(i\), \(b_i\) and \(a_i\) are the ordinary bid and ask volumes, and \(b_i^{io}\) and \(a_i^{io}\) are the imbalance-only (IO) bid and ask volumes. All four volumes are nonnegative integers. We pad each column to \(n\) rows with zeros. A market buy is recorded at tick \(N-1\) and a market sell at tick \(0\). For each tick, let
 \[
 D_i=\sum_{j\ge i}b_j,\quad S_i=\sum_{j\le i}a_j,\quad
 V_i=\min(D_i,S_i),\quad g_i=S_i-D_i,\quad \delta_i=|g_i|.
@@ -26,18 +26,18 @@ Choose \(p^*\) as the lowest candidate. The resulting receipt is \((V,c,d,p^*,v,
 \subsubsection{Fills}
 \label{app:zq-fills}
 
-The exchange admits \(I=\min(J,v)\) eligible IO units, leaving residual imbalance \(R=v-I\). The total traded volume is \(V+I\). For an order of quantity \(q\), the unrounded execution entitlement is
+If \(v=0\), every ordinary bid at or above \(p^*\) and every ordinary ask at or below \(p^*\) fills in full. IO orders receive zero. If \(v>0\), the exchange admits \(I=\min(J,v)\) units of eligible short-side IO volume. This leaves \(R=v-I\) units unfilled among long-side ordinary orders at \(p^*\). Before rounding, the volume bought and the volume sold each equal \(V+I\). In this imbalanced case, an order of quantity \(q\) has the following fill before rounding:
 \begin{itemize}
 \item \(q\), for an ordinary order strictly better priced than \(p^*\), or on the short side at \(p^*\);
 \item \(q(P-R)/P\), for an ordinary order at \(p^*\) on the long side;
 \item \(qI/J\), for an eligible IO order on the short side;
 \item zero, for any other order.
 \end{itemize}
-The ratios are used only when their denominators are positive. If \(v=0\), all eligible ordinary orders fill in full and IO orders receive zero. Integer rounding is left to the venue.
+The IO ratio \(I/J\) applies only when \(J>0\). The venue determines how to round individual fills to whole units.
 
 \subsection{Encoding and Public Polynomials}
 
-Let \(\mathbb F\) be the scalar field of BN254 and \(H=\{1,\omega,\ldots,\omega^{n-1}\}\) an evaluation domain, where \(n\) is a power of two, \(N\le n\), and \(\omega\) has order \(n\). The four book columns \(B,A,IOB,IOA\) are polynomials represented by their evaluations on \(H\), with \(B(\omega^i)=b_i\), for example. Each column entry is below \(2^{k_{in}}\), and accumulated quantities are bounded by \(2^k\), with \(k\ge k_{in}+\lceil\log_2 N\rceil\). Our 1,000-tick, 32-bit configuration uses \(n=1024\) and \(k=42\).
+Let \(\mathbb F\) be the scalar field of BN254 and \(H=\{1,\omega,\ldots,\omega^{n-1}\}\) an evaluation domain, where \(n\) is a power of two, \(N\le n\), and \(\omega\) has order \(n\). The four book columns \(B,A,IOB,IOA\) are polynomials represented by their evaluations on \(H\), with \(B(\omega^i)=b_i\), for example. Each column entry is below \(2^{k_{in}}\), and accumulated quantities are bounded by \(2^k\), with \(k\ge k_{in}+\lceil\log_2 N\rceil\). We require \(2^{k+1}<|\mathbb F|\). Under this bound, a negative difference between two integers in \([0,2^k)\) has a field representative outside that interval. The range check therefore distinguishes a negative difference from a nonnegative one. Our 1,000-tick, 32-bit configuration uses \(n=1024\) and \(k=42\).
 
 The nine derived value columns consist of four depth accumulators for ordinary and IO orders; executable volume \(Min\); two surplus columns; imbalance \(\Delta\); and the inequality witness \(Slack\). Together with the four book columns, these give 13 value columns. For the configuration above, the range checks require 46 limb columns and the lookup argument 29 more columns, for 88 witness columns in total.
 
@@ -53,7 +53,7 @@ L_{p^*-1}(X),&p^*>c\text{ and }(s=1\text{ or }v=0),\\
 \end{cases}
 \end{aligned}
 \]
-The range table is likewise a public polynomial with evaluations \(T(\omega^i)=i\) on the table rows (0 through 255 for eight-bit limbs). No commitments to these public polynomials are needed.
+For \(w\)-bit limbs, the public range table has \(T(\omega^i)=i\) for \(0\le i<2^w\) and \(T(\omega^i)=0\) on the remaining rows. The verifier constructs these public polynomials directly.
 
 \subsection{Clearing Constraints}
 
@@ -64,7 +64,7 @@ The range table is likewise a public polynomial with evaluations \(T(\omega^i)=i
 s&\in\{0,1\}, & 0&\le v\le P<2^k,\quad 0\le J<2^k.
 \end{aligned}
 \]
-If \(v=0\), it also requires \(s=P=J=0\). The polynomial constraints F1--F33 are listed in the main paper; here we explain only the less immediate parts.
+If \(v=0\), the verifier also requires \(s=P=J=0\). Table~\ref{tab:constraints} lists the clearing constraints F1--F33.
 
 \paragraph{Maximum-volume plateau.} F14 bounds the volume at each tick by \(V\), F15--F16 pin the claimed endpoints to that maximum, and F17 makes the immediately adjacent ticks strictly smaller:
 \[
@@ -72,11 +72,21 @@ Mask_C(X)\bigl(V-Min(X)-1-Slack(X)\bigr)=0.\tag{F17}
 \]
 These conditions identify the entire plateau because \(Min\) is the pointwise minimum of a non-increasing demand sequence and a non-decreasing supply sequence. Specifically, for \(i<j<\ell\), \(Min[j]\ge\min(Min[i],Min[\ell])\). The selector \(Mask_C\) omits a cliff at a domain boundary, and the range check on \(Slack\) enforces strict inequality without publishing the cliff volumes.
 
-\paragraph{Price tie-break.} F19--F20 establish minimum imbalance on the plateau and pin the chosen side. The verifier also checks \(v\le P\). For supply-long or balanced outcomes with \(p^*>c\), F21 excludes a lower qualifying price:
+\paragraph{Price tie-break.}
+F19 requires \(\Delta\ge v\) throughout the plateau. F20 establishes equality at \(p^*\) and identifies the long side when \(v>0\). In that case, F32 identifies \(P\) as the ordinary long-side volume at \(p^*\), so the scalar check \(v\le P\) establishes that \(p^*\) is a candidate.
+
+To see why \(p^*\) is the lowest candidate, first suppose that supply is long or the book is balanced. If \(p^*>c\), F21 requires
+\(\delta_{p^*-1}>v\):
 \[
-Mask_T(X)\bigl(\Delta(X)-v-1-Slack(X)\bigr)=0.\tag{F21}
+Mask_T(X)\bigl(\Delta(X)-v-1-Slack(X)\bigr)=0.
+\tag{F21}
 \]
-The same \(Slack\) column supports the inequalities in F17 and F21.
+Since \(g_i=S_i-D_i\) is nondecreasing and \(g_{p^*}\in\{0,v\}\), we have \(g_i<-v\) at every earlier tick on the plateau. Each such tick therefore has imbalance greater than \(v\).
+
+If demand is long, any earlier tick \(i\) tied at \(v\) must satisfy \(g_i=g_{p^*}=-v\). Monotonicity then gives \(0=g_{i+1}-g_i=a_{i+1}+b_i\), so \(b_i=0\). A bid volume of zero cannot cover the positive imbalance \(v\). This accounts for the
+demand-long case without a predecessor check.
+
+F17 uses \(Slack\) immediately outside the plateau, while F21 uses it inside the plateau. The two constraints therefore use different rows of the same column.
 
 \paragraph{No-cross.} When ordinary orders cannot cross, the exchange proves a smaller statement using the ordinary book columns, their cumulative depths, F1--F8, the relevant range checks, and
 \[
@@ -92,7 +102,7 @@ Y(X)-\sum_{j=0}^{m-1}2^{wj}\ell_j(X)=0.
 \]
 Each limb must belong to the public range table. We use \(w=8\) when \(n\ge256\), and narrower limbs for smaller domains. If \(b\) is not divisible by \(w\), we also check that \(2^{w-r}\ell_{m-1}\) lies in the table, for \(r=b\bmod w\); this restricts the top limb to \(r\) bits.
 
-For table membership we use a logarithmic-derivative lookup. Let \(f_1,\ldots,f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\); after challenge \(\beta\), it supplies pair helpers \(h_j\), a table helper \(U\), and a running-sum column \(S\), satisfying
+We check table membership with a logarithmic-derivative lookup~\cite{habock2022}. Let \(f_1,\ldots,f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\); after challenge \(\beta\), it supplies pair helpers \(h_j\), a table helper \(U\), and a running-sum column \(S\), satisfying
 \[
 \begin{aligned}
 h_j&=\frac{1}{\beta-f_{2j-1}}+\frac{1}{\beta-f_{2j}},&

@@ -22,67 +22,74 @@ For observations from an operating FBA, we used 362 published Cboe Europe BXE ou
 
 On five calibrated 1,000-tick books, our Rust implementation generated the clearing proof in 1.34 s on one thread and 0.37 s on eight. On the 32 replayed books, the corresponding times were 1.35 s and 0.37 s. Both workloads occupy 1,024 proof rows. A crossing batch also requires an update-validity proof, bringing the two proofs to 7,824 bytes. When no ordinary orders cross, the exchange supplies a smaller no-cross proof in place of the clearing proof.
 
-\textbf{Table 3.} Additional proofs in our Rust implementation on uniform books with 1,000 ticks, 32-bit volumes and 250 orders. One thread. Verification includes decoding.
-
-\begingroup
+\begin{table}[!tp]
+\centering
+\caption{Additional proofs in our Rust implementation on uniform books with
+1,000 ticks, 32-bit volumes, and 250 orders. Timings are for one thread.
+Verification time includes proof decoding.}
+\label{tab:rust-additional-proofs}
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{@{}lrrr@{}}
+\begin{adjustbox}{max totalsize={\linewidth}{0.90\textheight},center}
+\begin{tabular}{@{}lrrr@{}}
 \toprule
 Proof & Generation & Size & Verification \\
-\midrule\endfirsthead
-\toprule
-Proof & Generation & Size & Verification \\
-\midrule\endhead
-\bottomrule\endfoot
-Update validity & 0.42 s & 1,700 B & 48 ms \\
-No cross & 0.40 s & 1,612 B & 12 ms \\
-\end{longtable}
-\endgroup
+\midrule
+Update validity & 0.42\,s & 1,700\,B & 48\,ms \\
+No cross        & 0.40\,s & 1,612\,B & 12\,ms \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
-At fixed price resolution, the clearing proof keeps the same layout as the log grows. The update proof covers four logged steps per order. On eight threads, generating both proofs took 0.73 s at 1,000 orders and 1.46 s at 2,200 orders (Table 4). These figures measure proving after the close. For a 250-order batch, one thread verified the opening, log and both proofs in 79 ms from decoded inputs.
+At fixed price resolution, the clearing proof keeps the same layout as the log grows. The update proof covers four logged steps per order. On eight threads, generating both proofs took 0.73 s at 1,000 orders and 1.46 s at 2,200 orders (Table~\ref{tab:rust-proving-by-order-count}). These figures measure proving after the close. For a 250-order batch, one thread verified the opening, log and both proofs in 79 ms from decoded inputs.
 
-\textbf{Table 4.} Our Rust implementation on uniform 1,000-tick books, eight threads. The last column sums the clearing and update proving medians.
-
-\begingroup
+\begin{table}[!tp]
+\centering
+\caption{Proving times for our Rust implementation on uniform 1,000-tick
+books using eight threads. The last column sums the median proving times
+for the clearing proof and the update-validity proof.}
+\label{tab:rust-proving-by-order-count}
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{@{}lrrr@{}}
+\begin{adjustbox}{max totalsize={\linewidth}{0.90\textheight},center}
+\begin{tabular}{@{}rrrr@{}}
 \toprule
-Orders & Update rows & Update proving & Both proofs \\
-\midrule\endfirsthead
-\toprule
-Orders & Update rows & Update proving & Both proofs \\
-\midrule\endhead
-\bottomrule\endfoot
-250 & 1,024 & 122 ms & 0.50 s \\
-1,000 & 4,096 & 347 ms & 0.73 s \\
-2,200 & 16,384 & 1,083 ms & 1.46 s \\
-\end{longtable}
-\endgroup
+Orders & Update rows & Update proving (ms) & Both proofs (s) \\
+\midrule
+  250 &  1,024 &   122 & 0.50 \\
+1,000 &  4,096 &   347 & 0.73 \\
+2,200 & 16,384 & 1,083 & 1.46 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 \subsection{Independent clearing comparison}
 \label{sec:zq-comparison}
 
 We compare the cost of the clearing proof alone. Across the 25 calibrated and 32 replayed books, the six receipt fields exported by our Rust benchmark agreed with our Noir implementation. A separate recomputation checked all eight fields of the latter. These books contain no imbalance-only orders. The tests in Appendices~\ref{app:zq-rust} and~\ref{app:zq-noir} cover that branch.
 
-\textbf{Table 5.} Clearing at 1,000 ticks with 32-bit volumes on one CPU thread. The code counts cover the three protocol library crates and the standalone clearing circuit, respectively.
-
-\begingroup
+\begin{table}[!tp]
+\centering
+\caption{Clearing-proof performance at 1,000 ticks with 32-bit volumes
+on one CPU thread. Source lines cover the three protocol library crates
+for our Rust implementation and the standalone clearing circuit for our
+Noir implementation.}
+\label{tab:rust-noir-clearing}
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{@{}lrr@{}}
+\begin{adjustbox}{max totalsize={\linewidth}{0.90\textheight},center}
+\begin{tabular}{@{}lrr@{}}
 \toprule
 Measure & Our Rust implementation & Our Noir implementation \\
-\midrule\endfirsthead
-\toprule
-Measure & Our Rust implementation & Our Noir implementation \\
-\midrule\endhead
-\bottomrule\endfoot
-Proof layout & 88 columns \(\times\) 1,024 rows & 100,357 gates \\
-Proof generation & 1.34 s & 7.43 s \\
-Proof size & 6,124 B & 14,656 B \\
-Verification & 29 ms & 27 ms \\
-Peak memory & about 20 MB & 157 MB \\
-Source lines & 3,587 & 208 \\
-\end{longtable}
-\endgroup
+\midrule
+Proof layout         & 88 columns \(\times\) 1,024 rows & 100,357 gates \\
+Proof generation (s) & 1.34     & 7.43   \\
+Proof size (B)       & 6,124    & 14,656 \\
+Verification (ms)    & 29       & 27     \\
+Peak memory (MB)     & about 20 & 157    \\
+Source lines         & 3,587    & 208    \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
 
 On this workload our Rust implementation produced a proof in about one fifth of the time and used 42\% of the bytes. Verification times differed by 2 ms. We timed native function calls over 20 runs per book for our Rust implementation, including proof decoding in verification. For our Noir implementation we timed whole commands over ten runs per book. The 7.43 s sums the median witness time (1.00 s) and proof-command time (6.43 s), excluding verification-key generation. The Rust memory estimate comes from an earlier profiling run. Appendix~\ref{app:zq-bench} reports the timing distributions and scaling results.

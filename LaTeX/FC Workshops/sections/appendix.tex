@@ -364,20 +364,55 @@ Table 2 groups the constraints by their role in clearing. Appendix B gives the f
 
 \textbf{Table 2.} The clearing constraints. A range check is a limb decomposition whose limbs enter the lookup F23.
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begin{longtable}{@{}
+  >{\raggedright\arraybackslash}p{0.21\linewidth}
+  >{\raggedright\arraybackslash}p{\dimexpr0.41\linewidth-2\tabcolsep\relax}
+  >{\raggedright\arraybackslash}p{\dimexpr0.38\linewidth-2\tabcolsep\relax}
+@{}}
+\toprule
 Group & Constraints & What they force \\
-\midrule\noalign{}
+\midrule
 \endhead
-\bottomrule\noalign{}
+\bottomrule
 \endlastfoot
-Book & F1, F2, F24, F25 (range); F3, F4, F26, F27 (\(Pad \cdot B = 0\), and likewise) & Entries in \([0, 2^{k_{in}})\); padding ticks empty \\
-Depth & F5--F8, F28--F31 & \(AccB\), \(IOAccB\) are suffix sums; \(AccA\), \(IOAccA\) are prefix sums \\
-Executable volume & F9--F13 & \(Min = \min(AccA, AccB)\) \\
-Phase 1: plateau & F14 (range of \(V_{max} - Min\)); F15, F16 (\(Min = V_{max}\) at \(c\) and \(d\)); F17 (cliffs) & \(V_{max}\) is the maximum of \(Min\) and \([c,d]\) is exactly where it is attained \\
-Phase 2: clearing tick & F18 (\(\Delta\)); F19 (range of \(\Delta - V_{min\Delta}\) on the plateau); F20 (pins at \(p^*\)); F21 (tie-break); F22 (range of \(Slack\)) & \(V_{min\Delta}\) is the minimum imbalance on the plateau, attained at \(p^*\) on side \(s\); no lower tick qualifies \\
-Phase 3: rationing & F32, F33 (pins at \(p^*\)) & \(P\) and \(J\) are the at-price long volume and the eligible IO volume \\
-Lookup & F23 & Every limb is in \(\{0, \ldots, 255\}\) \\
+
+Book
+  & F1, F2, F24, F25 (range);
+    F3, F4, F26, F27 (\(Pad \cdot B = 0\), and likewise)
+  & Entries in \([0, 2^{k_{in}})\); padding ticks empty \\
+
+Depth
+  & F5--F8, F28--F31
+  & \(AccB\), \(IOAccB\) are suffix sums;
+    \(AccA\), \(IOAccA\) are prefix sums \\
+
+Executable volume
+  & F9--F13
+  & \(Min = \min(AccA, AccB)\) \\
+
+Phase 1: plateau
+  & F14 (range of \(V_{max} - Min\));
+    F15, F16 (\(Min = V_{max}\) at \(c\) and \(d\));
+    F17 (cliffs)
+  & \(V_{max}\) is the maximum of \(Min\) and
+    \([c,d]\) is exactly where it is attained \\
+
+Phase 2: clearing tick
+  & F18 (\(\Delta\));
+    F19 (range of \(\Delta - V_{min\Delta}\) on the plateau);
+    F20 (pins at \(p^*\)); F21 (tie-break);
+    F22 (range of \(Slack\))
+  & \(V_{min\Delta}\) is the minimum imbalance on the plateau,
+    attained at \(p^*\) on side \(s\); no lower tick qualifies \\
+
+Phase 3: rationing
+  & F32, F33 (pins at \(p^*\))
+  & \(P\) and \(J\) are the at-price long volume and
+    the eligible IO volume \\
+
+Lookup
+  & F23
+  & Every limb is in \(\{0, \ldots, 255\}\) \\
 \end{longtable}
 
 \textbf{Depth.} The two accumulators run in opposite directions:

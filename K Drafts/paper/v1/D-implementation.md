@@ -1,0 +1,62 @@
+# D Implementation Details
+
+**Software.** We use arkworks 0.4 in a Cargo workspace, with `sha2` for hashing and optional `rayon` support for parallel execution. Table 13 gives the size and responsibilities of the crates.
+
+**Table 13.** Crates of the Rust implementation. Lines exclude blanks and comments.
+
+| Crate | Content | Lines |
+|---|---|---|
+| `zeequent-types` | Parameters, orders, the plaintext book, the receipt | 237 |
+| `zeequent-kzg` | Commitments, openings, transcript, setup import, file codec | 754 |
+| `zeequent-core` | Clearing rule, constraints, prover, verifier, committed book, update validity | 2,596 |
+| `zeequent-cli` | The command-line tool | 1,090 |
+| Tests | 44 tests | 1,459 |
+
+**Setup.** We read the reference string from a powers-of-tau ceremony file: $[\tau^i]_1$ for $i \le 2M + 8$, $[1]_2$, $[\tau]_2$, and the file's $[\alpha\tau^i]_1$ section as the blinding basis, so $\gamma$ is the ceremony's $\alpha$. From the powers we derive what depends on the domain: the Lagrange-basis points $[L_i(\tau)]_1$, by an inverse FFT over group elements, and $[Z_H(\tau)]_2$. A verifier that receives a setup from another party checks with pairings that its points are powers of one $\tau$ and that the Lagrange points match them. The check does not show that $\tau$ is unknown; that rests on the ceremony.
+
+**Commitments.** We commit directly to the evaluations in each witness column. In the Lagrange basis, $[p(\tau)]_1=\sum_i p[i]\,[L_i(\tau)]_1$ requires one size-$n$ multi-scalar multiplication, with the column entries as scalars. Our earlier coefficient-based implementation took 3.6 times as long to prove. We commit separately to the mask $\rho(X)Z_H(X)$ and the blinding term $\gamma r(X)$, then add both commitments. For columns sampled within the proof, the mask and blinding degrees equal the number of opening points. Section 4.1 gives the degree-three masks for the running book commitments.
+
+**Quotient.** The combined constraint polynomial has degree up to $3n + 3$, so we evaluate it on a coset of size $4n$ that avoids $H$, divide pointwise by $Z_H$, and interpolate. The large coset is a union of four cosets of $H$, and we process them one at a time with transforms of size $n$. Before each transform we reduce a masked column, whose degree slightly exceeds $n$, modulo $X^n - s$, where $s$ is the constant value of $X^n$ on that coset. On each small coset $Z_H$ is a constant and $\omega x$ is the next point, so a shifted column is a rotation. If the constraints do not hold, the quotient has non-zero coefficients above degree $2n + 8$ and the prover stops.
+
+**Openings.** To open several polynomials at a point $z$, the prover combines them with powers of a challenge, divides by $X - z$, and commits to the quotient $W$; it sends one combined blinding evaluation $b$. With $C$ and $v$ the combined commitment and value, the verifier checks both opening points with two pairings:
+
+$$e\Big(\sum_{k} r^k \big(C_k - v_k [1]_1 - b_k\, \Gamma + z_k W_k\big),\ [1]_2\Big) = e\Big(\sum_{k} r^k W_k,\ [\tau]_2\Big),$$
+
+where $r$ is a further challenge. We evaluate the left pairing argument with a single multi-scalar multiplication over the proof commitments. This reduced verification time by about a factor of eight relative to combining the commitments pairwise.
+
+**Public polynomials.** We store a public polynomial as its non-zero values on $H$. The verifier evaluates it at $\zeta$ from $L_i(\zeta) = \omega^i(\zeta^n - 1)/(n(\zeta - \omega^i))$ with one batch inversion, at a cost linear in the number of non-zero values: the width of the plateau for $Mask_P$, 256 for the range table.
+
+**Transcript.** We maintain a SHA-256 digest. To absorb a message, we hash the current digest with the message label, length, and contents. To derive a challenge, we reduce 64 derived bytes modulo the field size and hash the challenge back into the state. The protocol label, parameters, receipt, and ordered commitments bind each challenge to the public statement and prior messages.
+
+**Proof format.** We serialize the column and quotient commitments, followed by two openings. Each opening includes its point, evaluations, combined blinding evaluation, and witness. A compressed curve point occupies 32 bytes. If $c$ columns are opened and $s$ also open at $\omega\zeta$, the proof occupies $32(2c+s+8)+12$ bytes. With $c=88$ and $s=7$ this gives 6,124 bytes. Decompression requires a base-field square root per point and accounts for most single-threaded verification time.
+
+**Determinism.** At the close we derive the prover's randomness from a hash of its private state, which includes the mask and blinding of every book column. Closing the same batch twice produces the same bytes, and the tool refuses orders after a close. This implements the one-proof rule of Section 6.3 for an honest exchange.
+
+**Batch files.** The command-line tool keeps a batch in a directory (Table 14) and has one command per protocol step: `setup`, `open`, `order`, `check-receipt`, `close`, `verify`, and `fill`.
+
+**Table 14.** Files of one batch, for 32-bit volumes.
+
+| File | Content | Public | Size |
+|---|---|---|---|
+| Opening | Four commitments with their emptiness proofs | Yes | 1,576 B |
+| Board | The log | Yes | 416 B per order |
+| Update receipt | Column, tick, quantity, blinding, commitment before and after | To its trader | 192 B |
+| Outcome | The clearing receipt, or no-cross | Yes | About 100 B |
+| Clearing proof | | Yes | 6,124 B |
+| Update-validity proof | | Yes | 1,700 B |
+| State | Plaintext book, masks, blindings, update history | No | Grows with the orders |
+
+**Tests.** Table 15 pairs implementation checks with the claims they exercise. In tests with a false statement we disable the prover’s local checks, pass its output to the verifier, and check that the verifier rejects it.
+
+**Table 15.** Claims and the tests that support them.
+
+| Claim | Test |
+|---|---|
+| The code's clearing rule is Definition 2 | 2,000 random books; the receipt is recomputed from the definition by direct search |
+| The constraints admit one receipt (Theorem 1) | 300 random books of 6 ticks; every receipt with values up to the total volume is tried, and exactly one is accepted |
+| The polynomial system equals the integer constraints | Receipt values and witness cells are changed one at a time and proved with the prover's checks off; the verifier rejects each |
+| Every tie-break case proves and verifies | One book per case of Appendix A.2, and a padded domain |
+| A crossing book cannot be declared no-cross | Direct test |
+| A logged step cannot cancel an order (no removal) | The attack of Section 4.3 is run; no update-validity proof verifies, whatever quantity and tick the exchange claims |
+| A repeated close reveals nothing new | The two proofs are compared byte for byte |
+| Range checks are exact | An 8-bit quantity in 3-bit limbs, a width that is not a multiple of the limb: values in range pass and values out of range fail |

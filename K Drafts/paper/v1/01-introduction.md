@@ -1,0 +1,23 @@
+# 1 Introduction
+
+Nasdaq and NYSE match orders in a continuous limit order book (CLOB) during regular trading and run scheduled auctions at the open and close [27]. In a CLOB, compatible buy and sell orders can execute as soon as they meet. A closing auction collects orders and executes them together at one price. That price serves as a benchmark for portfolios, an input to indexes, and a settlement price for derivatives. Closing auctions account for 7.5% of daily U.S. stock volume [8].
+
+In a continuous book, a few microseconds can determine which of two traders executes at a given price. High-frequency traders invest in co-location, hardware, and private links to compete over arrival time. Using exchange messages, Aquilina, Budish, and O’Neill find that latency races account for about 20% of trading volume in FTSE 100 stocks. They estimate the sums at stake across global equity markets at roughly USD 5 billion per year [1]. Fast traders also supply liquidity and narrow spreads, although other traders may see a quote disappear before they can trade against it.
+
+Budish, Cramton, and Shim propose running uniform-price auctions at short intervals throughout the day [10, 11]. In their frequent batch auction (FBA), orders compete on price. Two orders at the same price receive the same priority whether they arrive at the beginning or the end of a batch. The use of sub-second periodic auctions in European equities grew as regulation restricted dark trading. Zhang and Ibikunle document Cboe Europe’s periodic auction as a deployed form of FBA with randomized auction durations [46, Section 3.2]. We use its published outcomes in Section 5.7.
+
+A trader can see the price of a batch and how much of their own order filled. Those observations rarely suffice to check the price. An unexecuted bid can change the imbalance at one candidate price and thereby decide which price wins a tie. Publishing the full book would let traders repeat the calculation, but would also disclose interest that never traded.
+
+We use a zero-knowledge proof [24] to let anyone check the exchange’s calculation over a private book. Proofs of solvency apply a related idea to a custodial exchange’s balance sheet [18]. Here the public statement concerns the output of the matching engine.
+
+We construct a zero-knowledge frequent batch auction (zk-FBA) with two kinds of receipt. As orders arrive, the exchange updates a commitment to the book. Each trader receives an update receipt and can check the recorded change against the public log. At the close, the exchange publishes a clearing receipt for the whole batch, or announces that no orders crossed. A succinct zero-knowledge argument (zk-SNARK) ties the outcome to the final commitments. A separate proof establishes that each logged step added a non-negative quantity at one tick.
+
+We adapt the Nasdaq Closing Cross [37] because the FBA proposal leaves several choices to the venue [10]. In particular, we specify which price wins when several ticks tie on both volume and imbalance, and how to ration orders at that price. To generate a proof at each close, we encode the rule directly as polynomial identities over price ticks [40]. The resulting polynomial interactive oracle proof (PIOP) [13] uses a PLONK-style quotient [22] and KZG commitments [29].
+
+## 1.1 Contributions
+
+1. **Clearing rule.** We encode limit, market, and imbalance-only orders in 33 numbered constraint groups. For a crossing book the constraints determine a unique clearing receipt. The 1,000-tick, 32-bit configuration uses 88 columns and one quotient (Section 3).
+2. **Range checks.** An 8-bit limb decomposition and a shared logarithmic-derivative lookup replace one committed column per bit. For the 32-bit benchmark, the clearing proof falls from 352 commitments and 22.9 KB to 89 commitments and 6.1 KB (Section 3.4).
+3. **Committed order book.** A homomorphic commitment lets each trader verify their update while keeping the side of the order private on the public log. A second proof checks the logged steps at the close (Section 4).
+4. **Implementation.** At 1,000 ticks the Rust prover takes 1.34 s on one laptop core and 0.37 s on eight threads. Its 6,124-byte clearing proof verifies in 29 ms on one core, including decoding. On the same books, our independent Noir and Barretenberg implementation takes 7.43 s on one thread, including witness generation (Section 5).
+5. **Market data.** We replay Nasdaq order flow to measure tie frequency and calibrate synthetic books. Both implementations agree on 32 replayed books and 25 calibrated books. In a separate test, both reproduce the published price and size of 362 Cboe Europe auctions from books constructed to match those outcomes (Sections 5.6 and 5.7).

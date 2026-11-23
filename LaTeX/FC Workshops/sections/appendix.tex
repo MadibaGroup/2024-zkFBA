@@ -261,31 +261,51 @@ Figure 1 traces a batch from the empty book to public verification.
 \textbf{Derived columns.} The exchange computes nine value columns from the four book columns. Table 1 lists these alongside the lookup witnesses and public polynomials. Figure 2 follows the calculation on eight ticks.
 
 \textbf{Table 1.} Committed columns and public polynomials. For \(n = 1024\) and \(k_{in} = 32\) there are 88 columns.
-
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begin{longtable}{@{}
+  >{\raggedright\arraybackslash}p{0.31\linewidth}
+  >{\raggedright\arraybackslash}p{\dimexpr0.59\linewidth-4\tabcolsep\relax}
+  >{\raggedright\arraybackslash}p{0.10\linewidth}
+@{}}
+\toprule
 Column & Value at tick \(i\) & Count \\
-\midrule\noalign{}
+\midrule
 \endhead
-\bottomrule\noalign{}
+\bottomrule
 \endlastfoot
-\(B\), \(A\), \(IOB\), \(IOA\) & The book & 4 \\
-\(AccB\), \(IOAccB\) & Demand depth: sum of bids at ticks \(\ge i\) & 2 \\
-\(AccA\), \(IOAccA\) & Supply depth: sum of asks at ticks \(\le i\) & 2 \\
-\(Min\) & Executable volume \(\min(AccA[i], AccB[i])\) & 1 \\
-\(SurpB\), \(SurpA\) & \(AccB[i] - Min[i]\) and \(AccA[i] - Min[i]\) & 2 \\
-\(\Delta\) & Imbalance \(\lvert AccA[i] - AccB[i] \rvert\) & 1 \\
-\(Slack\) & Gap witnesses for strict inequalities & 1 \\
-Limbs & 8-bit limbs of the nine range-checked quantities & 46 \\
-\(Mult\), \(h_1, \ldots, h_{26}\), \(U\), \(S\) & Lookup columns (Section 3.4) & 29 \\
-\textbf{Public polynomial} & \textbf{Definition} & \\
-\(Pad\) & \(\sum_{i=N}^{n-1} L_i\) & \\
-\(Mask_P\) & \(\sum_{i=c}^{d} L_i\), the plateau & \\
-\(Mask_C\) & \(L_{c-1} + L_{d+1}\), omitting a term whose index leaves \([0, n-1]\) & \\
-\(Mask_T\) & \(L_{p^*-1}\) if \(p^* > c\) and (\(s = 1\) or \(V_{min\Delta} = 0\)), else 0 & \\
-\(T\) & \(\sum_{i < 256} i \cdot L_i\), the range table & \\
-\end{longtable}
 
+\(B\), \(A\), \(IOB\), \(IOA\)
+  & The book & 4 \\
+\(AccB\), \(IOAccB\)
+  & Demand depth: sum of bids at ticks \(\ge i\) & 2 \\
+\(AccA\), \(IOAccA\)
+  & Supply depth: sum of asks at ticks \(\le i\) & 2 \\
+\(Min\)
+  & Executable volume \(\min(AccA[i], AccB[i])\) & 1 \\
+\(SurpB\), \(SurpA\)
+  & \(AccB[i] - Min[i]\) and \(AccA[i] - Min[i]\) & 2 \\
+\(\Delta\)
+  & Imbalance \(\lvert AccA[i] - AccB[i] \rvert\) & 1 \\
+\(Slack\)
+  & Gap witnesses for strict inequalities & 1 \\
+Limbs
+  & 8-bit limbs of the\newline nine range-checked quantities & 46 \\
+\(Mult\), \(h_1, \ldots, h_{26}\), \(U\), \(S\)
+  & Lookup columns (Section 3.4) & 29 \\
+
+\textbf{Public polynomial} & \textbf{Definition} & \\
+\(Pad\)
+  & \(\sum_{i=N}^{n-1} L_i\) & \\
+\(Mask_P\)
+  & \(\sum_{i=c}^{d} L_i\), the plateau & \\
+\(Mask_C\)
+  & \(L_{c-1} + L_{d+1}\), omitting a term whose index leaves
+    \([0, n-1]\) & \\
+\(Mask_T\)
+  & \(L_{p^*-1}\) if \(p^* > c\) and
+    (\(s = 1\) or \(V_{min\Delta} = 0\)), else 0 & \\
+\(T\)
+  & \(\sum_{i < 256} i \cdot L_i\), the range table & \\
+\end{longtable}
 The verifier derives the public polynomials from the parameters and receipt. They require no additional commitments.
 
 %\includesvg{figures/fig2-worked-book.svg}

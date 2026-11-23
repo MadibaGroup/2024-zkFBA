@@ -1,0 +1,18 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.jj": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/c:\\Users\\kimes\\Documents\\GitHub\\2024-zkFBA\\LaTeX\\FC Workshops\\main.aux": true,
+        "**/c:\\Users\\kimes\\Documents\\GitHub\\2024-zkFBA\\LaTeX\\FC Workshops\\main.log": true,
+        "**/c:\\Users\\kimes\\Documents\\GitHub\\2024-zkFBA\\LaTeX\\FC Workshops\\main.gz": true,
+        "**/c:\\Users\\kimes\\Documents\\GitHub\\2024-zkFBA\\LaTeX\\FC Workshops\\main.out": true,
+        "**/c:\\Users\\kimes\\Documents\\GitHub\\2024-zkFBA\\LaTeX\\FC Workshops\\sections\\appendix.aux": true,
+        "**/c:\\Users\\kimes\\Documents\\GitHub\\2024-zkFBA\\LaTeX\\FC Workshops\\sections\\appendix.log": true,
+        "**/c:\\Users\\kimes\\Documents\\GitHub\\2024-zkFBA\\LaTeX\\FC Workshops\\sections\\appendix.gz": true,
+        "**/c:\\Users\\kimes\\Documents\\GitHub\\2024-zkFBA\\LaTeX\\FC Workshops\\sections\\appendix.out": true
+    }
+}

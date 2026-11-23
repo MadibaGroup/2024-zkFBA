@@ -503,17 +503,29 @@ Both depths are sums of range-checked entries, so they are non-negative, and the
 Following the PIOP construction \cite{GWC19}, the prover commits to the witness in two rounds before committing to the quotient.
 
 \begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  The prover commits to the value columns, the limb columns, and \(Mult\). The book columns are already committed on the board (Section 4).
-\item
-  The verifier sends \(\beta\). The prover commits to the lookup helpers.
-\item
-  The verifier sends \(\alpha\). The prover combines all identities into \(F(X) = \sum_t \alpha^t F_t(X)\), computes the quotient \(Q(X) = F(X)/Z_H(X)\), and commits to it.
-\item
-  The verifier sends \(\zeta\). The prover opens every column at \(\zeta\), and the columns that appear shifted (\(AccB\), \(AccA\), \(IOAccB\), \(IOAccA\), \(A\), \(IOA\), \(S\)) at \(\omega\zeta\) as well.
-\item
-  The verifier evaluates the public polynomials at \(\zeta\), recomputes \(F(\zeta)\) from the openings, and checks \(F(\zeta) = Q(\zeta)\, Z_H(\zeta)\).
+\renewcommand{\labelenumi}{\arabic{enumi}.}
+\raggedright
+
+\item The prover commits to the value columns, the limb columns, and
+      \(Mult\). The book columns are already committed on the board
+      (Section~4).
+
+\item The verifier sends \(\beta\). The prover commits to the lookup
+      helpers.
+
+\item The verifier sends \(\alpha\). The prover combines the identities
+      into \mbox{\(F(X) = \sum_t \alpha^t F_t(X)\)}. It then computes
+      the quotient \mbox{\(Q(X) = F(X)/Z_H(X)\)} and commits to it.
+
+\item The verifier sends \(\zeta\). The prover opens every column at
+      \(\zeta\). It also opens the shifted columns \(AccB\), \(AccA\),
+      \(IOAccB\), \(IOAccA\), \(A\), \(IOA\), and \(S\) at
+      \(\omega\zeta\).
+
+\item The verifier evaluates the public polynomials at \(\zeta\),
+      recomputes \(F(\zeta)\) from the openings, and checks
+      \mbox{\(F(\zeta) = Q(\zeta)\,Z_H(\zeta)\)}.
+
 \end{enumerate}
 
 We commit with KZG10 \cite{KZG10} over BN254 in its hiding form, batch all openings at one point into one group element with a random linear combination, and verify both points with two pairings. We remove the verifier\textquotesingle s messages with the Fiat--Shamir transform over a SHA-256 transcript that absorbs the parameters, the receipt, and every commitment. For zero knowledge, the prover adds to each column a random multiple of \(Z_H\), which changes no value on \(H\) and makes the openings at \(\zeta\) and \(\omega\zeta\) independent of the column.
@@ -616,7 +628,13 @@ We define \(\mathsf{Clear}\) on books with ordinary and imbalance-only orders. I
 
 A \emph{book} on \(n\) ticks, of which the first \(N\) are real, is four sequences of integers \(b_i, a_i, b^{io}_i, a^{io}_i\), \(0 \le i < n\), with every entry in \([0, 2^{k_{in}})\) and zero for \(i \ge N\). \(b_i\) is the bid volume with limit exactly tick \(i\) and \(a_i\) the ask volume; a market buy is recorded at tick \(N-1\) and a market sell at tick 0. The \(io\) sequences hold the imbalance-only orders. For each tick define
 
-\[D_i = \sum_{j \ge i} b_j, \qquad S_i = \sum_{j \le i} a_j, \qquad V_i = \min(D_i, S_i), \qquad g_i = S_i - D_i, \qquad \delta_i = |g_i|,\]
+\[
+D_i = \sum_{j \ge i} b_j, \quad
+S_i = \sum_{j \le i} a_j, \quad
+V_i = \min(D_i, S_i), \quad
+g_i = S_i - D_i, \quad
+\delta_i = |g_i|,
+\]
 
 and likewise \(D^{io}_i = \sum_{j \ge i} b^{io}_j\) and \(S^{io}_i = \sum_{j \le i} a^{io}_j\). \(D_i\) is the demand willing to trade at price \(i\), \(S_i\) the supply, and \(V_i\) the volume that can execute. \(D\) is non-increasing; \(S\) and \(g\) are non-decreasing. Tick \(i\) is \emph{demand long} if \(g_i < 0\), \emph{supply long} if \(g_i > 0\), and \emph{balanced} if \(g_i = 0\). Its \emph{at-price long volume} is \(\lambda_i = b_i\) if it is demand long and \(\lambda_i = a_i\) if it is supply long.
 
@@ -745,7 +763,12 @@ The verifier first checks the public receipt against the following bounds and co
 
 \[0 \le c \le p^* \le d \le N-1, \qquad 1 \le V_{max} < 2^k, \qquad 0 \le V_{min\Delta} < 2^k,\]
 
-\[s \in \{0,1\}, \qquad V_{min\Delta} \le P < 2^k, \qquad 0 \le J < 2^k, \qquad V_{min\Delta} = 0 \Rightarrow s = P = J = 0.\]
+\[
+s \in \{0,1\}, \quad
+V_{min\Delta} \le P < 2^k, \quad
+0 \le J < 2^k, \quad
+V_{min\Delta} = 0 \Rightarrow s = P = J = 0.
+\]
 
 \subsection{Clearing Constraints}
 

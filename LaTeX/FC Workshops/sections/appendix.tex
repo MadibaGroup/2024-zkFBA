@@ -302,7 +302,7 @@ To constrain \(Min[i]=\min(AccA[i],AccB[i])\) at every tick, we introduce two su
 
 \[SurpB[i] \in [0, 2^k), \qquad SurpA[i] \in [0, 2^k) \quad \text{for all } i \tag{F12, F13}\]
 
-F11 sets at least one surplus to zero, so \(Min\) equals one of the depths. F12 and F13 bound both differences to \([0,2^k)\). Under the width bound in Appendix C.5, a negative difference maps to a field element above this range. At tick 3 in Figure 2, demand is 12 and supply is 10. The only possible witnesses are \(Min=10\), \(SurpB=2\), and \(SurpA=0\).
+F11 sets at least one surplus to zero, so \(Min\) equals one of the depths. F12 and F13 bound both differences to \([0,2^k)\). Under the width bound in Appendix~\ref{app:zq-constraint-proof}, a negative difference maps to a field element above this range. At tick 3 in Figure 2, demand is 12 and supply is 10. The only possible witnesses are \(Min=10\), \(SurpB=2\), and \(SurpA=0\).
 
 F9 and F10 bind those differences to the book. Without them, both surplus witnesses could be zero regardless of the proposed minimum.
 
@@ -334,7 +334,7 @@ The running sum wraps from \(\omega^{n-1}\) to 1. Summing its differences over \
 
 \[\sum_{i=0}^{n-1} \sum_{e=1}^{E} \frac{1}{\beta - f_e[i]} = \sum_{i=0}^{n-1} \frac{Mult[i]}{\beta - T[i]}.\]
 
-As an identity of rational functions in \(\beta\), this holds only if every \(f_e[i]\) is a table value. The limbs and \(Mult\) are committed before \(\beta\) is drawn, so a prover with a cell outside the table passes with probability at most \((2E+2)\,n/|\mathbb{F}|\) (Appendix C.7). The running sum needs no initial condition, since only its differences are constrained.
+As an identity of rational functions in \(\beta\), this holds only if every \(f_e[i]\) is a table value. The limbs and \(Mult\) are committed before \(\beta\) is drawn, so a prover with a cell outside the table passes with probability at most \((2E+2)\,n/|\mathbb{F}|\) (Appendix~\ref{app:zq-security-errors}). The running sum needs no initial condition, since only its differences are constrained.
 
 A first version of the protocol committed to one column per bit, with a booleanity constraint on each \cite{plonkbook}. For 32-bit volumes that is 351 columns. With limbs and the lookup we have 46 limb columns and 29 lookup columns, and the proof falls from 22.9 KB to 6.1 KB. The lookup costs a second prover round and raises the degree of the quotient from about \(n\) to about \(2n\).
 
@@ -400,7 +400,7 @@ From the receipt we compute admitted IO volume \(I=\min(J,V_{min\Delta})\), resi
 
 \textbf{Scalar checks.} Before checking polynomial identities, the verifier requires \(0\le c\le p^*\le d\le N-1\), \(1\le V_{max}<2^k\), \(s\in\{0,1\}\), \(0\le V_{min\Delta}\le P<2^k\), and \(0\le J<2^k\). A zero imbalance also requires \(s=P=J=0\). The first check places the clearing tick inside the claimed plateau.
 
-\textbf{Uniqueness.} A crossing book admits exactly one receipt. Theorem 1 in Appendix C shows that an accepted receipt satisfies the clearing rule. Theorem 2 constructs a witness for the receipt that the rule selects.
+\textbf{Uniqueness.} A crossing book admits exactly one receipt. Theorem 1 in Appendix~\ref{app:zq-constraint-proof} shows that an accepted receipt satisfies the clearing rule. Theorem 2 constructs a witness for the receipt that the rule selects.
 
 \subsection{The No-Cross Statement}
 
@@ -415,7 +415,7 @@ Both depths are sums of range-checked entries, so they are non-negative, and the
 \label{app:piop}
 
 
-Following the PIOP construction \cite{plonk2019}, the prover commits to the witness in two rounds before committing to the quotient.
+Following the PIOP construction \cite{GWC19}, the prover commits to the witness in two rounds before committing to the quotient.
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -431,7 +431,7 @@ Following the PIOP construction \cite{plonk2019}, the prover commits to the witn
   The verifier evaluates the public polynomials at \(\zeta\), recomputes \(F(\zeta)\) from the openings, and checks \(F(\zeta) = Q(\zeta)\, Z_H(\zeta)\).
 \end{enumerate}
 
-We commit with KZG10 \cite{kzg2010} over BN254 in its hiding form, batch all openings at one point into one group element with a random linear combination, and verify both points with two pairings. We remove the verifier\textquotesingle s messages with the Fiat--Shamir transform over a SHA-256 transcript that absorbs the parameters, the receipt, and every commitment. For zero knowledge, the prover adds to each column a random multiple of \(Z_H\), which changes no value on \(H\) and makes the openings at \(\zeta\) and \(\omega\zeta\) independent of the column.
+We commit with KZG10 \cite{KZG10} over BN254 in its hiding form, batch all openings at one point into one group element with a random linear combination, and verify both points with two pairings. We remove the verifier\textquotesingle s messages with the Fiat--Shamir transform over a SHA-256 transcript that absorbs the parameters, the receipt, and every commitment. For zero knowledge, the prover adds to each column a random multiple of \(Z_H\), which changes no value on \(H\) and makes the openings at \(\zeta\) and \(\omega\zeta\) independent of the column.
 
 The lookup pair identities are cubic in the columns. The remaining identities are at most quadratic. The quotient has degree about \(2n\), and the implementation uses a reference string through degree \(2n+8\). For \(n=1024\) and 32-bit volumes, 88 column commitments, the quotient commitment, and their openings occupy 6,124 bytes. With a fixed column layout, the numbers of commitments and pairings stay fixed. Evaluating public selectors can still depend on the plateau width (Appendix D).
 
@@ -445,9 +445,9 @@ The reference string holds \([\tau^i]_1\) for a secret \(\tau\), and a short bli
 
 \[C = [\mathrm{col}(\tau)]_1 + [\rho_0(\tau)\,Z_H(\tau)]_1 + [\gamma\, r(\tau)]_1,\]
 
-where \(\mathrm{col}(X) = \sum_i \mathrm{col}[i]\, L_i(X)\) holds the column\textquotesingle s values, \(\rho_0\) is a random mask of degree 3, and \(r\) is a blinding polynomial of degree 3. This is a hiding KZG10 commitment \cite{kzg2010} to the masked column of Section 3.7. The mask is fixed when the batch opens, because the clearing proof later opens this polynomial at \(\zeta\).
+where \(\mathrm{col}(X) = \sum_i \mathrm{col}[i]\, L_i(X)\) holds the column\textquotesingle s values, \(\rho_0\) is a random mask of degree 3, and \(r\) is a blinding polynomial of degree 3. This is a hiding KZG10 commitment \cite{KZG10} to the masked column of Section 3.7. The mask is fixed when the batch opens, because the clearing proof later opens this polynomial at \(\zeta\).
 
-To open a batch, the exchange publishes for each column the commitment \(C_0\) to the zero column, the elements \(C_\rho = [\rho_0(\tau)]_1\) and \(C_r = [\gamma r_0(\tau)]_1\), and a Schnorr proof \cite{schnorr1991} that it knows \(r_0\) with \(C_r\) in the span of the blinding basis. The verifier checks the Schnorr proof and
+To open a batch, the exchange publishes for each column the commitment \(C_0\) to the zero column, the elements \(C_\rho = [\rho_0(\tau)]_1\) and \(C_r = [\gamma r_0(\tau)]_1\), and a Schnorr proof \cite{Sch91} that it knows \(r_0\) with \(C_r\) in the span of the blinding basis. The verifier checks the Schnorr proof and
 
 \[e(C_0 - C_r,\ [1]_2) = e(C_\rho,\ [Z_H(\tau)]_2).\]
 
@@ -480,6 +480,7 @@ The difference \(\Phi\) is a Pedersen commitment \cite{pedersen1991} to \(q\) at
 \textbf{Log consistency.} Each entry hashes the previous digest together with its own index, column, and commitment. The first digest binds the opening. For a digest to identify a common history, all parties must see the same published head.
 
 \subsection{Update Validity}
+\label{app:zq-update-validity}
 
 A receipt verifies one addition, while the clearing proof uses the sum of all additions. A later negative step could cancel an acknowledged order without invalidating its receipt. At the close, the exchange therefore proves a statement about every logged step.
 
@@ -501,7 +502,7 @@ A receipt verifies one addition, while the clearing proof uses the sum of all ad
   for a challenge \(\beta\) drawn after the commitments. This is the lookup argument again, with two helper columns and a running sum, and the quantities in place of unit numerators.
 \end{enumerate}
 
-The rational identity holds only if, at every tick \(i\), the weighted quantities of the steps that name tick \(i\) sum to \(w[i]\), and a step that names no tick contributes nothing. Since \(W\) is computed by the verifier from the log, \(w\) is also the weighted sum of what the steps actually commit to. The two agree for a random \(\eta\) only if they agree step by step. Every logged step therefore adds \(q_j \ge 0\) at one tick and nothing elsewhere, except with probability at most \((2E_Q + 12)\,M/|\mathbb{F}|\), where \(E_Q\) is the number of looked-up values of \(Qty\) (Appendix C.7). A step that adds zero is valid, which is what the three blinding-only steps of each order are.
+The rational identity holds only if, at every tick \(i\), the weighted quantities of the steps that name tick \(i\) sum to \(w[i]\), and a step that names no tick contributes nothing. Since \(W\) is computed by the verifier from the log, \(w\) is also the weighted sum of what the steps actually commit to. The two agree for a random \(\eta\) only if they agree step by step. Every logged step therefore adds \(q_j \ge 0\) at one tick and nothing elsewhere, except with probability at most \((2E_Q + 12)\,M/|\mathbb{F}|\), where \(E_Q\) is the number of looked-up values of \(Qty\) (Appendix~\ref{app:zq-security-errors}). A step that adds zero is valid, which is what the three blinding-only steps of each order are.
 
 \textbf{Cost.} For the 32-bit quantities in our benchmarks, the update-validity proof contains 17 commitments and occupies 1,700 bytes. Its domain of size \(M\) accommodates four steps per order, hence at most \(M/4\) orders. The verifier computes \(W\) with a multi-scalar multiplication over the logged steps. A layout with four commitments per row could accommodate four times as many orders at the same domain size. Its running time remains unmeasured.
 
@@ -522,6 +523,7 @@ The verifier checks the four empty-book openings, recomputes the digest from the
 % Required packages: \usepackage{amsmath,longtable,booktabs,array}
 
 \section{The Clearing Rule}
+\label{app:zq-clearing-rule}
 
 We define \(\mathsf{Clear}\) on books with ordinary and imbalance-only orders. Its output is either a clearing receipt or a no-cross outcome.
 
@@ -552,13 +554,14 @@ Then \(\mathsf{Clear}(\text{book}) = (V, c, d, p^*, v, s, P, J)\), where \(s = P
 
 \textbf{The plateau is an interval.} For \(i < j < l\) we have \(V_j \ge \min(V_i, V_l)\), because \(D_j \ge D_l \ge V_l\) and \(S_j \ge S_i \ge V_i\). Hence \(\Pi = \{c, \ldots, d\}\).
 
-\textbf{Existence.} Lemma C.1 supplies a candidate for every crossing book. Together with the no-cross case, this makes \(\mathsf{Clear}\) a total function.
+\textbf{Existence.} Lemma~\ref{app:zq-security}.1 supplies a candidate for every crossing book. Together with the no-cross case, this makes \(\mathsf{Clear}\) a total function.
 
 \textbf{At most two candidates when \(v > 0\).} On \(\Pi\), \(g\) is non-decreasing and takes the values \(-v\) and \(+v\) on the minimizers. Let \(j\) be a demand-long minimizer that is not the highest one. Then \(g_{j+1} = g_j\), and since \(g_{j+1} - g_j = a_{j+1} + b_j\), we get \(b_j = 0 < v\): \(j\) is not a candidate. By symmetry only the lowest supply-long minimizer can be a candidate. The two candidates are therefore the highest demand-long minimizer and the lowest supply-long minimizer, and the first, when it exists, is the lower tick. When \(v = 0\) every balanced plateau tick is a candidate and \(p^*\) is the lowest.
 
-\textbf{At-price volume.} We require better-priced orders to fill in full even when no IO volume is available. In that case all \(v\) unfilled units must come from long-side interest at the clearing tick, so we require \(\lambda_{p^*}\ge v\) when choosing the price. Proposition C.4 shows that this condition yields feasible fill ratios for every eligible IO volume.
+\textbf{At-price volume.} We require better-priced orders to fill in full even when no IO volume is available. In that case all \(v\) unfilled units must come from long-side interest at the clearing tick, so we require \(\lambda_{p^*}\ge v\) when choosing the price. Proposition~\ref{app:zq-security}.4 shows that this condition yields feasible fill ratios for every eligible IO volume.
 
 \subsection{Fills}
+\label{app:zq-fills}
 
 Of the eligible IO volume \(J\), the exchange admits \(I=\min(J,v)\), leaving residual imbalance \(R=v-I\). Both sides trade \(V+I\) units before rounding. Table 8 gives the pro rata entitlement for an order of size \(q\). When \(v=0\), all eligible ordinary orders fill in full and IO orders receive zero. A ratio is used only when its denominator is positive. The venue specifies integer rounding separately.
 
@@ -716,46 +719,89 @@ U4 & Running sum & \(S_2(\kappa X) - S_2(X) - (G(X) - U_H(X)) = 0\) \\
 For 32-bit quantities the proof has 15 columns: \(Qty\), \(Tick\), \(W\), four limbs, the multiplicities, two pair helpers, the table helper, the range running sum, \(G\), \(U_H\), and \(S_2\). With the quotient and \(\Phi_{mask}\) it holds 17 commitments.
 
 
-\section{Security Proofs}
+\section{Security and Proofs}
+\label{app:zq-security}
 
-\subsection{Overview}
+We compare one batch with a reference auction in which a trusted exchange acknowledges each order privately and publishes \(\mathsf{Clear}(\mathrm{book})\) at the close (Definition 2 in Appendix~\ref{app:zq-clearing-rule}). The public sees the number and timing of orders and the full outcome. Each trader also knows their own orders. For integrity, the exchange may deviate arbitrarily. For order secrecy, the exchange follows the protocol and receives orders in plaintext. The observers may collude with traders and obtain their receipts.
 
-We analyze one published board and one outcome. Integrity links a trader's checked receipt to a contribution to the book, then links that book to \(\mathsf{Clear}\). Secrecy compares the published transcript with the view available in a trusted auction that discloses the same outcome.
+\subsection{Security properties}
 
-The auction-specific argument begins once the polynomial identities hold on their domains. Section C.2 states the cryptographic assumptions that let us infer this from an accepted proof and simulate the proof transcript.
+\textbf{Definition 1 (verifiable private batch clearing).} Let \(\mathrm{Book}^*\) be the sum, by column, of the updates committed to on the published board. An honest exchange must be able to produce an accepting transcript for every admissible batch. We interpret update sums over the integers and require batch parameters that prevent field wraparound, as specified in the integrity proof below. The first four properties concern an accepted board in the presence of a malicious exchange, up to the soundness error. The fifth concerns the joint view of observers and colluding traders in an honest execution.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Recorded as submitted.} Each receipt that passes the trader's check identifies a logged update of exactly the acknowledged quantity in the stated column and at the stated tick.
+\item
+  \textbf{No removal.} Every entry of the board adds a non-negative quantity at a single tick.
+\item
+  \textbf{Cleared as recorded.} On a cross, the published receipt equals \(\mathsf{Clear}(\text{Book}^*)\). A no-cross outcome certifies zero executable volume for the committed ordinary bids and asks.
+\item
+  \textbf{No discretion.} The board determines the outcome.
+\item
+  \textbf{Order secrecy.} The view of the observers and of any set of colluding traders can be simulated from their view of the reference auction: the number and arrival times of the orders, the outcome, and the colluding traders\textquotesingle{} own orders.
+\end{enumerate}
+
+The checks in Table~\ref{tab:zq-security-properties} distinguish what an individual trader can verify from what a public verifier can establish about the batch. The election terminology follows Zeeperio~\cite{MEC26}.
+
+\begingroup
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}p{.20\linewidth}p{.20\linewidth}p{.18\linewidth}p{.33\linewidth}@{}}
+\caption{Security properties of the batch auction.}\label{tab:zq-security-properties}\\
+\toprule
+Property & Election counterpart & Checked by & Basis \\
+\midrule
+\endhead
+Recorded as submitted & Recorded as cast & Each trader & Receipt equation and commitment binding \\
+No removal & No ballot removed & Public verifier & Update-validity proof \\
+Cleared as recorded & Counted as recorded & Public verifier & Clearing or no-cross proof \\
+No discretion & Unique tally & Public verifier & The clearing rule has a unique outcome \\
+Order secrecy & Ballot secrecy & Simulation argument & Fresh update blindings, masked book columns and zero knowledge \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+\subsection{Security results and scope}
+
+The results assume a reference string with at least one honest setup contribution, a common published head digest, and the cryptographic properties in Appendix~\ref{app:zq-security-assumptions}. Secrecy additionally requires fresh order blindings and at most one distinct closing proof per opened book.
+
+\textbf{Theorem 3 (integrity).} Under these assumptions, the probability of accepting a batch that violates any of properties 1--4 is bounded by the commitment and hash failure probabilities and the soundness errors of the clearing (or no-cross) and update-validity arguments. For a single challenge trial the bound is
+\[
+  \varepsilon_{\mathrm{KZG}}+\varepsilon_{\mathrm{hash}}
+  +\varepsilon_{\mathrm{clear}}+\varepsilon_{\mathrm{upd}}.
+\]
+Here the commitment term includes the binding and empty-opening guarantees assumed below. Appendix~\ref{app:zq-security-errors} gives the algebraic terms per random-oracle query. A bound for multiple queries must account for the number of trials.
+
+\textbf{Theorem 4 (order secrecy).} Under the stated assumptions, observers and colluding traders can simulate their joint view of an honest batch from their reference-auction information. This includes the public opening, the log, their own update receipts, and the proof transcripts.
+
+The integrity claim starts with a checked log entry. The exchange may refuse an order or submit additional orders of its own. The secrecy claim concerns what publication adds to the reference view, which already includes the full clearing receipt on a cross. Its proof must account for the masks fixed when the exchange opens the book.
 
 \subsection{Cryptographic Assumptions}
+\label{app:zq-security-assumptions}
 
-We use the following as black boxes, in the algebraic group model with the \(q\)-discrete-logarithm assumption and a random oracle.
+We use the following as black boxes, in the algebraic group model under the \(q\)-discrete-logarithm assumption over BN254. We model SHA-256 as a random oracle for Fiat--Shamir and require collision resistance for the board digest.
 
 \begin{itemize}
 \item
-  \textbf{(K1) Knowledge soundness.} Let \(\mathsf{Acc}\) be the event that the verifier accepts a proof of our polynomial protocol and \(\mathsf{Vanish}\) the statement that every constraint polynomial vanishes on the domain for the columns behind the commitments. Then \(\mathsf{Acc} \Rightarrow_\epsilon \mathsf{Vanish}\): an accepted proof implies \(\mathsf{Vanish}\) except with probability \(\epsilon\). This is the soundness guarantee of PLONK-style arguments over KZG \cite{marlin2020,plonk2019}.
+  \textbf{(K1) Knowledge soundness.} Let \(\mathsf{Acc}\) be the event that the verifier accepts a proof of our polynomial protocol and \(\mathsf{Vanish}\) the statement that every constraint polynomial vanishes on the domain for the columns behind the commitments. Then \(\mathsf{Acc} \Rightarrow_\epsilon \mathsf{Vanish}\): an accepted proof implies \(\mathsf{Vanish}\) except with probability \(\epsilon\). We assume this implication for our variant of PLONK-style arguments over KZG \cite{CHM+20,GWC19}.
 \item
-  \textbf{(K2) Zero knowledge.} There is a simulator that, given a true statement, outputs a transcript indistinguishable from an honest one \cite{lipmaa2025,sefranek2024}. It requires a hiding commitment and, for each committed polynomial, more random off-domain coefficients than opened points.
+  \textbf{(K2) Zero knowledge.} There is a simulator that, given a true statement, outputs a transcript indistinguishable from an honest one \cite{Lip25,Sef24}. It requires a hiding commitment and, for each committed polynomial, more random off-domain coefficients than opened points.
 \item
-  \textbf{(K3) Binding.} A KZG commitment determines the polynomial behind it, and an equation between commitments that the adversary makes hold is an identity between those polynomials \cite{kzg2010}.
+  \textbf{(K3) Binding.} We use computational binding for the committed value polynomial. In the algebraic group model, the extracted value polynomials must respect the verified linear relations between commitments, except with the assumed binding error \cite{KZG10}.
 \item
   \textbf{(K4) Lookup.} If every identity of the logarithmic-derivative lookup vanishes on the domain, every looked-up value is in the table, except with probability \(\epsilon\) over its challenge \cite{habock2022}.
 \item
-  \textbf{(K5)} The Schnorr proof is a proof of knowledge \cite{schnorr1991}. \textbf{(K6)} The hash is collision resistant.
+  \textbf{(K5)} The Schnorr proof is a proof of knowledge \cite{Sch91}. \textbf{(K6)} The hash is collision resistant.
 \end{itemize}
 
-K1 and K2 must apply to our additional lookup round and to the four column commitments fixed before clearing starts. Section C.8 states this qualification explicitly.
-
-\subsection{The Reference Auction and Its Properties}
-
-\textbf{The reference auction.} A trusted exchange receives orders, acknowledges each one to its trader, and at the close publishes the outcome \(\mathsf{Clear}(\text{book})\) of Definition 2. The public sees the number of orders, when each arrived, and the outcome. A trader also knows their own orders.
-
-Table 7 relates the five properties in Definition 1 to end-to-end election verification. The correspondence is between a private order and a ballot, and between a public clearing result and the published tally.
-
-A trader checks whether their order was recorded as submitted. Anyone with the board can check update validity and clearing, including uniqueness of the outcome. Secrecy concerns the public transcript together with any receipts the colluding traders possess.
+K1 and K2 must apply to our additional lookup round and to the four column commitments fixed before clearing starts. For K2 we require joint simulation of the update and closing transcripts with the same public log, opening and commitments. Appendix~\ref{app:zq-security-limits} records this qualification.
 
 \subsection{Integrity}
 
 Let \(\mathsf{Bd}\) be the board, \(\mathsf{Rc}\) the set of receipts that pass their traders\textquotesingle{} checks against \(\mathsf{Bd}\), and \(R\) the published outcome. By K3 each board entry \(\Phi_j\) determines a vector \(u_j\) of values on \(H\), its \emph{contribution}. Let \(\text{Book}^* = \sum_j u_j\), arranged by column.
 
-Write \(R\) for the published outcome. The following predicates express integrity for \((\mathsf{Bd},\mathsf{Rc},R)\).
+The following predicates express integrity for \((\mathsf{Bd},\mathsf{Rc},R)\).
 
 \[\psi_0:\quad \mathsf{Bd} \text{ is one sequence of commitments starting from an empty book.}\]
 
@@ -771,23 +817,28 @@ This is the statement of the update-validity proof, and its argument is specific
 
 \[\sum_{j<\mu} \frac{\eta^j\, Qty[j]}{\beta - Tick[j]} = \sum_{i<n} \frac{w[i]}{\beta - \omega^i},\]
 
-where \(w\) is the vector of values on \(H\) behind \(W\). Both sides were fixed before \(\beta\) was drawn, so, except with probability \(2(M+n)/|\mathbb{F}|\), they agree as rational functions: for each tick \(i\), the steps whose \(Tick\) entry is \(\omega^i\) have \(\eta\)-weighted quantities summing to \(w[i]\), and steps whose entry is not a tick contribute nothing. The verifier computes \(W = \Phi_{mask} + \sum_j \eta^j \Phi_j\) from \(\mathsf{Bd}\), and \(\Phi_{mask}\) is empty by the argument of \(\psi_0\), so by K3 \(w = \sum_j \eta^j u_j\). Hence \(\sum_j \eta^j (u_j - Qty[j]\, e_{\ell_j}) = 0\). The \(u_j\), \(Qty\), and \(Tick\) were fixed before \(\eta\) was drawn, so every term is zero, except with probability \(\mu/|\mathbb{F}|\). An exchange that logs a step subtracting an acknowledged order violates \(\psi_2\) and cannot produce this proof.
+where \(w\) is the vector of values on \(H\) behind \(W\). Both sides were fixed before \(\beta\) was drawn, so, except with probability \(2(M+n)/|\mathbb{F}|\), they agree as rational functions: for each tick \(i\), the steps whose \(Tick\) entry is \(\omega^i\) have \(\eta\)-weighted quantities summing to \(w[i]\), and steps whose entry is not a tick contribute nothing. The verifier computes \(W = \Phi_{mask} + \sum_j \eta^j \Phi_j\) from \(\mathsf{Bd}\), and \(\Phi_{mask}\) is empty by the argument of \(\psi_0\), so by K3 \(w = \sum_j \eta^j u_j\). Hence \(\sum_j \eta^j (u_j - Qty[j]\, e_{\ell_j}) = 0\). The \(u_j\), \(Qty\), and \(Tick\) were fixed before \(\eta\) was drawn, so every term is zero, except with probability \(\mu/|\mathbb{F}|\). Thus a subtractive update violates \(\psi_2\) and is rejected up to the stated soundness error. To interpret the sum of updates as an integer volume, the batch parameters must exclude field wraparound; the sufficient bound \(\mu(2^{k_{in}}-1)<|\mathbb F|\) holds for the evaluated batches.
 
-\[\psi_3 \text{ (cleared as recorded)}:\quad R = \mathsf{Clear}(\text{Book}^*).\]
+\[
+\psi_3\ \text{(cleared as recorded)}:\quad
+\begin{cases}
+ R=\mathsf{Clear}(\text{Book}^*) & \text{on a clearing receipt},\\
+ \max_i\min(D_i,S_i)=0 & \text{on a no-cross outcome}.
+\end{cases}
+\]
 
-If a clearing proof verifies against the final commitments, K1 and K4 give F1--F33 on \(H\). By \(\psi_0\), the committed book columns equal \(\text{Book}^*\). Theorem 1 identifies the receipt as \(R=\mathsf{Clear}(\text{Book}^*)\). For a no-cross proof, Proposition C.3 gives \(V=0\).
+If a clearing proof verifies against the final commitments, K1 and K4 give F1--F33 on \(H\). By \(\psi_0\), the committed book columns equal \(\text{Book}^*\). Theorem 1 identifies the receipt as \(R=\mathsf{Clear}(\text{Book}^*)\). For a no-cross proof, the verifier binds the ordinary bid and ask columns to their final commitments. Proposition~\ref{app:zq-security}.3 gives \(V=0\) on these columns. Imbalance-only orders cannot create a cross, so this outcome is independent of their quantities. The no-cross proof itself does not certify their final column ranges or padding.
 
 \[\psi_4 \text{ (no discretion)}:\quad \mathsf{Bd} \text{ determines } R.\]
 
-\(\mathsf{Clear}\) is a function and is defined on every book, because a candidate always exists (Appendix A.2). With \(\psi_3\), two accepted outcomes for one board are equal.
+On a crossing book, Lemma~\ref{app:zq-security}.1 guarantees a candidate and the rule selects the least one. With zero executable volume the rule returns the single no-cross outcome. With \(\psi_3\), two accepted outcomes for one board are equal.
 
-\textbf{Theorem 3 (integrity).} If the verifier accepts a batch, then except with probability at most \(\varepsilon_{\mathrm{KZG}} + \varepsilon_{\mathrm{clear}} + \varepsilon_{\mathrm{upd}} + \varepsilon_{\mathrm{hash}}\) (Section C.7), the predicates \(\psi_0\) to \(\psi_4\) hold. In particular the outcome is the clearing of a book that contains every order with a verified receipt, at its tick and with at least its quantity.
+\emph{Conclusion of the proof of Theorem 3.} By \(\psi_1\) a receipted order contributes \(q\) at tick \(\ell\), and by \(\psi_2\) every other contribution to that tick is non-negative, so \(\text{Book}^*\) has at least \(q\) there. By \(\psi_3\), an accepted clearing receipt gives the prescribed outcome, and an accepted no-cross proof rules out a match between ordinary orders. \(\blacksquare\)
 
-\emph{Proof.} The predicates hold by the arguments above. By \(\psi_1\) a receipted order contributes \(q\) at tick \(\ell\), and by \(\psi_2\) every other contribution to that tick is non-negative, so \(\text{Book}^*\) has at least \(q\) there. By \(\psi_3\) the outcome is the clearing of \(\text{Book}^*\). \(\blacksquare\)
-
-\textbf{Fill feasibility.} Proposition C.4 shows that each applicable pro rata ratio lies in \([0,1]\) and that total purchases equal total sales before rounding.
+\textbf{Fill feasibility.} Proposition~\ref{app:zq-security}.4 shows that each applicable pro rata ratio lies in \([0,1]\) and that total purchases equal total sales before rounding.
 
 \subsection{The Constraints and the Clearing Rule}
+\label{app:zq-constraint-proof}
 
 We now interpret the field constraints over the integers to establish \(\psi_3\).
 
@@ -822,45 +873,47 @@ We now interpret the field constraints over the integers to establish \(\psi_3\)
   \emph{\(v = 0\).} F21 gives \(\delta_{p^*-1} \ge 1\) with \(g_{p^*-1} \le 0\), so \(g_i \le -1\) and \(\delta_i > v\).
 \end{itemize}
 
-The tick \(p^* - 1\) is in \(\Pi\) and the cliff ticks are not, so \(Slack\) is constrained at most once per tick. \(\blacksquare\)
+When the tie selector is active, the tick \(p^* - 1\) is in \(\Pi\) and the cliff ticks are not, so \(Slack\) is constrained at most once per tick. \(\blacksquare\)
 
-\textbf{Lemma C.1 (a candidate exists).} For every book that crosses, \(\Pi\) contains a candidate.
+\textbf{Lemma~\ref{app:zq-security}.1 (a candidate exists).} For every book that crosses, \(\Pi\) contains a candidate.
 
 \emph{Proof.} If \(v = 0\) every minimizer is a candidate. Let \(v > 0\). For \(i \in \Pi\), a demand-long tick has \(S_i = V\) and \(D_i = V + \delta_i\), and a supply-long tick has \(D_i = V\) and \(S_i = V + \delta_i\). Suppose the set of minimizers contains a demand-long tick and let \(j\) be the highest, so \(D_j = V + v\). If \(j = d\), either \(d = n - 1\) and \(b_d = D_d \ge v\), or \(V_{d+1} < V\) with \(S_{d+1} \ge V\), so \(D_{d+1} < V\) and \(b_d > v\). If \(j < d\), tick \(j + 1 \in \Pi\) is not balanced, and it is not demand long, since it would then be a demand-long minimizer above \(j\); so \(D_{j+1} = V\) and \(b_j = v\). In each case \(j\) is a candidate. If every minimizer is supply long, the lowest one is a candidate by the symmetric argument. \(\blacksquare\)
 
 \textbf{Theorem 2 (completeness of the constraints).} For every book that crosses, \(\mathsf{Clear}\) of the book passes the scalar checks, and there is a witness satisfying F1--F33.
 
-\emph{Proof.} Take \(AccB = D\), \(AccA = S\), \(Min_i = V_i\), the surpluses and \(\Delta\) by their definitions, and \(Slack\) zero except \(Slack_{c-1} = V - V_{c-1} - 1\), \(Slack_{d+1} = V - V_{d+1} - 1\) where those ticks exist, and \(Slack_{p^*-1} = \delta_{p^*-1} - v - 1\) when \(Mask_T \ne 0\). Padding ticks have \(D_i = 0\), so \(\Pi \subseteq [0, N-1]\) and the scalar checks hold; \(P \ge v\) because \(p^*\) is a candidate. Every constraint holds by construction once the three slack values are non-negative. The cliff ticks are outside \(\Pi\). For \(p^* - 1\) with \(v = 0\): it is in \(\Pi\) and not a candidate, so \(\delta_{p^*-1} \ge 1\). For \(p^* - 1\) with \(v > 0\) and \(s = 1\), suppose \(\delta_{p^*-1} = v\). If \(g_{p^*-1} = v\) then \(a_{p^*} = 0 < v\), contradicting that \(p^*\) is a candidate. If \(g_{p^*-1} = -v\) then \(p^* - 1\) is a demand-long minimizer whose upper neighbour is supply long, so \(b_{p^*-1} = v\) as in Lemma C.1, and \(p^* - 1\) is a lower candidate. \(\blacksquare\)
+\emph{Proof.} Take \(AccB = D\), \(AccA = S\), \(Min_i = V_i\), the surpluses and \(\Delta\) by their definitions, and \(Slack\) zero except \(Slack_{c-1} = V - V_{c-1} - 1\), \(Slack_{d+1} = V - V_{d+1} - 1\) where those ticks exist, and \(Slack_{p^*-1} = \delta_{p^*-1} - v - 1\) when \(Mask_T \ne 0\). Padding ticks have \(D_i = 0\), so \(\Pi \subseteq [0, N-1]\) and the scalar checks hold; \(P \ge v\) because \(p^*\) is a candidate. Every constraint holds by construction once the three slack values are non-negative. The cliff ticks are outside \(\Pi\). For \(p^* - 1\) with \(v = 0\): it is in \(\Pi\) and not a candidate, so \(\delta_{p^*-1} \ge 1\). For \(p^* - 1\) with \(v > 0\) and \(s = 1\), suppose \(\delta_{p^*-1} = v\). If \(g_{p^*-1} = v\) then \(a_{p^*} = 0 < v\), contradicting that \(p^*\) is a candidate. If \(g_{p^*-1} = -v\) then \(p^* - 1\) is a demand-long minimizer whose upper neighbour is supply long, so \(b_{p^*-1} = v\) as in Lemma~\ref{app:zq-security}.1, and \(p^* - 1\) is a lower candidate. \(\blacksquare\)
 
-\textbf{Proposition C.3 (no-cross).} A witness satisfies F1--F8, F23, and \(AccA \cdot AccB = 0\) if and only if its \(B\) and \(A\) form a book with \(V = 0\).
+\textbf{Proposition~\ref{app:zq-security}.3 (no-cross).} For fixed ordinary columns \(B,A\), a witness satisfying F1--F8, the corresponding lookups in F23, and \(AccA \cdot AccB = 0\) exists if and only if these columns satisfy the entry and padding bounds and \(V=0\).
 
-\emph{Proof.} As in Steps 1 and 2, \(AccB = D\) and \(AccA = S\) are integers in \([0, 2^k)\). A field has no zero divisors, so the product vanishes at \(i\) exactly when \(\min(D_i, S_i) = 0\). \(\blacksquare\)
+\emph{Proof.} As in Steps 1 and 2, \(AccB = D\) and \(AccA = S\) are integers in \([0, 2^k)\). A field has no zero divisors, so the product vanishes at \(i\) exactly when \(\min(D_i, S_i) = 0\). Conversely, for such ordinary columns take their actual depths and valid range witnesses. They satisfy the recurrences, the lookups and the zero-product constraint. \(\blacksquare\)
 
-\textbf{Proposition C.4 (execution).} If the receipt is \(\mathsf{Clear}\) of the book, no fill ratio of Section 3.5 lies outside \([0,1]\), and before rounding the volume bought equals the volume sold equals \(V + \min(J, v)\).
+\textbf{Proposition~\ref{app:zq-security}.4 (execution).} If the receipt is \(\mathsf{Clear}\) of the book, no applicable fill ratio in Appendix~\ref{app:zq-fills} lies outside \([0,1]\), and before rounding the volume bought equals the volume sold equals \(V + \min(J, v)\).
 
 \emph{Proof.} Let \(I = \min(J, v)\) and \(R = v - I\). If \(v = 0\), \(D_{p^*} = S_{p^*} = V\) and both sides fill \(V\). If demand is long, \(S_{p^*} = V\) and \(D_{p^*} = V + v\). Sold: the asks at or below \(p^*\), \(V\), plus the admitted IO, \(I\). Bought: the bids strictly above \(p^*\), \(V + v - P\), plus the at-price bids at ratio \((P - R)/P\), that is \(P - v + I\); in total \(V + I\). The ratio lies in \([0, 1]\) exactly because \(P \ge v \ge R\), which is the candidate condition. The supply-long case is symmetric. \(\blacksquare\)
 
 \subsection{Order Secrecy}
+\label{app:zq-secrecy-proof}
 
-Following Zeeperio \cite{zeeperio2026}, we express secrecy as non-expansivity relative to the reference auction. The simulator may use everything that the reference auction already discloses.
+Following Zeeperio \cite{MEC26}, we express secrecy as non-expansivity relative to the reference auction. The simulator may use everything that the reference auction already discloses.
 
-\textbf{Lemma C.2 (non-expansive secrecy under transcript augmentation).} Let \(\Pi\) be a protocol with adversary view \(T\), and \(\Pi^+\) an augmentation with view \((T, Z)\) on the same execution. If there is an efficient \(\mathsf{Sim}\) such that \((T, Z)\) and \((T, \mathsf{Sim}(T))\) are indistinguishable, then for any secrecy experiment that depends on the protocol only through the adversary\textquotesingle s view, an adversary against \(\Pi^+\) yields one against \(\Pi\) with negligibly different success.
+\textbf{Lemma~\ref{app:zq-security}.2 (non-expansive secrecy under transcript augmentation).} Let \(\Pi\) be a protocol with adversary view \(T\), and \(\Pi^+\) an augmentation with view \((T, Z)\) on the same execution. If there is an efficient \(\mathsf{Sim}\) such that \((T, Z)\) and \((T, \mathsf{Sim}(T))\) are indistinguishable, then for any secrecy experiment that depends on the protocol only through the adversary\textquotesingle s view, an adversary against \(\Pi^+\) yields one against \(\Pi\) with negligibly different success.
 
-\textbf{Theorem 4 (order secrecy).} Let \(\Pi\) be the reference auction and \(T\) the view of the observers and of a set of colluding traders: the number and arrival times of the orders, the outcome, and the colluding traders\textquotesingle{} own orders. Let \(Z\) be what the zk-FBA adds: the opening, the board, the colluding traders\textquotesingle{} receipts, and the proofs. If the exchange publishes one clearing proof per opened book, the zk-FBA is a non-expansive augmentation of \(\Pi\).
+\emph{Proof of Theorem 4.} Let \(\Pi\) be the reference auction and \(T\) the view of the observers and of a set of colluding traders: the number and arrival times of the orders, the outcome, and the colluding traders\textquotesingle{} own orders. Let \(Z\) be what the zk-FBA adds: the opening, the board, the colluding traders\textquotesingle{} receipts, and the proofs. We apply the lemma to this joint view.
 
-\emph{Proof.} \(\mathsf{Sim}(T)\) produces \(Z\) in three parts.
+\(\mathsf{Sim}(T)\) produces \(Z\) in three parts.
 
 \emph{Opening.} The opening does not depend on any order. The simulator generates it as the exchange does.
 
 \emph{Board.} A step is \(\Phi = q\,[L_\ell(\tau)]_1 + \rho\,\Gamma\) on the order\textquotesingle s column and \(\rho'\Gamma\) on each other column, with fresh uniform \(\rho, \rho'\). Each is a uniform group element whatever the order is. For every order of an honest trader, the simulator outputs four uniform elements, at the time given in \(T\). For every order of a colluding trader, it computes the steps and the receipt from the order in \(T\). Because all four columns move at every order, the simulator does not need the order\textquotesingle s side.
 
-\emph{Proofs.} The outcome in \(T\) is a true statement about some book, so by K2 the simulator of the polynomial protocol outputs transcripts for the clearing proof and the update-validity proof. K2 has two conditions, and they hold for columns committed inside a proof by fresh randomness. For the four book columns the randomness was fixed at the opening, and part of it is already public. The mask \(\rho_0\) has four coefficients, and the public values that depend on it are \(C_\rho\) and the column\textquotesingle s evaluations at \(\zeta\) and, for \(A\) and \(IOA\), at \(\omega\zeta\): at most three linear functionals at distinct points, which are jointly uniform. The blinding polynomial likewise has four coefficients against at most three functionals, and the blindings known to colluding traders only shift its constant term by known amounts. Both conditions therefore hold with one coefficient to spare. \(\blacksquare\)
+\emph{Proofs.} We invoke K2 for the joint public statement: the simulated opening and log, the final commitments derived from them, and the outcome in \(T\). This invocation requires simulated update-validity and closing transcripts consistent with those same commitments. Columns first committed inside either proof use fresh randomness. The four running columns require a separate accounting of what their masks reveal. For the four book columns the randomness was fixed at the opening, and part of it is already public. The mask \(\rho_0\) has four coefficients, and the public values that depend on it are \(C_\rho\) and the column\textquotesingle s evaluations at \(\zeta\) and, for \(A\) and \(IOA\), at \(\omega\zeta\): at most three linear functionals at distinct points, which are jointly uniform. The blinding polynomial likewise has four coefficients against at most three functionals, and the blindings known to colluding traders only shift its constant term by known amounts. This count leaves one coefficient to spare for the stated openings. Indistinguishability of the joint proof transcripts still relies on K2. \(\blacksquare\)
 
-\textbf{Reuse of a book mask.} For a column opened at both \(\zeta\) and \(\omega\zeta\), a fresh proof can expose two more evaluations of the same mask. Together with the opening and the first proof, that can exceed the four coefficients available for masking. The one-proof condition in Theorem 4 limits this exposure.
+\textbf{Reuse of a book mask.} For a column opened at both \(\zeta\) and \(\omega\zeta\), a fresh proof can expose two more evaluations of the same mask. Together with the opening and the first proof, that can exceed the four coefficients available for masking. Theorem 4 therefore allows at most one distinct closing proof per opened book. Our Rust implementation derives its proving randomness from the private batch state so that repeating a close on the same state reproduces the same proof.
 
-\textbf{Reference disclosure.} The reference view includes the entire receipt, including the plateau \([c,d]\) and the volumes \(P\) and \(J\). A venue that wishes to keep these values private would need a different public statement (Section 7).
+\textbf{Reference disclosure.} The reference view includes the entire receipt, including the plateau \([c,d]\) and the volumes \(P\) and \(J\). A venue that wishes to keep these values private would need a different public statement (Section~\ref{sec:zq-discussion}).
 
 \subsection{Error Terms}
+\label{app:zq-security-errors}
 
 We bound the algebraic error terms in K1 and K4 for the domains and challenges used here.
 
@@ -870,13 +923,14 @@ We bound the algebraic error terms in K1 and K4 for the domains and challenges u
 
 \emph{Update-validity proof.} The polynomial protocol on \(K\) contributes at most \(5M/|\mathbb{F}|\), the range lookup of \(Qty\) \((2E_Q+2)\,M/|\mathbb{F}|\), the challenge \(\beta\) of the histogram identity \(2(M+n)/|\mathbb{F}|\), and the challenge \(\eta\) \(\mu/|\mathbb{F}|\). With \(n, \mu \le M\) this gives \(\varepsilon_{\mathrm{upd}} \le (2E_Q+12)\,M/|\mathbb{F}|\).
 
-Each term is per random-oracle query. With \(|\mathbb{F}| \approx 2^{254}\), \(n = 2^{10}\), \(M = 2^{14}\), \(E = 51\), and \(E_Q = 4\), both are below \(2^{-230}\).
+These algebraic bounds are per random-oracle query. For at most \(Q\) trials, a union bound gives \(Q(\varepsilon_{\mathrm{clear}}+\varepsilon_{\mathrm{upd}})\) for their combined contribution. With \(|\mathbb{F}| \approx 2^{254}\), \(n = 2^{10}\), \(M = 2^{14}\), \(E = 51\), and \(E_Q = 4\), both are below \(2^{-230}\).
 
 \subsection{What Is Assumed and What Is Open}
+\label{app:zq-security-limits}
 
 \begin{itemize}
 \item
-  \textbf{K1 and K2 for our variant.} The cited results are for PLONK. Our protocol uses the same technique with a second round and with externally committed columns. We have not proved K1 and K2 for this exact variant; Section C.7 gives the error terms we expect.
+  \textbf{K1 and K2 for our variant.} The cited results are for PLONK. Our protocol uses the same technique with a second round and with externally committed columns. Knowledge soundness and joint zero knowledge for this exact variant remain assumptions. Appendix~\ref{app:zq-security-errors} accounts for the algebraic challenges. Simulation extractability is outside the claim.
 \item
   \textbf{The exchange\textquotesingle s own orders.} \(\text{Book}^*\) may contain contributions with no receipt holder. \(\psi_2\) makes them non-negative: the exchange can trade in its own auction, and it cannot remove an acknowledged order.
 \item
@@ -932,7 +986,7 @@ where \(r\) is a further challenge. We evaluate the left pairing argument with a
 
 \textbf{Proof format.} We serialize the column and quotient commitments, followed by two openings. Each opening includes its point, evaluations, combined blinding evaluation, and witness. A compressed curve point occupies 32 bytes. If \(c\) columns are opened and \(s\) also open at \(\omega\zeta\), the proof occupies \(32(2c+s+8)+12\) bytes. With \(c=88\) and \(s=7\) this gives 6,124 bytes. Decompression requires a base-field square root per point and accounts for most single-threaded verification time.
 
-\textbf{Determinism.} At the close we derive the prover's randomness from a hash of its private state, which includes the mask and blinding of every book column. Closing the same batch twice produces the same bytes, and the tool refuses orders after a close. This implements the one-proof rule of Section 6.3 for an honest exchange.
+\textbf{Determinism.} At the close we derive the prover's randomness from a hash of its private state, which includes the mask and blinding of every book column. Closing the same batch twice produces the same bytes, and the tool refuses orders after a close. This implements the one-proof condition of Appendix~\ref{app:zq-secrecy-proof} for an honest exchange.
 
 \textbf{Batch files.} The command-line tool keeps a batch in a directory (Table 14) and has one command per protocol step: \texttt{setup}, \texttt{open}, \texttt{order}, \texttt{check-receipt}, \texttt{close}, \texttt{verify}, and \texttt{fill}.
 

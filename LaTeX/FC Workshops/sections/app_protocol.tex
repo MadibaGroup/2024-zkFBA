@@ -1,717 +1,182 @@
 % !TEX root = ../main.tex
 
+% !TEX root = ../main.tex
 
-\section{The Clearing Rule}
+\section{Further Protocol Details}
+\label{app:zq-protocol}
+
+\subsection{The Clearing Rule}
 \label{app:zq-clearing-rule}
 
-We define \(\mathsf{Clear}\) on books with ordinary and imbalance-only orders. Its output is either a clearing receipt or a no-cross outcome.
-
-\subsection{Definition}
-
-A \emph{book} on \(n\) ticks, of which the first \(N\) are real, is four sequences of integers \(b_i, a_i, b^{io}_i, a^{io}_i\), \(0 \le i < n\), with every entry in \([0, 2^{k_{in}})\) and zero for \(i \ge N\). \(b_i\) is the bid volume with limit exactly tick \(i\) and \(a_i\) the ask volume; a market buy is recorded at tick \(N-1\) and a market sell at tick 0. The \(io\) sequences hold the imbalance-only orders. For each tick define
-
+We define \(\mathsf{Clear}\) for books containing ordinary and imbalance-only (IO) orders. A book has \(N\) real price ticks, padded to \(n\) rows, and consists of four nonnegative integer sequences \(b_i,a_i,b_i^{io},a_i^{io}\), with zero entries for \(i\ge N\). A market buy is recorded at tick \(N-1\) and a market sell at tick 0. For each tick, let
 \[
-D_i = \sum_{j \ge i} b_j, \quad
-S_i = \sum_{j \le i} a_j, \quad
-V_i = \min(D_i, S_i), \quad
-g_i = S_i - D_i, \quad
-\delta_i = |g_i|,
+D_i=\sum_{j\ge i}b_j,\quad S_i=\sum_{j\le i}a_j,\quad
+V_i=\min(D_i,S_i),\quad g_i=S_i-D_i,\quad \delta_i=|g_i|.
 \]
+Similarly, \(D_i^{io}=\sum_{j\ge i}b_j^{io}\) and \(S_i^{io}=\sum_{j\le i}a_j^{io}\). We call demand \emph{long} if \(g_i<0\), supply \emph{long} if \(g_i>0\), and the book \emph{balanced} if \(g_i=0\). At an imbalanced tick, the at-price long-side volume is \(\lambda_i=b_i\) when demand is long and \(\lambda_i=a_i\) when supply is long.
 
-and likewise \(D^{io}_i = \sum_{j \ge i} b^{io}_j\) and \(S^{io}_i = \sum_{j \le i} a^{io}_j\). \(D_i\) is the demand willing to trade at price \(i\), \(S_i\) the supply, and \(V_i\) the volume that can execute. \(D\) is non-increasing; \(S\) and \(g\) are non-decreasing. Tick \(i\) is \emph{demand long} if \(g_i < 0\), \emph{supply long} if \(g_i > 0\), and \emph{balanced} if \(g_i = 0\). Its \emph{at-price long volume} is \(\lambda_i = b_i\) if it is demand long and \(\lambda_i = a_i\) if it is supply long.
-
-\textbf{Definition 2 (\(\mathsf{Clear}\)).} Let \(V = \max_i V_i\). If \(V = 0\), \(\mathsf{Clear}(\text{book}) = \textsf{no-cross}\). Otherwise let
-
+\paragraph{Clearing receipt.} Let \(V=\max_i V_i\). If \(V=0\), the outcome is \(\textsf{no-cross}\). Otherwise, define
 \begin{itemize}
-\item
-  \(\Pi = \{i : V_i = V\}\) be the \emph{plateau}, with \(c = \min \Pi\) and \(d = \max \Pi\);
-\item
-  \(v = \min_{i \in \Pi} \delta_i\) be the minimum imbalance;
-\item
-  a \emph{candidate} be a tick \(i \in \Pi\) with \(\delta_i = v\) and (\(v = 0\) or \(\lambda_i \ge v\));
-\item
-  \(p^*\) be the least candidate.
+\item the maximizing plateau \(\Pi=\{i:V_i=V\}\), with \(c=\min\Pi\) and \(d=\max\Pi\);
+\item the minimum imbalance \(v=\min_{i\in\Pi}\delta_i\);
+\item a candidate tick \(i\in\Pi\) satisfying \(\delta_i=v\) and either \(v=0\) or \(\lambda_i\ge v\).
 \end{itemize}
+Choose \(p^*\) as the lowest candidate. The resulting receipt is \((V,c,d,p^*,v,s,P,J)\), where \(s=P=J=0\) if \(v=0\). Otherwise, \(s=0\) when demand is long and \(s=1\) when supply is long, \(P=\lambda_{p^*}\), and \(J=S_{p^*}^{io}\) if \(s=0\) or \(J=D_{p^*}^{io}\) if \(s=1\). The condition \(\lambda_{p^*}\ge v\) ensures that unfilled ordinary volume can be rationed at the clearing price without reducing fills of better-priced orders. In the main paper's notation, \(V=V_{max}\) and \(v=V_{min\Delta}\).
 
-Then \(\mathsf{Clear}(\text{book}) = (V, c, d, p^*, v, s, P, J)\), where \(s = P = J = 0\) if \(v = 0\), and otherwise \(s = [g_{p^*} > 0]\), \(P = \lambda_{p^*}\), and \(J = S^{io}_{p^*}\) if \(s = 0\), \(J = D^{io}_{p^*}\) if \(s = 1\).
-
-\subsection{Properties}
-
-\textbf{The plateau is an interval.} For \(i < j < l\) we have \(V_j \ge \min(V_i, V_l)\), because \(D_j \ge D_l \ge V_l\) and \(S_j \ge S_i \ge V_i\). Hence \(\Pi = \{c, \ldots, d\}\).
-
-\textbf{Existence.} Lemma~\ref{app:zq-security}.1 supplies a candidate for every crossing book. Together with the no-cross case, this makes \(\mathsf{Clear}\) a total function.
-
-\textbf{At most two candidates when \(v > 0\).} On \(\Pi\), \(g\) is non-decreasing and takes the values \(-v\) and \(+v\) on the minimizers. Let \(j\) be a demand-long minimizer that is not the highest one. Then \(g_{j+1} = g_j\), and since \(g_{j+1} - g_j = a_{j+1} + b_j\), we get \(b_j = 0 < v\): \(j\) is not a candidate. By symmetry only the lowest supply-long minimizer can be a candidate. The two candidates are therefore the highest demand-long minimizer and the lowest supply-long minimizer, and the first, when it exists, is the lower tick. When \(v = 0\) every balanced plateau tick is a candidate and \(p^*\) is the lowest.
-
-\textbf{At-price volume.} We require better-priced orders to fill in full even when no IO volume is available. In that case all \(v\) unfilled units must come from long-side interest at the clearing tick, so we require \(\lambda_{p^*}\ge v\) when choosing the price. Proposition~\ref{app:zq-security}.4 shows that this condition yields feasible fill ratios for every eligible IO volume.
-
-\subsection{Fills}
+\subsubsection{Fills}
 \label{app:zq-fills}
 
-Of the eligible IO volume \(J\), the exchange admits \(I=\min(J,v)\), leaving residual imbalance \(R=v-I\). Both sides trade \(V+I\) units before rounding. Table 8 gives the pro rata entitlement for an order of size \(q\). When \(v=0\), all eligible ordinary orders fill in full and IO orders receive zero. A ratio is used only when its denominator is positive. The venue specifies integer rounding separately.
+The exchange admits \(I=\min(J,v)\) eligible IO units, leaving residual imbalance \(R=v-I\). The total traded volume is \(V+I\). For an order of quantity \(q\), the unrounded execution entitlement is
+\begin{itemize}
+\item \(q\), for an ordinary order strictly better priced than \(p^*\), or on the short side at \(p^*\);
+\item \(q(P-R)/P\), for an ordinary order at \(p^*\) on the long side;
+\item \(qI/J\), for an eligible IO order on the short side;
+\item zero, for any other order.
+\end{itemize}
+The ratios are used only when their denominators are positive. If \(v=0\), all eligible ordinary orders fill in full and IO orders receive zero. Integer rounding is left to the venue.
 
-\textbf{Table 8.} The fill of an order of quantity \(q\), given the receipt.
+\subsection{Encoding and Public Polynomials}
 
-\begin{longtable}{@{}
-  >{\raggedright\arraybackslash}p{\dimexpr0.75\linewidth-\tabcolsep\relax}
-  >{\raggedright\arraybackslash}p{\dimexpr0.25\linewidth-\tabcolsep\relax}
-@{}}
-\toprule
-Order & Fill \\
-\midrule
-\endhead
-\bottomrule
-\endlastfoot
+Let \(\mathbb F\) be the scalar field of BN254 and \(H=\{1,\omega,\ldots,\omega^{n-1}\}\) an evaluation domain, where \(n\) is a power of two, \(N\le n\), and \(\omega\) has order \(n\). The four book columns \(B,A,IOB,IOA\) are polynomials represented by their evaluations on \(H\), with \(B(\omega^i)=b_i\), for example. Each column entry is below \(2^{k_{in}}\), and accumulated quantities are bounded by \(2^k\), with \(k\ge k_{in}+\lceil\log_2 N\rceil\). Our 1,000-tick, 32-bit configuration uses \(n=1024\) and \(k=42\).
 
-Limit or market order strictly better than \(p^*\), or on the short side at \(p^*\)
-  & \(q\) \\
-Limit order at exactly \(p^*\) on the long side
-  & \(q \cdot (P - R)/P\) \\
-Imbalance-only order on the short side, eligible at \(p^*\)
-  & \(q \cdot I/J\) \\
-Any other order
-  & 0 \\
-\end{longtable}
+The nine derived value columns consist of four depth accumulators for ordinary and IO orders; executable volume \(Min\); two surplus columns; imbalance \(\Delta\); and the inequality witness \(Slack\). Together with the four book columns, these give 13 value columns. For the configuration above, the range checks require 46 limb columns and the lookup argument 29 more columns, for 88 witness columns in total.
 
-
-\subsection{Relation to the Nasdaq Closing Cross}
-
-Nasdaq Rule 4754(b)(2) first maximizes executed shares, then minimizes imbalance. For remaining ties it considers the entered price at which shares stay unexecuted and finally proximity to the continuous market's bid--ask midpoint [37, Rule 4754(b)(2)]. Table 10 gives the corresponding steps in our rule.
-
-\textbf{Table 10.} The steps of the Closing Cross and of \(\mathsf{Clear}\).
-
-\begin{longtable}{@{}
-  >{\raggedright\arraybackslash}p{\dimexpr0.32\linewidth-\tabcolsep\relax}
-  >{\raggedright\arraybackslash}p{\dimexpr0.36\linewidth-2\tabcolsep\relax}
-  >{\raggedright\arraybackslash}p{\dimexpr0.32\linewidth-\tabcolsep\relax}
-@{}}
-\toprule
-Closing Cross & \(\mathsf{Clear}\) & Difference \\
-\midrule
-\endhead
-\bottomrule
-\endlastfoot
-
-(A) maximize executed shares
-  & \(V\) and the plateau \(\Pi\)
-  & None \\
-
-(B) minimize the imbalance
-  & \(v\) and the minimizers
-  & None \\
-
-(C) the entered price at which shares remain unexecuted
-  & Candidate: the long side's volume at the tick covers the imbalance
-  & We state the step as the inequality \(\lambda_i \ge v\) \\
-
-(D) closest to the bid-ask midpoint
-  & The least candidate
-  & A batch market has no continuous quote to refer to \\
-\end{longtable}
-
-The Closing Cross can draw on the continuous book. Our batch contains only orders represented in its four columns. We admit IO orders after setting the price, so they affect execution volume alone. At the cross price, Nasdaq Rule 4754(b)(3) allocates by order type and time priority. We use pro rata allocation on the long side, consistent with the absence of time priority within an FBA batch \cite{budish2015}.
-
-% !TEX root = ../main.tex
-
-\section{The zk-FBA Protocol}
-
-\subsection{Overview}
-
-The exchange receives orders, maintains the book, and clears each batch. Traders check receipts for their own orders. Any party with access to the append-only public board can verify the batch outcome.
-
-Figure 1 traces a batch from the empty book to public verification.
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  \textbf{Open.} The exchange publishes commitments to an empty book and a proof that it is empty.
-\item
-  \textbf{Collect.} For each order, the exchange updates the commitments, appends the change to the board, and returns an update receipt to the trader. The trader checks the receipt against the board.
-\item
-  \textbf{Close.} The exchange runs the clearing rule of Section 2.1 on the book. It publishes either a clearing receipt with a \emph{clearing proof}, or a \emph{no-cross proof} if no bid meets an ask. It also publishes an \emph{update-validity proof} that every logged change is a valid order.
-\item
-  \textbf{Verify.} The verifier checks the opening, the chain of updates, and the two proofs against the final commitments.
-\end{enumerate}
-
-\textbf{Figure 1.} Messages exchanged during a batch. Dashed arrows indicate reads from the public board.
-
-\textbf{Public information.} The board records order counts and arrival times. For a crossing batch, the exchange also publishes \((V_{max},c,d,p^*,V_{min\Delta},s,P,J)\). The first three entries give the maximum executable volume and the endpoints of its plateau. The next three give the clearing tick, its imbalance, and the long side (\(s=0\) for demand and \(s=1\) for supply). \(P\) is the long-side volume at exactly \(p^*\), and \(J\) is the eligible IO volume on the short side. A balanced batch uses \(s=P=J=0\).
-
-\subsection{Encoding the Book}
-
-\textbf{Domain.} Let \(\mathbb{F}\) be the scalar field of BN254 and \(H = \{1, \omega, \ldots, \omega^{n-1}\} \subset \mathbb{F}\) a multiplicative subgroup, with \(n\) a power of two. The book has \(N \le n\) price ticks, and tick \(i\) sits at \(\omega^i\). Ticks \(N, \ldots, n-1\) are padding. A \emph{column} is a polynomial of degree below \(n\) given by its values on \(H\); we write \(B[i]\) for \(B(\omega^i)\). A constraint \(F(X) = 0\) means that \(F\) vanishes on \(H\), that is, \(Z_H(X) = X^n - 1\) divides \(F\). \(L_i(X)\) is the Lagrange polynomial that is 1 at \(\omega^i\) and 0 on the rest of \(H\).
-
-\textbf{Orders.} We store ordinary bids \(B\), ordinary asks \(A\), IO bids \(IOB\), and IO asks \(IOA\) in four columns. An order of size \(q\) at tick \(i\) adds \(q\) to one cell. We encode a market buy at tick \(N-1\) and a market sell at tick 0, making each eligible across the grid.
-
-\textbf{Widths.} We fix two bit widths at setup. Every entry of the book is below \(2^{k_{in}}\), and every accumulated quantity is below \(2^k\) with \(k \ge k_{in} + \lceil \log_2 N \rceil\). We use \(k_{in} = 32\) and \(k = 42\) for \(N = 1000\).
-
-\textbf{Derived columns.} The exchange computes nine value columns from the four book columns. Table 1 lists these alongside the lookup witnesses and public polynomials. Figure 2 follows the calculation on eight ticks.
-
-\textbf{Table 1.} Committed columns and public polynomials. For \(n = 1024\) and \(k_{in} = 32\) there are 88 columns.
-\begin{longtable}{@{}
-  >{\raggedright\arraybackslash}p{0.31\linewidth}
-  >{\raggedright\arraybackslash}p{\dimexpr0.59\linewidth-4\tabcolsep\relax}
-  >{\raggedright\arraybackslash}p{0.10\linewidth}
-@{}}
-\toprule
-Column & Value at tick \(i\) & Count \\
-\midrule
-\endhead
-\bottomrule
-\endlastfoot
-
-\(B\), \(A\), \(IOB\), \(IOA\)
-  & The book & 4 \\
-\(AccB\), \(IOAccB\)
-  & Demand depth: sum of bids at ticks \(\ge i\) & 2 \\
-\(AccA\), \(IOAccA\)
-  & Supply depth: sum of asks at ticks \(\le i\) & 2 \\
-\(Min\)
-  & Executable volume \(\min(AccA[i], AccB[i])\) & 1 \\
-\(SurpB\), \(SurpA\)
-  & \(AccB[i] - Min[i]\) and \(AccA[i] - Min[i]\) & 2 \\
-\(\Delta\)
-  & Imbalance \(\lvert AccA[i] - AccB[i] \rvert\) & 1 \\
-\(Slack\)
-  & Gap witnesses for strict inequalities & 1 \\
-Limbs
-  & 8-bit limbs of the\newline nine range-checked quantities & 46 \\
-\(Mult\), \(h_1, \ldots, h_{26}\), \(U\), \(S\)
-  & Lookup columns (Section 3.4) & 29 \\
-
-\textbf{Public polynomial} & \textbf{Definition} & \\
-\(Pad\)
-  & \(\sum_{i=N}^{n-1} L_i\) & \\
-\(Mask_P\)
-  & \(\sum_{i=c}^{d} L_i\), the plateau & \\
-\(Mask_C\)
-  & \(L_{c-1} + L_{d+1}\), omitting a term whose index leaves
-    \([0, n-1]\) & \\
-\(Mask_T\)
-  & \(L_{p^*-1}\) if \(p^* > c\) and
-    (\(s = 1\) or \(V_{min\Delta} = 0\)), else 0 & \\
-\(T\)
-  & \(\sum_{i < 256} i \cdot L_i\), the range table & \\
-\end{longtable}
-The verifier derives the public polynomials from the parameters and receipt. They require no additional commitments.
-
-%\includesvg{figures/fig2-worked-book.svg}
-
-\textbf{Figure 2.} Bids of 3, 10, and 2 units rest at ticks 2, 5, and 6. Asks of 4, 6, 5, and 3 rest at ticks 1, 2, 6, and 7, and a one-unit sell IO rests at tick 4. Volume reaches 10 at ticks 2 through 5. Demand exceeds supply by five units at tick 2 and by two at ticks 3 through 5. The tertiary rule selects tick 5, giving the receipt \((10,2,5,5,2,0,10,1)\).
-
-\subsection{Walkthrough of a Constraint}
-
-To constrain \(Min[i]=\min(AccA[i],AccB[i])\) at every tick, we introduce two surpluses. Each is the difference between a depth and the proposed minimum.
-
-\begin{equation}
-\begin{gathered}
-SurpB(X) - \bigl(AccB(X) - Min(X)\bigr) = 0, \\
-SurpA(X) - \bigl(AccA(X) - Min(X)\bigr) = 0.
-\end{gathered}
-\tag{F9, F10}
-\end{equation}
-
-\[SurpA(X) \cdot SurpB(X) = 0 \tag{F11}\]
-
-\[SurpB[i] \in [0, 2^k), \qquad SurpA[i] \in [0, 2^k) \quad \text{for all } i \tag{F12, F13}\]
-
-F11 sets at least one surplus to zero, so \(Min\) equals one of the depths. F12 and F13 bound both differences to \([0,2^k)\). Under the width bound in Appendix~\ref{app:zq-constraint-proof}, a negative difference maps to a field element above this range. At tick 3 in Figure 2, demand is 12 and supply is 10. The only possible witnesses are \(Min=10\), \(SurpB=2\), and \(SurpA=0\).
-
-F9 and F10 bind those differences to the book. Without them, both surplus witnesses could be zero regardless of the proposed minimum.
-
-Because at least one surplus vanishes, their sum gives the absolute imbalance. The identity
-
-\[\Delta(X) - \big(SurpA(X) + SurpB(X)\big) = 0 \tag{F18}\]
-
-forces \(\Delta[i] = \lvert AccA[i] - AccB[i] \rvert\).
-
-\subsection{Range Checks}
-
-Every inequality in the protocol is a range check, and we use one gadget for all of them. To prove \(Y[i] \in [0, 2^b)\) for a column \(Y\) at every tick, the prover commits to limb columns \(\ell_0, \ldots, \ell_{m-1}\) with \(m = \lceil b/8 \rceil\) and shows
-
-\[Y(X) - \sum_{l=0}^{m-1} 2^{8l}\, \ell_l(X) = 0,\]
-
-together with the claim that every limb value lies in the table \(\{0, \ldots, 255\}\) (for a domain smaller than 256 we use narrower limbs). When \(b\) is not a multiple of 8, the top limb must be below \(2^r\) with \(r = b \bmod 8\); this holds exactly when \(2^{8-r}\) times the top limb is also in the table, so we look that value up as well. The range proved is exactly \([0, 2^b)\).
-
-We prove table membership for all limbs of all nine quantities with one logarithmic-derivative lookup \cite{habock2022}. Let \(f_1, \ldots, f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\), where \(Mult[v]\) counts the cells equal to \(v\). After a challenge \(\beta\), it commits to helper columns defined on \(H\) by
-
-\[h_j = \frac{1}{\beta - f_{2j-1}} + \frac{1}{\beta - f_{2j}}, \qquad U = \frac{Mult}{\beta - T}, \qquad S[i+1] = S[i] + \sum_j h_j[i] - U[i].\]
-
-We constrain the helpers by the following identities.
-
-\[h_j \,(\beta - f_{2j-1})(\beta - f_{2j}) - (\beta - f_{2j-1}) - (\beta - f_{2j}) = 0, \qquad U\,(\beta - T) - Mult = 0,\]
-
-\[S(\omega X) - S(X) - \Big(\sum_j h_j(X) - U(X)\Big) = 0. \tag{F23}\]
-
-The running sum wraps from \(\omega^{n-1}\) to 1. Summing its differences over \(H\) cancels every term of \(S\), yielding
-
-\[\sum_{i=0}^{n-1} \sum_{e=1}^{E} \frac{1}{\beta - f_e[i]} = \sum_{i=0}^{n-1} \frac{Mult[i]}{\beta - T[i]}.\]
-
-As an identity of rational functions in \(\beta\), this holds only if every \(f_e[i]\) is a table value. The limbs and \(Mult\) are committed before \(\beta\) is drawn, so a prover with a cell outside the table passes with probability at most \((2E+2)\,n/|\mathbb{F}|\) (Appendix~\ref{app:zq-security-errors}). The running sum needs no initial condition, since only its differences are constrained.
-
-A first version of the protocol committed to one column per bit, with a booleanity constraint on each \cite{plonkbook}. For 32-bit volumes that is 351 columns. With limbs and the lookup we have 46 limb columns and 29 lookup columns, and the proof falls from 22.9 KB to 6.1 KB. The lookup costs a second prover round and raises the degree of the quotient from about \(n\) to about \(2n\).
+Let \(L_i(X)\) denote the Lagrange polynomial selecting tick \(i\). The verifier constructs the public polynomials
+\[
+\begin{aligned}
+Pad(X)&=\sum_{i=N}^{n-1}L_i(X),\\
+Mask_P(X)&=\sum_{i=c}^{d}L_i(X),\\
+Mask_C(X)&=\sum_{i\in\{c-1,d+1\}\cap\{0,\ldots,n-1\}}L_i(X),\\
+Mask_T(X)&=\begin{cases}
+L_{p^*-1}(X),&p^*>c\text{ and }(s=1\text{ or }v=0),\\
+0,&\text{otherwise.}
+\end{cases}
+\end{aligned}
+\]
+The range table is likewise a public polynomial with evaluations \(T(\omega^i)=i\) on the table rows (0 through 255 for eight-bit limbs). No commitments to these public polynomials are needed.
 
 \subsection{Clearing Constraints}
 
-Table 2 groups the constraints by their role in clearing. Appendix B gives the full identities.
+\paragraph{Scalar checks.} Before checking polynomial identities, the verifier checks the receipt:
+\[
+\begin{aligned}
+0&\le c\le p^*\le d\le N-1, & 1&\le V<2^k,\\
+s&\in\{0,1\}, & 0&\le v\le P<2^k,\quad 0\le J<2^k.
+\end{aligned}
+\]
+If \(v=0\), it also requires \(s=P=J=0\). The polynomial constraints F1--F33 are listed in the main paper; here we explain only the less immediate parts.
 
-\textbf{Table 2.} The clearing constraints. A range check is a limb decomposition whose limbs enter the lookup F23.
+\paragraph{Maximum-volume plateau.} F14 bounds the volume at each tick by \(V\), F15--F16 pin the claimed endpoints to that maximum, and F17 makes the immediately adjacent ticks strictly smaller:
+\[
+Mask_C(X)\bigl(V-Min(X)-1-Slack(X)\bigr)=0.\tag{F17}
+\]
+These conditions identify the entire plateau because \(Min\) is the pointwise minimum of a non-increasing demand sequence and a non-decreasing supply sequence. Specifically, for \(i<j<\ell\), \(Min[j]\ge\min(Min[i],Min[\ell])\). The selector \(Mask_C\) omits a cliff at a domain boundary, and the range check on \(Slack\) enforces strict inequality without publishing the cliff volumes.
 
-\begin{longtable}{@{}
-  >{\raggedright\arraybackslash}p{0.21\linewidth}
-  >{\raggedright\arraybackslash}p{\dimexpr0.41\linewidth-2\tabcolsep\relax}
-  >{\raggedright\arraybackslash}p{\dimexpr0.38\linewidth-2\tabcolsep\relax}
-@{}}
-\toprule
-Group & Constraints & What they force \\
-\midrule
-\endhead
-\bottomrule
-\endlastfoot
+\paragraph{Price tie-break.} F19--F20 establish minimum imbalance on the plateau and pin the chosen side. The verifier also checks \(v\le P\). For supply-long or balanced outcomes with \(p^*>c\), F21 excludes a lower qualifying price:
+\[
+Mask_T(X)\bigl(\Delta(X)-v-1-Slack(X)\bigr)=0.\tag{F21}
+\]
+The same \(Slack\) column supports the inequalities in F17 and F21.
 
-Book
-  & F1, F2, F24, F25 (range);
-    F3, F4, F26, F27 (\(Pad \cdot B = 0\), and likewise)
-  & Entries in \([0, 2^{k_{in}})\); padding ticks empty \\
+\paragraph{No-cross.} When ordinary orders cannot cross, the exchange proves a smaller statement using the ordinary book columns, their cumulative depths, F1--F8, the relevant range checks, and
+\[
+AccA(X)\,AccB(X)=0.
+\]
+Since both depths are nonnegative, this forces zero executable volume at every tick. IO orders do not create a cross.
 
-Depth
-  & F5--F8, F28--F31
-  & \(AccB\), \(IOAccB\) are suffix sums;
-    \(AccA\), \(IOAccA\) are prefix sums \\
+\subsection{Range Checks and Lookup}
 
-Executable volume
-  & F9--F13
-  & \(Min = \min(AccA, AccB)\) \\
+To prove that a column \(Y\) represents integers in \([0,2^b)\), we decompose it into \(w\)-bit limb columns \(\ell_0,\ldots,\ell_{m-1}\), with \(m=\lceil b/w\rceil\), and impose
+\[
+Y(X)-\sum_{j=0}^{m-1}2^{wj}\ell_j(X)=0.
+\]
+Each limb must belong to the public range table. We use \(w=8\) when \(n\ge256\), and narrower limbs for smaller domains. If \(b\) is not divisible by \(w\), we also check that \(2^{w-r}\ell_{m-1}\) lies in the table, for \(r=b\bmod w\); this restricts the top limb to \(r\) bits.
 
-Phase 1: plateau
-  & F14 (range of \(V_{max} - Min\));
-    F15, F16 (\(Min = V_{max}\) at \(c\) and \(d\));
-    F17 (cliffs)
-  & \(V_{max}\) is the maximum of \(Min\) and
-    \([c,d]\) is exactly where it is attained \\
+For table membership we use a logarithmic-derivative lookup. Let \(f_1,\ldots,f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\); after challenge \(\beta\), it supplies pair helpers \(h_j\), a table helper \(U\), and a running-sum column \(S\), satisfying
+\[
+\begin{aligned}
+h_j&=\frac{1}{\beta-f_{2j-1}}+\frac{1}{\beta-f_{2j}},&
+U&=\frac{Mult}{\beta-T},\\
+S(\omega X)-S(X)&=\sum_j h_j(X)-U(X).
+\end{aligned}
+\]
+The corresponding polynomial constraints are
+\[
+\begin{aligned}
+h_j(\beta-f_{2j-1})(\beta-f_{2j})
+ &-(\beta-f_{2j-1})-(\beta-f_{2j})=0,\\
+U(\beta-T)-Mult&=0,\\
+S(\omega X)-S(X)-\sum_j h_j(X)+U(X)&=0.
+\end{aligned}\tag{F23}
+\]
+Summing the last identity over the cyclic domain cancels the running-sum terms and gives equality between the rational lookup sums and table multiplicities. Since the looked-up columns and multiplicities are committed before \(\beta\), an invalid membership claim is detected with high probability. The running sum needs no initial condition.
 
-Phase 2: clearing tick
-  & F18 (\(\Delta\));
-    F19 (range of \(\Delta - V_{min\Delta}\) on the plateau);
-    F20 (pins at \(p^*\)); F21 (tie-break);
-    F22 (range of \(Slack\))
-  & \(V_{min\Delta}\) is the minimum imbalance on the plateau,
-    attained at \(p^*\) on side \(s\); no lower tick qualifies \\
-
-Phase 3: rationing
-  & F32, F33 (pins at \(p^*\))
-  & \(P\) and \(J\) are the at-price long volume and
-    the eligible IO volume \\
-
-Lookup
-  & F23
-  & Every limb is in \(\{0, \ldots, 255\}\) \\
-\end{longtable}
-
-\textbf{Depth.} The two accumulators run in opposite directions:
-
-\begin{equation}
-\begin{gathered}
-L_{n-1}(X)\bigl(AccB(X) - B(X)\bigr) = 0, \\
-(X - \omega^{n-1})\bigl[AccB(X) - AccB(\omega X) - B(X)\bigr] = 0,
-\end{gathered}
-\tag{F5, F7}
-\end{equation}
-
-\begin{equation}
-\begin{gathered}
-L_{0}(X)\bigl(AccA(X) - A(X)\bigr) = 0, \\
-(X - \omega^{n-1})\bigl[AccA(\omega X) - AccA(X) - A(\omega X)\bigr] = 0.
-\end{gathered}
-\tag{F6, F8}
-\end{equation}
-
-The factor \(X-\omega^{n-1}\) disables both recurrences at the wraparound. Demand adds the current tick's bids to demand at the next tick. Supply adds the next tick's asks to supply at the current tick. The recurrences include padding rows, where F3 and F4 set the book entries to zero. A bid in a padding row would otherwise contribute to demand at every real price.
-
-\textbf{Phase 1.} F14 gives \(Min \le V_{max}\) everywhere, and F15 and F16 pin \(Min = V_{max}\) at the two endpoints. The cliff constraint makes the ticks just outside strictly lower:
-
-\[Mask_C(X) \cdot \big(V_{max} - Min(X) - 1 - Slack(X)\big) = 0, \tag{F17}\]
-
-with \(Slack \ge 0\) by F22. These four constraints pin the whole plateau, because \(Min\) is the pointwise minimum of a non-increasing and a non-decreasing sequence: for \(i < j < l\) we have \(Min[j] \ge \min(Min[i], Min[l])\). Every tick between \(c\) and \(d\) therefore attains \(V_{max}\), and a tick beyond a cliff that attained it would lift the cliff to \(V_{max}\) as well. The executable volume at the cliffs stays hidden behind \(Slack\); opening it would disclose depth that the receipt does not contain. \(Mask_C\) drops a cliff that does not exist (\(c = 0\) or \(d = n-1\)), so no index wraps around the domain.
-
-\textbf{Phase 2.} F19 proves \(\Delta \ge V_{min\Delta}\) on the plateau, and the two pins
-
-\begin{equation}
-\begin{gathered}
-L_{p^*}(X)\bigl(SurpB(X) - (1-s)\,V_{min\Delta}\bigr) = 0, \\
-L_{p^*}(X)\bigl(SurpA(X) - s\,V_{min\Delta}\bigr) = 0
-\end{gathered}
-\tag{F20}
-\end{equation}
-
-show that the minimum is attained at \(p^*\) and fix which side is long.
-
-Ticks 3 through 5 in Figure 2 all minimize imbalance. At tick 3 the bids strictly above the clearing price would total 12 units, yet ordinary supply is only 10. To fill better-priced orders in full even when no IO orders arrive, we require long-side volume at the clearing tick to cover the entire initial imbalance, \(V_{min\Delta}\le P\). This yields the tertiary rule.
-
-\begin{quote}
-Among the plateau ticks with minimum imbalance, \(p^*\) is the lowest one whose long-side volume at that tick covers the imbalance.
-\end{quote}
-
-In Figure 2, only tick 5 has sufficient at-price volume (\(P=10\) for an imbalance of 2). For a positive minimum imbalance, at most two ticks qualify, the highest demand-long minimizer and the lowest supply-long minimizer. At least one exists. When the imbalance is zero, every balanced plateau tick qualifies (Appendix A). The verifier checks \(V_{min\Delta}\le P\) on the receipt. For a supply-long or balanced outcome above \(c\), the following identity excludes a lower candidate.
-
-\[Mask_T(X) \cdot \big(\Delta(X) - V_{min\Delta} - 1 - Slack(X)\big) = 0. \tag{F21}\]
-
-The tick \(p^* - 1\) lies inside the plateau and the cliffs lie outside it, so one \(Slack\) column serves F17 and F21.
-
-\textbf{Phase 3.} Two pins bind the remaining receipt values to the book, with \(\nu = 1\) if \(V_{min\Delta} > 0\) and 0 otherwise:
-
-\begin{equation}
-\begin{gathered}
-\nu\,L_{p^*}(X)\bigl((1-s)\,B(X) + s\,A(X) - P\bigr) = 0, \\
-\nu\,L_{p^*}(X)\bigl((1-s)\,IOAccA(X) + s\,IOAccB(X) - J\bigr) = 0.
-\end{gathered}
-\tag{F32, F33}
-\end{equation}
-
-From the receipt we compute admitted IO volume \(I=\min(J,V_{min\Delta})\), residual imbalance \(R=V_{min\Delta}-I\), and traded volume \(V_{max}+I\). With positive imbalance, long-side volume at \(p^*\) fills at \((P-R)/P\). Eligible short-side IO volume fills at \(I/J\) when \(J>0\). All other eligible ordinary volume fills in full. In Figure 2, one IO unit trades and one unit of demand remains unfilled. Bids at tick 5 fill at \(9/10\), bringing total traded volume to 11. Traders can apply these ratios to their own orders before integer rounding.
-
-\textbf{Scalar checks.} Before checking polynomial identities, the verifier requires \(0\le c\le p^*\le d\le N-1\), \(1\le V_{max}<2^k\), \(s\in\{0,1\}\), \(0\le V_{min\Delta}\le P<2^k\), and \(0\le J<2^k\). A zero imbalance also requires \(s=P=J=0\). The first check places the clearing tick inside the claimed plateau.
-
-\textbf{Uniqueness.} A crossing book admits exactly one receipt. Theorem 1 in Appendix~\ref{app:zq-constraint-proof} shows that an accepted receipt satisfies the clearing rule. Theorem 2 constructs a witness for the receipt that the rule selects.
-
-\subsection{The No-Cross Statement}
-
-When no bid meets an ask, executable volume is zero at every tick. We prove this smaller statement separately. The exchange commits to \(B\), \(A\), \(AccB\), \(AccA\), and the limbs of \(B\) and \(A\). It proves F1--F8, table membership for those limbs, and
-
-\[AccA(X) \cdot AccB(X) = 0.\]
-
-Both depths are sums of range-checked entries, so they are non-negative, and the product vanishes at a tick exactly when \(\min(AccA, AccB) = 0\) there. No receipt value is disclosed. Imbalance-only orders take no part, since they cannot create a cross.
-
-
-\subsection{Proving Polynomial Constraints with a PIOP}
+\subsection{Proving the Constraints with a PIOP}
 \label{app:piop}
 
-
-Following the PIOP construction \cite{GWC19}, the prover commits to the witness in two rounds before committing to the quotient.
-
+We follow a PLONK-style polynomial interactive oracle proof \cite{GWC19}, with an additional lookup round. The main steps are:
 \begin{enumerate}
-\renewcommand{\labelenumi}{\arabic{enumi}.}
-\raggedright
-
-\item The prover commits to the value columns, the limb columns, and
-      \(Mult\). The book columns are already committed on the board
-      (Section~4).
-
-\item The verifier sends \(\beta\). The prover commits to the lookup
-      helpers.
-
-\item The verifier sends \(\alpha\). The prover combines the identities
-      into \mbox{\(F(X) = \sum_t \alpha^t F_t(X)\)}. It then computes
-      the quotient \mbox{\(Q(X) = F(X)/Z_H(X)\)} and commits to it.
-
-\item The verifier sends \(\zeta\). The prover opens every column at
-      \(\zeta\). It also opens the shifted columns \(AccB\), \(AccA\),
-      \(IOAccB\), \(IOAccA\), \(A\), \(IOA\), and \(S\) at
-      \(\omega\zeta\).
-
-\item The verifier evaluates the public polynomials at \(\zeta\),
-      recomputes \(F(\zeta)\) from the openings, and checks
-      \mbox{\(F(\zeta) = Q(\zeta)\,Z_H(\zeta)\)}.
-
+\item Commit to the value columns, range-check limbs, and \(Mult\). The four book-column commitments already appear on the public board.
+\item After challenge \(\beta\), commit to the lookup-helper columns.
+\item After challenge \(\alpha\), combine constraints into \(F(X)=\sum_t\alpha^tF_t(X)\), commit to the quotient \(Q(X)=F(X)/Z_H(X)\), where \(Z_H(X)=X^n-1\).
+\item After challenge \(\zeta\), open the columns at \(\zeta\). Shifted openings at \(\omega\zeta\) are also required for the four depth accumulators, \(A\), \(IOA\), and \(S\).
+\item Reconstruct \(F(\zeta)\) from the openings and check \(F(\zeta)=Q(\zeta)Z_H(\zeta)\).
 \end{enumerate}
+We use hiding KZG commitments \cite{KZG10} over BN254, aggregate openings at each point, and apply Fiat--Shamir using a SHA-256 transcript bound to the parameters, receipt, and commitments. Random multiples of \(Z_H\) mask witness columns without changing their values on \(H\). For the 1,024-row, 32-bit configuration, the clearing proof occupies 6,124 bytes; the reference string supports degrees through \(2n+8\). The public selector evaluations can depend on plateau width, even though the number of commitments and opening points is fixed.
 
-We commit with KZG10 \cite{KZG10} over BN254 in its hiding form, batch all openings at one point into one group element with a random linear combination, and verify both points with two pairings. We remove the verifier\textquotesingle s messages with the Fiat--Shamir transform over a SHA-256 transcript that absorbs the parameters, the receipt, and every commitment. For zero knowledge, the prover adds to each column a random multiple of \(Z_H\), which changes no value on \(H\) and makes the openings at \(\zeta\) and \(\omega\zeta\) independent of the column.
+\subsection{Committed Book and Trader Checks}
+\label{app:committed-book}
 
-The lookup pair identities are cubic in the columns. The remaining identities are at most quadratic. The quotient has degree about \(2n\), and the implementation uses a reference string through degree \(2n+8\). For \(n=1024\) and 32-bit volumes, 88 column commitments, the quotient commitment, and their openings occupy 6,124 bytes. With a fixed column layout, the numbers of commitments and pairings stay fixed. Evaluating public selectors can still depend on the plateau width (Appendix D).
+The clearing proof is tied to the final commitments of an append-only order log. Trader receipts establish inclusion of acknowledged orders; an additional update-validity proof prevents logged negative updates from removing them.
 
-\section{The Committed Book and Trader Checks}
+\subsubsection{Commitment and Opening}
 
-The clearing proof binds the outcome to four committed columns. To connect those columns to the orders traders submitted, the exchange commits to an empty book before trading begins and publishes each subsequent update.
+Let \([x]_1\) denote a scalar multiple of the first pairing-group generator, and let \(\Gamma=[\gamma]_1\) denote the blinding generator. A book column is committed as
+\[
+C=[\mathrm{col}(\tau)]_1+[\rho_0(\tau)Z_H(\tau)]_1+[\gamma r(\tau)]_1,
+\qquad \mathrm{col}(X)=\sum_i\mathrm{col}[i]L_i(X),
+\]
+where \(\rho_0\) and \(r\) are random degree-three masking polynomials. Their values are retained for the clearing proof. To certify an initially empty column, the exchange publishes \(C_0\), \(C_\rho=[\rho_0(\tau)]_1\), and \(C_r=[\gamma r(\tau)]_1\), with a Schnorr proof \cite{Sch91} of knowledge of the blinding polynomial, and the verifier checks
+\[
+e(C_0-C_r,[1]_2)=e(C_\rho,[Z_H(\tau)]_2).
+\]
+Thus the committed value component is a multiple of \(Z_H\) and vanishes at every tick.
 
-\subsection{Commitment and Opening}
+\subsubsection{Recording an Order}
 
-The reference string holds \([\tau^i]_1\) for a secret \(\tau\), and a short blinding basis \([\gamma\tau^i]_1\), \(i \le 3\), for a second secret \(\gamma\). We write \([x]_1\) for \(x\) times the generator of the first pairing group and \(\Gamma = [\gamma]_1\). Each of the four book columns has a running commitment
+For an order of quantity \(q\) at tick \(\ell\), the exchange updates the selected column commitment by \(\Phi=q[L_\ell(\tau)]_1+\rho\Gamma\), while reblinding the other three columns. It appends all four updated commitments to the public board in a fixed order and returns the trader the receipt
+\[
+(\mathrm{column},\ell,q,\rho,C_{before},C_{after}).
+\]
+The trader verifies
+\[
+C_{after}=C_{before}+q[L_\ell(\tau)]_1+\rho\Gamma
+\]
+and checks that the two commitments are consecutive entries for that column in the public log. The differences are Pedersen-style commitments \cite{Ped91a}; fresh blinding conceals which column carries the actual order. Each log entry hashes the preceding digest, its index, column, and commitment. The inclusion check relies on participants seeing a consistent published log head.
 
-\[C = [\mathrm{col}(\tau)]_1 + [\rho_0(\tau)\,Z_H(\tau)]_1 + [\gamma\, r(\tau)]_1,\]
-
-where \(\mathrm{col}(X) = \sum_i \mathrm{col}[i]\, L_i(X)\) holds the column\textquotesingle s values, \(\rho_0\) is a random mask of degree 3, and \(r\) is a blinding polynomial of degree 3. This is a hiding KZG10 commitment \cite{KZG10} to the masked column of Section 3.7. The mask is fixed when the batch opens, because the clearing proof later opens this polynomial at \(\zeta\).
-
-To open a batch, the exchange publishes for each column the commitment \(C_0\) to the zero column, the elements \(C_\rho = [\rho_0(\tau)]_1\) and \(C_r = [\gamma r_0(\tau)]_1\), and a Schnorr proof \cite{Sch91} that it knows \(r_0\) with \(C_r\) in the span of the blinding basis. The verifier checks the Schnorr proof and
-
-\[e(C_0 - C_r,\ [1]_2) = e(C_\rho,\ [Z_H(\tau)]_2).\]
-
-The Schnorr proof accounts for the blinding component \(C_r\). The pairing equation then binds the value component of \(C_0\) to a multiple of \(Z_H\), which vanishes at every tick.
-
-\subsection{Recording an Order}
-
-Additive homomorphism lets the trader check one order by taking the difference between two consecutive commitments.
-
-\begin{quote}
-\textbf{Protocol 1 (order update).} The trader sends an order of quantity \(q\) at tick \(\ell\) for one column (a market buy uses \(\ell = N-1\), a market sell \(\ell = 0\)).
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  The exchange draws \(\rho, \rho_1', \rho_2', \rho_3'\) at random. It moves the order\textquotesingle s column by \(\Phi = q\,[L_\ell(\tau)]_1 + \rho\,\Gamma\) and each other column by \(\rho_t'\,\Gamma\).
-\item
-  The exchange appends the four new commitments to the board, in a fixed column order.
-\item
-  The exchange returns the receipt \((\text{column}, \ell, q, \rho, C_{before}, C_{after})\) to the trader.
-\item
-  The trader checks \(C_{after} = C_{before} + q\,[L_\ell(\tau)]_1 + \rho\,\Gamma\) and that \(C_{before}\) and \(C_{after}\) are consecutive commitments of that column on the board.
-\end{enumerate}
-\end{quote}
-
-The difference \(\Phi\) is a Pedersen commitment \cite{pedersen1991} to \(q\) at position \(\ell\). Binding and the board check in step 4 tie that contribution to the identified column and log entry. A trader may disclose the receipt to a third party, who can repeat the check.
-
-\textbf{Public log.} Fresh uniform blinding makes each of the four steps a uniform group element. Three steps change only the blinding, and all four appear in fixed order. Observers learn when an order arrived. The distribution of the steps hides its side, type, tick, and quantity.
-
-\textbf{Log consistency.} Each entry hashes the previous digest together with its own index, column, and commitment. The first digest binds the opening. For a digest to identify a common history, all parties must see the same published head.
-
-\subsection{Update Validity}
+\subsubsection{Update Validity}
 \label{app:zq-update-validity}
 
-A receipt verifies one addition, while the clearing proof uses the sum of all additions. A later negative step could cancel an acknowledged order without invalidating its receipt. At the close, the exchange therefore proves a statement about every logged step.
+A valid receipt alone would not stop the exchange from cancelling the order with a subsequent negative update. Let \(\Phi_0,\ldots,\Phi_{\mu-1}\) be the logged commitment differences, four per order. The update-validity proof establishes that each step adds a quantity \(q_j\in[0,2^{k_{in}})\) at one valid tick \(\ell_j\), or adds zero.
 
-\textbf{Statement.} Let \(\Phi_0, \ldots, \Phi_{\mu-1}\) be the \(\mu\) logged steps, four per order. For every \(j\) there are a quantity \(q_j \in [0, 2^{k_{in}})\) and a tick \(\ell_j\) such that \(\Phi_j\) commits to \(q_j L_{\ell_j}\), up to a multiple of \(Z_H\).
-
-\textbf{Construction.} We use a second domain \(K \supseteq H\) of size \(M\), a power of two fixed at setup, with one row per step.
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  The exchange commits to a column \(Qty\) with \(Qty[j] = q_j\) and a column \(Tick\) with \(Tick[j] = \omega^{\ell_j}\), and to a masked empty commitment \(\Phi_{mask}\) with the opening proof of Section 4.1.
-\item
-  A challenge \(\eta\) is derived from every \(\Phi_j\), \(\Phi_{mask}\), and the commitments to \(Qty\) and \(Tick\).
-\item
-  Both sides compute \(W = \Phi_{mask} + \sum_j \eta^j \Phi_j\) from the board. The exchange knows the column behind it: \(w[i] = \sum_{j : \ell_j = i} \eta^j q_j\), a histogram of the steps weighted by powers of \(\eta\).
-\item
-  The exchange proves, with the proof system of Section 3.7 run on \(K\), that \(Qty\) is in range (limbs and the lookup of Section 3.4) and that
-  \[\sum_{j<\mu} \frac{\eta^j\, q_j}{\beta - Tick[j]} = \sum_{i<n} \frac{w[i]}{\beta - \omega^i}\]
-  for a challenge \(\beta\) drawn after the commitments. This is the lookup argument again, with two helper columns and a running sum, and the quantities in place of unit numerators.
-\end{enumerate}
-
-The rational identity holds only if, at every tick \(i\), the weighted quantities of the steps that name tick \(i\) sum to \(w[i]\), and a step that names no tick contributes nothing. Since \(W\) is computed by the verifier from the log, \(w\) is also the weighted sum of what the steps actually commit to. The two agree for a random \(\eta\) only if they agree step by step. Every logged step therefore adds \(q_j \ge 0\) at one tick and nothing elsewhere, except with probability at most \((2E_Q + 12)\,M/|\mathbb{F}|\), where \(E_Q\) is the number of looked-up values of \(Qty\) (Appendix~\ref{app:zq-security-errors}). A step that adds zero is valid, which is what the three blinding-only steps of each order are.
-
-\textbf{Cost.} For the 32-bit quantities in our benchmarks, the update-validity proof contains 17 commitments and occupies 1,700 bytes. Its domain of size \(M\) accommodates four steps per order, hence at most \(M/4\) orders. The verifier computes \(W\) with a multi-scalar multiplication over the logged steps. A layout with four commitments per row could accommodate four times as many orders at the same domain size. Its running time remains unmeasured.
-
-\subsection{Verifying a Batch}
-
-The verifier checks the four empty-book openings, recomputes the digest from the log, verifies update validity against the logged steps, and checks the clearing or no-cross proof against the final commitments it uses. A trader also checks each update receipt against the log (Protocol 1) and uses the clearing receipt to compute the unrounded fill (Section 3.5).
-
-% !TEX root = ../main.tex
-
-
-\section{The Full Constraint List}
-
-We use the domain and columns of Section 3.2. Each identity holds throughout \(H\). Table 11 identifies the rows on which it imposes a restriction. For limb width \(w\) (\(w=8\) when \(n\ge256\)), let \(m_{in}=\lceil k_{in}/w\rceil\) and \(m=\lceil k/w\rceil\). We set \(\nu=1\) for positive \(V_{min\Delta}\) and \(\nu=0\) otherwise.
-
-\subsection{Scalar Checks}
-
-The verifier first checks the public receipt against the following bounds and conventions.
-
-\[0 \le c \le p^* \le d \le N-1, \qquad 1 \le V_{max} < 2^k, \qquad 0 \le V_{min\Delta} < 2^k,\]
-
+Use a second domain \(K\) of size \(M\), with \(K\supseteq H\), and one row per logged step. The prover commits to \(Qty[j]=q_j\) and \(Tick[j]=\omega^{\ell_j}\), along with an empty masking commitment \(\Phi_{mask}\), certified as above. After challenge \(\eta\), both sides form the aggregate commitment \(C_W\) and its underlying polynomial evaluations
 \[
-s \in \{0,1\}, \quad
-V_{min\Delta} \le P < 2^k, \quad
-0 \le J < 2^k, \quad
-V_{min\Delta} = 0 \Rightarrow s = P = J = 0.
+C_W=\Phi_{mask}+\sum_{j<\mu}\eta^j\Phi_j,
+\qquad w[i]=\sum_{j:\ell_j=i}\eta^j q_j.
 \]
+The verifier computes \(C_W\) from the log, while the prover supplies the committed polynomial \(W(X)\) with evaluations \(w[i]\). A weighted lookup, with challenge \(\beta\) drawn after commitments, establishes
+\[
+\sum_{j<\mu}\frac{\eta^j q_j}{\beta-Tick[j]}
+=\sum_{i<n}\frac{w[i]}{\beta-\omega^i}.
+\]
+This is enforced by four groups of polynomial constraints. Let \(\kappa\) generate \(K\), with \(\kappa^{M/n}=\omega\). The public polynomial \(P_\eta\) takes value \(\eta^j\) on step rows \(j<\mu\) and zero elsewhere; on row \(iM/n\), \(X_H=\omega^i\) and \(S_H=1\), with zero selector values on other rows. The prover also supplies helper columns \(G,U_H,S_2\). Write \(m_{in}=\lceil k_{in}/w\rceil\). The constraints are:
+\[
+\begin{aligned}
+Qty(X)-\sum_{j<m_{in}}2^{wj}\ell_j^{Qty}(X)&=0, &&\text{(U1)}\\
+G(X)(\beta-Tick(X))-P_\eta(X)Qty(X)&=0, &&\text{(U2)}\\
+U_H(X)(\beta-X_H(X))-S_H(X)W(X)&=0, &&\text{(U3)}\\
+S_2(\kappa X)-S_2(X)-G(X)+U_H(X)&=0. &&\text{(U4)}
+\end{aligned}
+\]
+The quantity limbs in U1 also undergo the table lookup. Cyclic summation of U4 gives the weighted lookup identity. Because \(\eta\) is sampled after the logged steps are fixed, a false aggregate would require a coincidental cancellation. Zero-quantity steps permit the three blinding-only updates per order. For 32-bit quantities, this proof has 17 commitments and occupies 1,700 bytes. With one row per logged step, the domain accommodates up to \(M/4\) orders.
 
-\subsection{Clearing Constraints}
-
-\textbf{Table 11.} The constraints of the clearing proof.
-
-\begingroup
-\small
-\setlength{\tabcolsep}{3pt}
-
-\begin{longtable}{@{}
-  >{\raggedright\arraybackslash}p{2.8em}
-  >{\raggedright\arraybackslash}p{0.18\linewidth}
-  >{\raggedright\arraybackslash}p{\dimexpr0.66\linewidth-2.8em-6\tabcolsep\relax}
-  >{\raggedright\arraybackslash}p{0.16\linewidth}
-@{}}
-\toprule
-\# & Name & Identity & Active at \\
-\midrule
-\endhead
-\bottomrule
-\endlastfoot
-
-F1 & Bid range
-   & \(B - \sum_{l<m_{in}} 2^{wl}\ell^{B}_l = 0\)
-   & All ticks \\
-
-F2 & Ask range
-   & \(A - \sum_{l<m_{in}} 2^{wl}\ell^{A}_l = 0\)
-   & All ticks \\
-
-F3 & Bid padding
-   & \(Pad \cdot B = 0\)
-   & Padding \\
-
-F4 & Ask padding
-   & \(Pad \cdot A = 0\)
-   & Padding \\
-
-F5 & Demand start
-   & \(L_{n-1} \cdot (AccB - B) = 0\)
-   & \(\omega^{n-1}\) \\
-
-F6 & Supply start
-   & \(L_0 \cdot (AccA - A) = 0\)
-   & \(\omega^0\) \\
-
-F7 & Demand step
-   & \((X - \omega^{n-1})\,\bigl[AccB(X)\)\newline
-     \(\quad {}- AccB(\omega X) - B(X)\bigr] = 0\)
-   & All but the last \\
-
-F8 & Supply step
-   & \((X - \omega^{n-1})\,\bigl[AccA(\omega X)\)\newline
-     \(\quad {}- AccA(X) - A(\omega X)\bigr] = 0\)
-   & All but the last \\
-
-F9 & Bid surplus
-   & \(SurpB - (AccB - Min) = 0\)
-   & All ticks \\
-
-F10 & Ask surplus
-    & \(SurpA - (AccA - Min) = 0\)
-    & All ticks \\
-
-F11 & Minimum selection
-    & \(SurpA \cdot SurpB = 0\)
-    & All ticks \\
-
-F12 & \(SurpB \ge 0\)
-    & \(SurpB - \sum_{l<m} 2^{wl}\ell^{sB}_l = 0\)
-    & All ticks \\
-
-F13 & \(SurpA \ge 0\)
-    & \(SurpA - \sum_{l<m} 2^{wl}\ell^{sA}_l = 0\)
-    & All ticks \\
-
-F14 & Ceiling
-    & \((V_{max} - Min) - \sum_{l<m} 2^{wl}\ell^{ceil}_l = 0\)
-    & All ticks \\
-
-F15 & Plateau, left end
-    & \(L_c \cdot (Min - V_{max}) = 0\)
-    & \(\omega^c\) \\
-
-F16 & Plateau, right end
-    & \(L_d \cdot (Min - V_{max}) = 0\)
-    & \(\omega^d\) \\
-
-F17 & Cliffs
-    & \(Mask_C \cdot \bigl(V_{max} - Min\)\newline
-      \(\quad {}- 1 - Slack\bigr) = 0\)
-    & \(\omega^{c-1}\), \(\omega^{d+1}\) where they exist \\
-
-F18 & Imbalance
-    & \(\Delta - (SurpA + SurpB) = 0\)
-    & All ticks \\
-
-F19 & Imbalance floor
-    & \(Mask_P \cdot \bigl[(\Delta - V_{min\Delta})\)\newline
-      \(\quad {}- \sum_{l<m} 2^{wl}\ell^{flr}_l\bigr] = 0\)
-    & Plateau \\
-
-F20a & Pin, demand side
-     & \(L_{p^*} \cdot (SurpB - (1-s)\,V_{min\Delta}) = 0\)
-     & \(\omega^{p^*}\) \\
-
-F20b & Pin, supply side
-     & \(L_{p^*} \cdot (SurpA - s\,V_{min\Delta}) = 0\)
-     & \(\omega^{p^*}\) \\
-
-F21 & Tie-break
-    & \(Mask_T \cdot \bigl(\Delta - V_{min\Delta}\)\newline
-      \(\quad {}- 1 - Slack\bigr) = 0\)
-    & \(\omega^{p^*-1}\) when \(Mask_T \ne 0\) \\
-
-F22 & \(Slack \ge 0\)
-    & \(Slack - \sum_{l<m} 2^{wl}\ell^{slk}_l = 0\)
-    & All ticks \\
-
-F23 & Table membership
-    & The lookup identities of Section 3.4 over all looked-up values
-    & All ticks \\
-
-F24 & IO bid range
-    & \(IOB - \sum_{l<m_{in}} 2^{wl}\ell^{IOB}_l = 0\)
-    & All ticks \\
-
-F25 & IO ask range
-    & \(IOA - \sum_{l<m_{in}} 2^{wl}\ell^{IOA}_l = 0\)
-    & All ticks \\
-
-F26 & IO bid padding
-    & \(Pad \cdot IOB = 0\)
-    & Padding \\
-
-F27 & IO ask padding
-    & \(Pad \cdot IOA = 0\)
-    & Padding \\
-
-F28 & IO demand start
-    & \(L_{n-1} \cdot (IOAccB - IOB) = 0\)
-    & \(\omega^{n-1}\) \\
-
-F29 & IO demand step
-    & \((X - \omega^{n-1})\,\bigl[IOAccB(X)\)\newline
-      \(\quad {}- IOAccB(\omega X) - IOB(X)\bigr] = 0\)
-    & All but the last \\
-
-F30 & IO supply start
-    & \(L_0 \cdot (IOAccA - IOA) = 0\)
-    & \(\omega^0\) \\
-
-F31 & IO supply step
-    & \((X - \omega^{n-1})\,\bigl[IOAccA(\omega X)\)\newline
-      \(\quad {}- IOAccA(X) - IOA(\omega X)\bigr] = 0\)
-    & All but the last \\
-
-F32 & At-price long volume
-    & \(\nu\,L_{p^*} \cdot \bigl((1-s)\,B\)\newline
-      \(\quad {}+ s\,A - P\bigr) = 0\)
-    & \(\omega^{p^*}\) when \(V_{min\Delta} > 0\) \\
-
-F33 & Eligible IO volume
-    & \(\nu\,L_{p^*} \cdot \bigl((1-s)\,IOAccA\)\newline
-      \(\quad {}+ s\,IOAccB - J\bigr) = 0\)
-    & \(\omega^{p^*}\) when \(V_{min\Delta} > 0\) \\
-
-\end{longtable}
-\endgroup
-
-F20 is a pair, so the list has 33 identities besides the lookup. The looked-up values are the limbs of the nine range-checked quantities (\(B\), \(A\), \(IOB\), \(IOA\), \(SurpB\), \(SurpA\), \(V_{max} - Min\), \(\Delta - V_{min\Delta}\), \(Slack\)) and, for a width that is not a multiple of \(w\), the scaled top limb of each. Their number is \(E = 4 m_{in} + 5m\), plus 4 if \(w \nmid k_{in}\), plus 5 if \(w \nmid k\). F23 consists of \(\lceil E/2 \rceil\) pair identities, the table-helper identity, and the running-sum identity.
-
-\textbf{Column count.} The first round commits to 13 value columns, \(4m_{in}+5m\) limb columns, and \(Mult\). The second adds \(\lceil E/2\rceil+2\) helper columns. At \(n=1024\), \(k_{in}=32\), and \(k=42\), we have 46 limb columns and \(E=51\) lookup inputs. The 26 pair helpers bring the total, including the other helpers, to 88 columns.
-
-\textbf{Degrees and openings.} The pair identities have degree at most \(3n - 3\) before masking and every other identity at most \(2n - 2\). The quotient has degree at most \(2n + 3\) with masking, and the implementation requests a reference string of degree \(2n + 8\). \(AccB\), \(AccA\), \(IOAccB\), \(IOAccA\), \(A\), \(IOA\), and \(S\) are opened at \(\zeta\) and \(\omega\zeta\); every other column at \(\zeta\).
-
-\subsection{No-Cross Constraints}
-
-The no-cross proof uses only ordinary bids and asks, their depth columns, the limbs of \(B\) and \(A\), and the corresponding lookup columns. We impose F1--F8, apply F23 to those limbs, and require
-
-\[AccA(X) \cdot AccB(X) = 0.\]
-
-\subsection{Update-Validity Constraints}
-
-For update validity, let \(\kappa\) generate the domain \(K\) of size \(M\), with \(\kappa^{M/n}=\omega\). The public polynomial \(P_\eta\) takes value \(\eta^j\) on the first \(\mu\) rows, one per logged step, and zero elsewhere. On row \(iM/n\), \(X_H\) equals \(\omega^i\) and \(S_H\) equals one. Both vanish on the other rows. The range table is also public. The witness includes \(Qty\), \(Tick\), \(W\), quantity limbs and their lookup columns. The prover commits to \(G\), \(U_H\), and \(S_2\) after receiving \(\beta\).
-
-\textbf{Table 12.} The constraints of the update-validity proof, each on all of \(K\).
-
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
-\# & Name & Identity \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-U1 & Quantity range & \(Qty - \sum_{l<m_{in}} 2^{wl} \ell^{Qty}_l = 0\), with every limb in the table \\
-U2 & Step side & \(G(X)\,(\beta - Tick(X)) - P_\eta(X)\,Qty(X) = 0\) \\
-U3 & Tick side & \(U_H(X)\,(\beta - X_H(X)) - S_H(X)\,W(X) = 0\) \\
-U4 & Running sum & \(S_2(\kappa X) - S_2(X) - (G(X) - U_H(X)) = 0\) \\
-\end{longtable}
-
-For 32-bit quantities the proof has 15 columns: \(Qty\), \(Tick\), \(W\), four limbs, the multiplicities, two pair helpers, the table helper, the range running sum, \(G\), \(U_H\), and \(S_2\). With the quotient and \(\Phi_{mask}\) it holds 17 commitments.

@@ -1,230 +1,93 @@
+% !TEX root = ../main.tex
+
+
 \section{Extended Benchmarks}
 \label{app:zq-bench}
 
-Times are in milliseconds unless stated otherwise. Section~\ref{sec:zq-platform} describes the laptop. For the calibrated and replayed books, we timed 20 runs per book and thread count for our Rust implementation and ten for our Noir implementation. For the Cboe-derived books we timed five runs per book and thread count for our Rust implementation and one eight-thread run per book for our Noir implementation.
+All times below are in milliseconds unless indicated otherwise. The main text describes the laptop and reports the principal comparisons. For each calibrated or replayed book and thread setting we timed 20 Rust runs and ten Noir runs; for each Cboe-derived book we timed five Rust runs and one eight-thread Noir run. We report medians, or medians of per-book medians where multiple books were used.
 
-\subsection{The Clearing Proof Against Ticks and Volume Width}
+\subsection{Rust Scaling and Variability}
+\label{app:zq-bench-rust}
 
-\textbf{Table 22.} Our Rust implementation on uniform books, 250 orders per batch, one thread.
+The following measurements use uniform books with 250 orders, 32-bit volumes, and a single- or eight-thread Rust prover. Verification plus decoding is measured with one thread. The domain size $n$ is the next power of two at least as large as the $N$-tick price grid.
 
-\begingroup
-\setlength{\tabcolsep}{1.5pt}\scriptsize
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}@{}}
+\begin{center}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}rrrrrr@{}}
 \toprule
-\(N\) & \(n\) & \(k_{in}\) & Commitments & Proof (B) & Prove & Verify & Decode \\
-\midrule\endfirsthead
-\toprule
-\(N\) & \(n\) & \(k_{in}\) & Commitments & Proof (B) & Prove & Verify & Decode \\
-\midrule\endhead
-\bottomrule\endfoot
-100 & 128 & 16 & 70 & 4,908 & 264 & 9.2 & 15.3 \\
-100 & 128 & 32 & 97 & 6,636 & 349 & 10.2 & 21.1 \\
-250 & 256 & 16 & 52 & 3,756 & 298 & 8.7 & 11.5 \\
-250 & 256 & 32 & 79 & 5,484 & 448 & 9.6 & 17.5 \\
-500 & 512 & 16 & 62 & 4,396 & 582 & 9.0 & 13.5 \\
-500 & 512 & 32 & 89 & 6,124 & 781 & 9.7 & 19.0 \\
-1,000 & 1,024 & 16 & 62 & 4,396 & 998 & 9.3 & 14.0 \\
-1,000 & 1,024 & 32 & 89 & 6,124 & 1,366 & 10.0 & 19.3 \\
-2,000 & 2,048 & 16 & 62 & 4,396 & 1,803 & 9.2 & 14.1 \\
-2,000 & 2,048 & 32 & 89 & 6,124 & 2,462 & 10.0 & 19.6 \\
-4,000 & 4,096 & 16 & 62 & 4,396 & 3,330 & 9.1 & 13.7 \\
-4,000 & 4,096 & 32 & 89 & 6,124 & 4,506 & 10.1 & 19.2 \\
-8,000 & 8,192 & 16 & 62 & 4,396 & 6,367 & 8.9 & 13.6 \\
-8,000 & 8,192 & 32 & 89 & 6,124 & 8,723 & 9.8 & 18.9 \\
-\end{longtable}
-\endgroup
+$N$ & $n$ & Prove, 1 thread & Prove, 8 threads & Verify + decode & Proof (B) \\
+\midrule
+100 & 128 & 349 & 117 & 31.3 & 6,636 \\
+250 & 256 & 448 & 154 & 27.1 & 5,484 \\
+500 & 512 & 781 & 236 & 28.7 & 6,124 \\
+1,000 & 1,024 & 1,366 & 376 & 29.3 & 6,124 \\
+2,000 & 2,048 & 2,462 & 615 & 29.6 & 6,124 \\
+8,000 & 8,192 & 8,723 & 2,026 & 28.7 & 6,124 \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}@{}}
-\toprule
-\(N\) & \(n\) & \(k_{in}\) & Update-validity prove & No-cross prove & Batch check \\
-\midrule\endfirsthead
-\toprule
-\(N\) & \(n\) & \(k_{in}\) & Update-validity prove & No-cross prove & Batch check \\
-\midrule\endhead
-\bottomrule\endfoot
-100 & 128 & 16 & 378 & 92 & 77 \\
-100 & 128 & 32 & 415 & 111 & 78 \\
-250 & 256 & 16 & 384 & 118 & 78 \\
-250 & 256 & 32 & 449 & 152 & 80 \\
-500 & 512 & 16 & 381 & 190 & 77 \\
-500 & 512 & 32 & 422 & 234 & 78 \\
-1,000 & 1,024 & 16 & 382 & 320 & 78 \\
-1,000 & 1,024 & 32 & 424 & 402 & 79 \\
-2,000 & 2,048 & 16 & 625 & 568 & 80 \\
-2,000 & 2,048 & 32 & 693 & 715 & 81 \\
-4,000 & 4,096 & 16 & 1,102 & 1,047 & 85 \\
-4,000 & 4,096 & 32 & 1,218 & 1,303 & 87 \\
-8,000 & 8,192 & 16 & 1,950 & 1,950 & 95 \\
-8,000 & 8,192 & 32 & 2,196 & 2,484 & 95 \\
-\end{longtable}
-\endgroup
+At 1,000 ticks, reducing the input width from 32 to 16 bits decreases one-thread proving from 1,366 to 998 ms and eight-thread proving from 376 to 291 ms; the proof falls from 6,124 to 4,396 bytes. Column counts vary at small domains because accumulated widths may or may not be multiples of the lookup limb size. With 250 orders the update-validity domain is at least 1,024 rows, so its proving time is nearly constant below this threshold. At 1,000 ticks and 32-bit inputs, update-validity proving took 424 ms on one thread and 122 ms on eight; no-cross proving took 402 and 128 ms, respectively. The full batch check on already decoded inputs took 79 and 52 ms.
 
-\textbf{Table 23.} Our Rust implementation on the same books with eight threads.
-
-\begingroup
-\setlength{\tabcolsep}{1.5pt}\scriptsize
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}>{\raggedright\arraybackslash}p{0.1125\linewidth}@{}}
-\toprule
-\(N\) & \(k_{in}\) & Prove & Verify & Decode & Update-validity prove & No-cross prove & Batch check \\
-\midrule\endfirsthead
-\toprule
-\(N\) & \(k_{in}\) & Prove & Verify & Decode & Update-validity prove & No-cross prove & Batch check \\
-\midrule\endhead
-\bottomrule\endfoot
-100 & 16 & 98 & 6.4 & 3.6 & 122 & 41 & 52 \\
-100 & 32 & 117 & 6.7 & 5.0 & 131 & 50 & 53 \\
-250 & 16 & 115 & 6.2 & 2.9 & 113 & 56 & 51 \\
-250 & 32 & 154 & 6.4 & 3.9 & 122 & 72 & 51 \\
-500 & 16 & 192 & 6.4 & 3.3 & 115 & 84 & 51 \\
-500 & 32 & 236 & 6.7 & 4.6 & 123 & 102 & 52 \\
-1,000 & 16 & 291 & 6.4 & 3.6 & 114 & 114 & 52 \\
-1,000 & 32 & 376 & 6.7 & 4.8 & 122 & 128 & 52 \\
-2,000 & 16 & 484 & 6.5 & 3.7 & 174 & 178 & 54 \\
-2,000 & 32 & 615 & 6.8 & 4.7 & 190 & 215 & 54 \\
-4,000 & 16 & 865 & 6.6 & 3.6 & 314 & 314 & 60 \\
-4,000 & 32 & 1,081 & 6.6 & 4.6 & 314 & 354 & 60 \\
-8,000 & 16 & 1,590 & 6.7 & 3.6 & 532 & 533 & 70 \\
-8,000 & 32 & 2,026 & 6.8 & 4.6 & 549 & 618 & 69 \\
-\end{longtable}
-\endgroup
-
-At \(n=256\), the accumulated widths of 24 and 40 bits are multiples of eight, so the proof needs no scaled top limbs. This explains the smaller column count than at \(n=512\). At \(n=128\) the prover uses seven-bit limbs and needs more columns. With 250 orders the update-validity domain has \(\max(n,1024)\) rows. Timings vary little up to \(n=1024\) and increase at larger \(n\). Using eight threads on four physical cores speeds up clearing-proof generation by a factor of 3.6 at \(n=1024\) and 4.3 at \(n=8192\).
+For the same 1,000-tick configuration, the interquartile range of clearing-proof generation over 20 runs was 1,356--1,377 ms on one thread and 359--384 ms on eight. Verification and decoding together took about 29 ms on one thread. The 32-bit update-validity proof occupied 1,700 bytes. At 250, 1,000, and 2,200 orders its eight-thread verification, including decoding, took 23, 43, and 69 ms, respectively; increasing the order count enlarges the update-validity domain.
 
 \begin{figure}[!tp]
-    \centering
-    \includegraphics[width=\linewidth]{figures/fig3-performance.png}
-    \caption{Scaling with price-grid size. Our Rust implementation uses uniform books and our Noir implementation uses calibrated books. Panel (a) shows proving time. For our Noir implementation it plots the median of the paired witness and proof times, whereas Table 5 sums the two component medians. Panel (b) shows one-thread verification, including decoding for our Rust implementation. Panel (c) gives the serialized proof size at the indicated input widths.}
-    \label{fig:performance-scaling}
+\centering
+\includegraphics[width=\linewidth]{figures/fig3-performance.png}
+\caption{Scaling with price-grid size. The Rust implementation uses uniform books and the Noir baseline uses calibrated books. (a) Proving time; the Noir curve is the median of paired witness-plus-proof times. (b) One-thread verification, including decoding for Rust. (c) Serialized proof size by input width.}
+\label{fig:performance-scaling}
 \end{figure}
 
-\subsection{Spread}
+\subsection{Calibrated and Observed Books}
 
-\textbf{Table 24.} Our Rust implementation, \(N = 1000\), 32-bit volumes, 250 orders: median and interquartile range over 20 runs.
+For calibrated books at 100, 250, 500, 1,000, and 2,000 ticks, median one-thread Rust proving times were 343, 414, 769, 1,343, and 2,437 ms, respectively; eight-thread medians were 117, 150, 232, 373, and 626 ms. Each size had five books, with a narrow range of per-book medians (for example, 1,339--1,351 ms at 1,000 ticks). The 32 selected Nasdaq replay books (601--662 ticks, padded to 1,024 rows) took 1,348 ms on one thread and 367 ms on eight, with a one-thread verify-plus-decode median of 29.5 ms. At a fixed domain of 1,024 rows, the medians for uniform, calibrated, and replayed books differ by less than 3\%.
 
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.3960\linewidth}>{\raggedright\arraybackslash}p{0.2520\linewidth}>{\raggedright\arraybackslash}p{0.2520\linewidth}@{}}
-\toprule
-Metric & One thread & Eight threads \\
-\midrule\endfirsthead
-\toprule
-Metric & One thread & Eight threads \\
-\midrule\endhead
-\bottomrule\endfoot
-Clearing proof, prove & 1,366 [1,356--1,377] & 376 [359--384] \\
-Clearing proof, verify & 10.0 [9.5--10.3] & 6.7 [6.6--6.8] \\
-Clearing proof, decode & 19.3 [18.8--19.6] & 4.8 [4.5--5.2] \\
-Update-validity proof, prove & 424 [419--428] & 122 [121--123] \\
-Update-validity proof, verify & 43.0 [42.4--44.0] & 20.5 [20.0--20.8] \\
-Batch check & 79.3 [77.5--80.3] & 52.0 [51.5--52.3] \\
-\end{longtable}
-\endgroup
-
-All three proofs in the 1,000-tick, 32-bit configuration open at two points. The crossing, update-validity and no-cross proofs contain 89, 17 and 20 column-and-quotient commitments, respectively. In the eight-thread experiment of Table 4, update-proof verification including decoding took 23, 43 and 69 ms at 250, 1,000 and 2,200 orders. The update proof occupied 1,700 bytes at each log length. The full batch check in Table 24 uses decoded inputs.
-
-\subsection{Calibrated and Replayed Books}
-
-\textbf{Table 25.} Our Rust implementation's clearing proof on the calibrated books (five per size) and on the 32 replayed books, 32-bit volumes. Brackets give the range of the per-book medians.
-
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}>{\raggedright\arraybackslash}p{0.1500\linewidth}@{}}
-\toprule
-Books & \(N\) & \(n\) & Prove, one thread & Prove, eight threads & Verify + decode, one thread \\
-\midrule\endfirsthead
-\toprule
-Books & \(N\) & \(n\) & Prove, one thread & Prove, eight threads & Verify + decode, one thread \\
-\midrule\endhead
-\bottomrule\endfoot
-Calibrated & 100 & 128 & 343 [341--345] & 117 [111--130] & 30.6 \\
-Calibrated & 250 & 256 & 414 [408--420] & 150 [134--156] & 26.3 \\
-Calibrated & 500 & 512 & 769 [765--771] & 232 [228--235] & 28.6 \\
-Calibrated & 1,000 & 1,024 & 1,343 [1,339--1,351] & 373 [363--382] & 28.8 \\
-Calibrated & 2,000 & 2,048 & 2,437 [2,433--2,447] & 626 [608--633] & 28.6 \\
-Replayed & 601--662 & 1,024 & 1,348 [1,334--1,363] & 367 [353--381] & 29.5 \\
-\end{longtable}
-\endgroup
-
-At a domain size of 1,024, median clearing-proof generation times for the uniform, calibrated, and replayed books differ by less than 3\%.
-
-On the 362 Cboe-derived books (101 ticks, 32-bit inputs), the median of the per-book proving medians for our Rust implementation was 384 ms on one thread and 112 ms on eight. Each clearing proof occupied 6,636 bytes.
+On the 362 Cboe-derived books (101 ticks, 32-bit inputs), median Rust proving times were 384 ms on one thread and 112 ms on eight; proofs occupied 6,636 bytes. As explained in Appendix~\ref{app:zq-data}, these are synthetic books constrained by the venue's published prices and volumes, not its hidden order submissions.
 
 \subsection{Operations Outside the Proofs}
 
-\textbf{Table 26.} Per-order and per-batch operations in our Rust implementation, \(N = 1000\), 32-bit volumes.
+The following per-order and per-batch costs were measured in the Rust implementation at 1,000 ticks and 32-bit volumes:
 
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.3240\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}>{\raggedright\arraybackslash}p{0.2700\linewidth}@{}}
+\begin{center}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrl@{}}
 \toprule
-Operation & One thread & Eight threads & Encoded size \\
-\midrule\endfirsthead
-\toprule
-Operation & One thread & Eight threads & Encoded size \\
-\midrule\endhead
-\bottomrule\endfoot
-Record an order (exchange) & 0.98 & 0.99 & 416 B in the public log \\
-Check a receipt (trader) & 0.24 & 0.24 & 192 B private receipt \\
+Operation & 1 thread & 8 threads & Encoded size \\
+\midrule
+Record an order (exchange) & 0.98 & 0.99 & 416 B, public log \\
+Check a receipt (trader) & 0.24 & 0.24 & 192 B, private receipt \\
 Open a batch & 13.3 & 9.6 & 1,576 B \\
-Check an opening & 19.1 & 18.5 &  \\
-Run the clearing rule & 0.07 & 0.08 &  \\
-\end{longtable}
-\endgroup
+Check an opening & 19.1 & 18.5 & --- \\
+Run the clearing rule & 0.07 & 0.08 & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-The single-thread recording time of 0.98 ms per order corresponds to roughly 1,000 order updates per second for this operation alone.
+Recording an order alone corresponds to roughly 1,000 updates per second on one thread; this is not a throughput measurement for the full exchange pipeline.
 
-\subsection{Our Noir Implementation}
+\subsection{Noir Baseline and Comparability}
+\label{app:zq-bench-noir}
 
-\textbf{Table 27.} Our Noir implementation on the calibrated books (median over five books and ten runs each, interquartile range in brackets) and on the 32 replayed books. The proof is 14,656 bytes and verification takes 27 to 30 ms in every row.
+The Noir/UltraHonk circuit has a fixed size for each grid and must be compiled separately for each size. On the calibrated books, the median times for witness generation and proving were:
 
-\begingroup
-\setlength{\tabcolsep}{1.5pt}\scriptsize
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1350\linewidth}>{\raggedright\arraybackslash}p{0.0990\linewidth}>{\raggedright\arraybackslash}p{0.1080\linewidth}>{\raggedright\arraybackslash}p{0.0900\linewidth}>{\raggedright\arraybackslash}p{0.0990\linewidth}>{\raggedright\arraybackslash}p{0.1080\linewidth}>{\raggedright\arraybackslash}p{0.1440\linewidth}>{\raggedright\arraybackslash}p{0.1170\linewidth}@{}}
+\begin{center}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}rrrrr@{}}
 \toprule
-Books & \(N\) & Gates & Threads & Witness & Key & Prove & Prover memory \\
-\midrule\endfirsthead
-\toprule
-Books & \(N\) & Gates & Threads & Witness & Key & Prove & Prover memory \\
-\midrule\endhead
-\bottomrule\endfoot
-Calibrated & 100 & 12,757 & 1 & 720 & 344 & 1,052 [1,044--1,064] & 36 MB \\
- &  &  & 8 & 702 & 191 & 525 [518--540] & 45 MB \\
-Calibrated & 250 & 27,357 & 1 & 764 & 683 & 1,994 [1,981--2,012] & 57 MB \\
- &  &  & 8 & 739 & 288 & 764 [754--777] & 68 MB \\
-Calibrated & 500 & 51,666 & 1 & 844 & 1,181 & 3,541 [3,532--3,567] & 96 MB \\
- &  &  & 8 & 820 & 456 & 1,159 [1,145--1,173] & 106 MB \\
-Calibrated & 1,000 & 100,357 & 1 & 1,001 & 2,213 & 6,427 [6,396--6,480] & 157 MB \\
- &  &  & 8 & 989 & 763 & 1,898 [1,879--1,927] & 180 MB \\
-Calibrated & 2,000 & 197,666 & 1 & 1,337 & 4,260 & 12,478 [12,400--12,716] & 305 MB \\
- &  &  & 8 & 1,315 & 1,470 & 3,359 [3,333--3,420] & 326 MB \\
-Replayed & 601--662 & 61,521--67,434 & 1 & 877 & 1,439 & 4,195 [4,115--4,300] & 116 MB \\
- &  &  & 8 & 858 & 537 & 1,316 [1,297--1,352] & 129 MB \\
-\end{longtable}
-\endgroup
+$N$ & Witness, 1 thread & Prove, 1 thread & Prove, 8 threads & Peak memory, 1 thread \\
+\midrule
+100 & 720 & 1,052 & 525 & 36 MB \\
+250 & 764 & 1,994 & 764 & 57 MB \\
+500 & 844 & 3,541 & 1,159 & 96 MB \\
+1,000 & 1,001 & 6,427 & 1,898 & 157 MB \\
+2,000 & 1,337 & 12,478 & 3,359 & 305 MB \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-The key column reports verification-key generation, performed once per book size. Additional threads accelerate proving, while witness generation remains sequential.
+The eight-thread witness step was nearly as slow as the one-thread step (989 versus 1,001 ms at 1,000 ticks), while proving benefited from parallelism. Verification took 27--30 ms, and every proof occupied 14,656 bytes. Verification-key generation is a separate, once-per-circuit-size operation, not included in the proving column. On the 32 replayed books, Noir took a median of 877 ms to generate the witness and 4,195 ms to prove with one thread, or 858 and 1,316 ms with eight threads.
 
-\textbf{Table 28.} Proving time for our Noir implementation, including witness generation, divided by proving time for our Rust implementation, on the same books.
-
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.3000\linewidth}>{\raggedright\arraybackslash}p{0.3000\linewidth}>{\raggedright\arraybackslash}p{0.3000\linewidth}@{}}
-\toprule
-\(N\) & One thread & Eight threads \\
-\midrule\endfirsthead
-\toprule
-\(N\) & One thread & Eight threads \\
-\midrule\endhead
-\bottomrule\endfoot
-100 & 5.2 & 10.5 \\
-250 & 6.7 & 10.0 \\
-500 & 5.7 & 8.5 \\
-1,000 & 5.5 & 7.7 \\
-2,000 & 5.7 & 7.5 \\
-Replayed, 601--662 & 3.8 & 5.9 \\
-\end{longtable}
-\endgroup
-
-Our Noir implementation runs as timed commands under WSL2, including process startup. For our Rust implementation we time native Windows function calls. The implementations also use different transcript hashes. We did not isolate these effects or benchmark another backend configuration.
+Including witness generation, Noir's one-thread proving time was 5.2--6.7 times the Rust time on the calibrated books and 3.8 times on the replayed books. These comparisons are \emph{not} controlled measurements of the proof systems alone: Noir was run as commands under WSL2 (including process startup) while Rust used native Windows function calls, their transcript hashes differ, and the Noir statement commits to a completed book rather than the Rust order log. We did not isolate these differences or test alternative backend configurations.

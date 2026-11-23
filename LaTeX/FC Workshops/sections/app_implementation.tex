@@ -1,162 +1,34 @@
 % !TEX root = ../main.tex
 
-\section{Our Rust Implementation}
+\section{Further Implementation Details}
+\label{app:zq-implementation}
+
+\subsection{Rust Prototype}
 \label{app:zq-rust}
 
-\textbf{Software.} We use arkworks 0.4 in a Cargo workspace, with \texttt{sha2} for hashing and optional \texttt{rayon} support for parallel execution. Table 13 gives the size and responsibilities of the crates.
+\paragraph{Setup and commitments.} Our implementation uses Rust, arkworks 0.4, \texttt{sha2}, and optional \texttt{rayon} parallelism. The benchmarks use locally generated test parameters. We also support importing a powers-of-tau reference string containing \([\tau^i]_1\) through degree \(2M+8\), \([1]_2\), \([\tau]_2\), and a blinding basis from the ceremony's \([\alpha\tau^i]_1\) section. Domain-specific Lagrange-basis points \([L_i(\tau)]_1\) are derived using an inverse FFT over group elements. An externally supplied setup can be checked for consistent powers of \(\tau\), although the secrecy of \(\tau\) relies on the ceremony.
 
-\textbf{Table 13.} Crates of our Rust implementation. Lines exclude blanks and comments.
-
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.2520\linewidth}>{\raggedright\arraybackslash}p{0.5040\linewidth}>{\raggedright\arraybackslash}p{0.1440\linewidth}@{}}
-\toprule
-Crate & Content & Lines \\
-\midrule\endfirsthead
-\toprule
-Crate & Content & Lines \\
-\midrule\endhead
-\bottomrule\endfoot
-\texttt{zeequent-types} & Parameters, orders, the plaintext book, the receipt & 237 \\
-\texttt{zeequent-kzg} & Commitments, openings, transcript, setup import, file codec & 754 \\
-\texttt{zeequent-core} & Clearing rule, constraints, prover, verifier, committed book, update validity & 2,596 \\
-\texttt{zeequent-cli} & The command-line tool & 1,090 \\
-Tests & 44 tests & 1,459 \\
-\end{longtable}
-\endgroup
-
-\textbf{Setup.} The benchmarks use locally generated test parameters. For an external setup, we read the reference string from a powers-of-tau ceremony file: \([\tau^i]_1\) for \(i \le 2M + 8\), \([1]_2\), \([\tau]_2\), and the file's \([\alpha\tau^i]_1\) section as the blinding basis, so \(\gamma\) is the ceremony's \(\alpha\). From the powers we derive what depends on the domain: the Lagrange-basis points \([L_i(\tau)]_1\), by an inverse FFT over group elements, and \([Z_H(\tau)]_2\). A verifier that receives a setup from another party checks with pairings that its points are powers of one \(\tau\) and that the Lagrange points match them. The check does not show that \(\tau\) is unknown; that rests on the ceremony.
-
-\textbf{Commitments.} We commit directly to the evaluations in each witness column. In the Lagrange basis, \([p(\tau)]_1=\sum_i p[i]\,[L_i(\tau)]_1\) requires one size-\(n\) multi-scalar multiplication, with the column entries as scalars. Our earlier coefficient-based implementation took 3.6 times as long to prove. We commit separately to the mask \(\rho(X)Z_H(X)\) and the blinding term \(\gamma r(X)\), then add both commitments. For columns sampled within the proof, the mask and blinding degrees equal the number of opening points. Section 4.1 gives the degree-three masks for the running book commitments.
-
-\textbf{Quotient.} The combined constraint polynomial has degree up to \(3n + 3\), so we evaluate it on a coset of size \(4n\) that avoids \(H\), divide pointwise by \(Z_H\), and interpolate. The large coset is a union of four cosets of \(H\), and we process them one at a time with transforms of size \(n\). Before each transform we reduce a masked column, whose degree slightly exceeds \(n\), modulo \(X^n - s\), where \(s\) is the constant value of \(X^n\) on that coset. On each small coset \(Z_H\) is a constant and \(\omega x\) is the next point, so a shifted column is a rotation. If the constraints do not hold, the quotient has non-zero coefficients above degree \(2n + 8\) and the prover stops.
-
-\textbf{Openings.} To open several polynomials at a point \(z\), the prover combines them with powers of a challenge, divides by \(X - z\), and commits to the quotient \(W\); it sends one combined blinding evaluation \(b\). With \(C\) and \(v\) the combined commitment and value, the verifier checks both opening points with two pairings:
-
+We commit directly in the evaluation basis. For a column \(p\), we use
 \[
-e\Big(\sum_{k} r^k \big(C_k - v_k [1]_1 - b_k\, \Gamma + z_k W_k\big),\ [1]_2\Big) = e\Big(\sum_{k} r^k W_k,\ [\tau]_2\Big),
+[p(\tau)]_1=\sum_i p[i][L_i(\tau)]_1,
 \]
+which requires one size-\(n\) multi-scalar multiplication. The masking multiple of \(Z_H\) and the hiding commitment are added separately. The running book commitments use degree-three masks, as described in Appendix~\ref{app:committed-book}.
 
-where \(r\) is a further challenge. We evaluate the left pairing argument with a single multi-scalar multiplication over the proof commitments. This reduced verification time by about a factor of eight relative to combining the commitments pairwise.
+\paragraph{Quotient and openings.} The combined constraint polynomial has degree at most \(3n+3\). We evaluate it on a coset of size \(4n\), divide by \(Z_H\), and interpolate to obtain the quotient. To limit memory use, the four constituent cosets of size \(n\) are processed separately, reducing masked columns modulo \(X^n-s\) on each coset, where \(s\) is the value of \(X^n\) there. Shifts by \(\omega\) then correspond to rotations. The prover rejects a quotient whose degree exceeds the supported bound \(2n+8\).
 
-\textbf{Public polynomials.} We store a public polynomial as its non-zero values on \(H\). The verifier evaluates it at \(\zeta\) from \(L_i(\zeta) = \omega^i(\zeta^n - 1)/(n(\zeta - \omega^i))\) with one batch inversion, at a cost linear in the number of non-zero values: the width of the plateau for \(Mask_P\), 256 for the range table.
+Polynomial openings at each point are batched with a challenge-weighted linear combination. The verifier checks the openings at \(\zeta\) and \(\omega\zeta\) using two pairings, combining the commitments in a single multi-scalar multiplication. Public selectors are evaluated from the Lagrange formula \(L_i(\zeta)=\omega^i(\zeta^n-1)/(n(\zeta-\omega^i))\). Their cost depends on the number of nonzero evaluations, including the plateau width for \(Mask_P\). Fiat--Shamir challenges are derived from a SHA-256 transcript that binds the protocol parameters, public receipt, and ordered commitments.
 
-\textbf{Transcript.} We maintain a SHA-256 digest. To absorb a message, we hash the current digest with the message label, length, and contents. To derive a challenge, we reduce 64 derived bytes modulo the field size and hash the challenge back into the state. The protocol label, parameters, receipt, and ordered commitments bind each challenge to the public statement and prior messages.
+\paragraph{Proof encoding.} Proofs contain the column and quotient commitments followed by the two aggregated openings. Compressed curve points occupy 32 bytes. If \(c\) columns are opened at \(\zeta\), with \(s\) additional shifted openings, the serialized proof occupies \(32(2c+s+8)+12\) bytes. At \(c=88\) and \(s=7\), this is 6,124 bytes. Point decompression accounts for much of the one-thread verification cost.
 
-\textbf{Proof format.} We serialize the column and quotient commitments, followed by two openings. Each opening includes its point, evaluations, combined blinding evaluation, and witness. A compressed curve point occupies 32 bytes. If \(c\) columns are opened and \(s\) also open at \(\omega\zeta\), the proof occupies \(32(2c+s+8)+12\) bytes. With \(c=88\) and \(s=7\) this gives 6,124 bytes. Decompression requires a base-field square root per point and accounts for most single-threaded verification time.
+\paragraph{Tests.} We recomputed receipts directly for 2,000 random books. For 300 random six-tick books, we enumerated possible public receipts and checked that exactly one was accepted. Further tests modify receipt values or witness cells and confirm verifier rejection even with the prover's local consistency checks disabled; other tests cover tie-breaks, padding, no-cross outcomes, logged negative updates, and limb-width edge cases.
 
-\textbf{Determinism.} At the close we derive the prover's randomness from a hash of its private state, which includes the mask and blinding of every book column. Closing the same batch twice produces the same bytes, and the tool refuses orders after a close. This implements the one-proof condition of Appendix~\ref{app:zq-secrecy-proof} for an honest exchange.
-
-\textbf{Batch files.} The command-line tool keeps a batch in a directory (Table 14) and has one command per protocol step: \texttt{setup}, \texttt{open}, \texttt{order}, \texttt{check-receipt}, \texttt{close}, \texttt{verify}, and \texttt{fill}.
-
-\textbf{Table 14.} Files of one batch, for 32-bit volumes.
-
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1800\linewidth}>{\raggedright\arraybackslash}p{0.3690\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}>{\raggedright\arraybackslash}p{0.1980\linewidth}@{}}
-\toprule
-File & Content & Public & Size \\
-\midrule\endfirsthead
-\toprule
-File & Content & Public & Size \\
-\midrule\endhead
-\bottomrule\endfoot
-Opening & Four commitments with their emptiness proofs & Yes & 1,576 B \\
-Board & The log & Yes & 416 B per order \\
-Update receipt & Column, tick, quantity, blinding, commitment before and after & To its trader & 192 B \\
-Outcome & The clearing receipt, or no-cross & Yes & About 100 B \\
-Clearing proof &  & Yes & 6,124 B \\
-Update-validity proof &  & Yes & 1,700 B \\
-State & Plaintext book, masks, blindings, update history & No & Grows with the orders \\
-\end{longtable}
-\endgroup
-
-\textbf{Tests.} Table 15 pairs implementation checks with the claims they exercise. In tests with a false statement we disable the prover's local checks, pass its output to the verifier, and check that the verifier rejects it.
-
-\textbf{Table 15.} Claims and the tests that support them.
-
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.3150\linewidth}>{\raggedright\arraybackslash}p{0.5850\linewidth}@{}}
-\toprule
-Claim & Test \\
-\midrule\endfirsthead
-\toprule
-Claim & Test \\
-\midrule\endhead
-\bottomrule\endfoot
-The code's clearing rule is Definition 2 & 2,000 random books; the receipt is recomputed from the definition by direct search \\
-The constraints admit one receipt (Theorem 1) & 300 random books of 6 ticks; every receipt with values up to the total volume is tried, and exactly one is accepted \\
-The polynomial system equals the integer constraints & Receipt values and witness cells are changed one at a time and proved with the prover's checks off; the verifier rejects each \\
-Every tie-break case proves and verifies & One book per case of the clearing-rule appendix, and a padded domain \\
-A crossing book cannot be declared no-cross & Direct test \\
-A logged step cannot cancel an order (no removal) & The attack of Section 4.3 is run; no update-validity proof verifies, whatever quantity and tick the exchange claims \\
-A repeated close reveals nothing new & The two proofs are compared byte for byte \\
-Range checks are exact & An 8-bit quantity in 3-bit limbs, a width that is not a multiple of the limb: values in range pass and values out of range fail \\
-\end{longtable}
-\endgroup
-
-\section{Our Noir Implementation}
+\subsection{Noir Baseline}
 \label{app:zq-noir}
 
-We wrote the Noir circuit directly from the clearing constraints. It supplies an independent implementation of the rule and the general-purpose benchmark in Section~\ref{sec:zq-comparison}.
+\paragraph{Circuit and statement.} We implemented the clearing rule independently in Noir for comparison, using Nargo 1.0.0 and Barretenberg 6.0.0 in zero-knowledge UltraHonk mode. Unlike the Rust protocol, this baseline checks a completed book identified by a salted Poseidon2 digest; it does not maintain the KZG-committed order log. Its private witness is four arrays of \(N\) unsigned 32-bit volumes and a salt. The crossing circuit publishes the digest and eight receipt values, while the no-cross circuit publishes only the digest.
 
-\textbf{Statement.} The witness consists of four arrays of \(N\) unsigned 32-bit volumes and a salt. The crossing circuit publishes nine field elements (288 bytes) for the book digest and eight receipt values. The no-cross circuit publishes only the digest.
+An unconstrained function proposes the receipt and intermediate values, which the circuit checks with ordinary arithmetic and integer comparisons. Unsigned 64-bit arithmetic enforces nonnegative surplus quantities for the minimum gadget. The circuit also checks the plateau, price tie-break, eligible IO quantities, and public receipt bounds. Reads at witness-selected ticks are handled as backend memory lookups. Noir's integer bounds and comparisons avoid explicit limb and slack columns at the source-language level.
 
-\textbf{Circuit model.} Noir constrains the result of ordinary arithmetic, including the sums used to compute depth. Its unsigned integer types enforce bounds, so a subtraction that would underflow cannot satisfy the circuit. An unconstrained function can supply a witness value, but the circuit must still check that value. The backend implements the polynomial domain, quotient, openings, and lookups.
+\paragraph{Book digest.} At each tick we pack the four volumes into \(b+2^{32}a+2^{64}b^{io}+2^{96}a^{io}\). A width-four Poseidon2 sponge (rate three) absorbs the packed entries; its initial state is \((\mathrm{salt},0,0,N)\), permuted once before absorption. The first state element is the digest. The salt makes direct guessing of a low-volume book harder. This particular sponge construction has not received a separate security analysis.
 
-\textbf{Executable volume.} An unconstrained function proposes the minimum of the two depths. The circuit subtracts this value from each depth in unsigned 64-bit arithmetic, enforcing the differences and their non-negativity (F9, F10, F12, F13). It then checks that their product is zero (F11). Together the checks force the proposed value to equal the smaller depth.
-
-\textbf{Types.} Table 16 maps Noir types to the constraints they enforce. Arrays have exactly \(N\) entries. Native comparisons implement the inequalities in F14 and F19 without an explicit slack column or limb witnesses at the circuit-language level.
-
-\textbf{Table 16.} Types of the circuit and the constraints they replace.
-
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.2070\linewidth}>{\raggedright\arraybackslash}p{0.2250\linewidth}>{\raggedright\arraybackslash}p{0.4680\linewidth}@{}}
-\toprule
-Quantity & Type & Replaces \\
-\midrule\endfirsthead
-\toprule
-Quantity & Type & Replaces \\
-\midrule\endhead
-\bottomrule\endfoot
-Volume at one tick & 32-bit unsigned & F1, F2, F24, F25 \\
-Depths, \(Min\), surpluses, \(\Delta\) & 64-bit unsigned & F12, F13, and the range of every accumulated value \\
-\(c\), \(d\), \(p^*\) & 32-bit unsigned &  \\
-Side & Boolean &  \\
-Array of length \(N\) &  & F3, F4, F26, F27 \\
-\end{longtable}
-\endgroup
-
-\textbf{Receipt.} An unconstrained function computes a candidate receipt from the book. The circuit then applies the scalar and per-tick checks in Table 17. By Theorem 1, every accepted candidate equals the rule's receipt. The backend handles reads at \(c\), \(d\), \(p^*\), and their neighbours as memory lookups because those positions depend on the witness.
-
-\textbf{Table 17.} Steps of the clearing check in our Noir implementation.
-
-\begingroup
-\setlength{\tabcolsep}{2pt}\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.1710\linewidth}>{\raggedright\arraybackslash}p{0.5760\linewidth}>{\raggedright\arraybackslash}p{0.1530\linewidth}@{}}
-\toprule
-Step & Assertion & Constraints \\
-\midrule\endfirsthead
-\toprule
-Step & Assertion & Constraints \\
-\midrule\endhead
-\bottomrule\endfoot
-Receipt & \(c \le p^* \le d < N\); \(V_{max} \ge 1\); \(V_{min\Delta} \le P\); \(s\), \(P\), \(J\) zero when balanced & Scalar checks \\
-Depth & Running sums from the top tick and from the bottom tick & F5--F8, F28--F31 \\
-Each tick & The minimum; \(\Delta = SurpA + SurpB\); \(Min \le V_{max}\); \(\Delta \ge V_{min\Delta}\) on \([c,d]\) & F9--F14, F18, F19 \\
-Plateau & \(Min[c] = Min[d] = V_{max}\); \(Min\) strictly lower at \(c - 1\) and \(d + 1\) where they exist & F15--F17 \\
-Clearing tick & The surpluses at \(p^*\) are \(V_{min\Delta}\) on the long side and 0 on the other & F20 \\
-Tie-break & If \(p^* > c\) and supply is long or the batch is balanced, \(\Delta[p^* - 1] > V_{min\Delta}\) & F21 \\
-Rationing & \(P\) is the long side's volume at \(p^*\); \(J\) is the short side's eligible IO depth at \(p^*\) & F32, F33 \\
-\end{longtable}
-\endgroup
-
-\textbf{Digest.} We pack the four volumes at each tick into \(b+2^{32}a+2^{64}b^{io}+2^{96}a^{io}\). A width-four Poseidon2 sponge with rate three and capacity one absorbs the resulting field elements. We initialize the state to \((\text{salt},0,0,N)\), permute once before absorption, and take the first state element as the output after absorption. The private salt prevents an observer from testing a guessed low-volume book against the digest without also guessing the salt. At 1,000 ticks a Pedersen hash of the unpacked volumes required 1.78 million gates. Our sponge uses about 25,000. This arrangement of the standard permutation has not received a separate security analysis.
-
-\textbf{Size.} The circuit has 12,757 gates at 100 ticks, 100,357 at 1,000, and 197,666 at 2,000, about 100 per tick. The proof is 14,656 bytes and the verification key 3,680 bytes at every size. The number of ticks is a compile-time constant, so each book size has its own verification key.
-
-\textbf{Tests.} Four of 20 library tests check hand-computed receipts for a demand-long book, a supply-long book, a balanced book, and a book with one maximizing tick and IO interest. Twelve tests submit false receipts and check which constraint rejects them. The remaining tests cover no-cross and the dependence of the digest on the book and salt. Across the 57 calibrated and replayed books and the 362 Cboe-derived books, the six fields exported by our Rust benchmark agree with our Noir implementation. Independent recomputation from the input volumes checks all eight fields returned by our Noir implementation, including the two rationing quantities.
-
-\textbf{Toolchain.} We compile with \texttt{nargo} 1.0.0 and prove with Barretenberg 6.0.0 in its zero-knowledge UltraHonk mode with a Poseidon2 transcript. The circuit is 208 lines and its tests 161.
+\paragraph{Size and validation.} The circuit has 12,757 gates at 100 ticks, 100,357 at 1,000 ticks, and 197,666 at 2,000 ticks. It produces 14,656-byte proofs and a 3,680-byte verification key; the tick count is fixed at compile time, so different sizes require different keys. Of 20 library tests, four check hand-computed clearing cases and twelve check rejection of false receipts. For the 57 calibrated and replayed books, the six receipt fields exported by the Rust benchmark agreed with Noir; an independent recomputation checked all eight Noir receipt fields. Both implementations were also tested on 362 Cboe-derived books.

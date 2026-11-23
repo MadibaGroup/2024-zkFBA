@@ -170,8 +170,7 @@ F33 & Eligible IO volume & \(\nu L_{p^*}((1-s)IOAccA+sIOAccB-J)=0\)\\
 
 
 
-Table~\ref{tab:constraints} summarizes the complete arithmetization, with constraints numbered F1--F33. Having illustrated the cumulative quantities and minimum gadget in detail, we briefly explain the remaining constructions. Full correctness arguments and boundary cases are provided in Appendix~\ref{sec:market-close}.
-
+Table~\ref{tab:constraints} summarizes the complete arithmetization, with constraints numbered F1--F33. Having illustrated the cumulative quantities and minimum gadget in detail, we only briefly explain the remaining constructions. Appendix~\ref{app:zq-protocol} provides further technical details.
 
 \paragraph{Maximum Executable Volume.}
 Constraints F14--F17 certify the maximum volume and its price interval. F14 ensures no price exceeds the claimed maximum, F15--F16 establish that both endpoints attain it, and F17 proves that the immediately adjacent prices have strictly smaller volumes. Since executable volume increases and then decreases (possibly with a plateau), these conditions identify the entire maximizing interval.
@@ -320,7 +319,9 @@ How often are there incoming batches? While high-frequency traders (HFTs) operat
 
 \paragraph{How much does \ari help?} Our implementation achieves faster proving than Noir despite being a research prototype, whereas Noir uses the mature Barretenberg backend and UltraHonk proving system. This is an encouraging result for application-specific arithmetization. However, the comparison is not apples-to-apples: the implementations differ in their proving systems, programming environments, and measurement methods. We therefore cannot attribute the entire speedup to arithmetization alone. A more controlled comparison would help isolate that contribution.
 
-\paragraph{On-chain verification.} Our verifier runs off chain. A contract in the style of Zeeperio~\cite{MEC26} would check the pairings and compute \(W\) from the logged steps. The latter operation grows linearly with the log. Our experiments cover the implementation choices in Section 5.1 on one laptop. They do not establish a gas cost.
+
+
+\paragraph{DeFi applications.} A decentralized exchange could collect orders and compute batch-clearing outcomes off chain, while a smart contract accepts the resulting trades only after verifying a zk-FBA proof. Galal and Youssef~\cite{GY21} previously demonstrated smart-contract verification of periodic auctions using commitments and aggregated Bulletproofs to establish correct order sorting. Our construction instead proves the full three-phase clearing rule, including imbalance-only orders, using a succinct polynomial argument. On-chain verification is a natural extension: Zeeperio~\cite{MEC26} already implements essentially the same BN254/KZG verification machinery in Solidity, including batched openings, Fiat--Shamir checks, and Ethereum pairing precompiles. Its verifier code provides a concrete basis for adapting zk-FBA to Ethereum, with proof-specific changes to the transcript and public inputs. %The main remaining engineering challenge is the log-derived commitment \(W\), whose reconstruction on chain grows linearly with the update log. %We leave smart-contract integration and gas evaluation to future work.
 
 % Add one about DeFi and smart contracts
 

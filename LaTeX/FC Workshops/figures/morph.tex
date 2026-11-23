@@ -1,0 +1,74 @@
+% !TEX root = ../main.tex
+
+
+
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{(a) Algorithm}\par\smallskip
+\begin{adjustbox}{max width=\linewidth}
+\begin{minipage}{\textwidth}
+\begin{algorithmic}[1]
+\For{$i=0,\ldots,N-1$}
+    \State $AccB_i \gets \sum_{j=i}^{N-1} B_j$
+    \State $AccA_i \gets \sum_{j=0}^{i} A_j$
+    \State \mbox{$Min_i \gets \min\{AccB_i,AccA_i\}$}
+\EndFor
+\end{algorithmic}
+\end{minipage}
+\end{adjustbox}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{(b) Recurrences}\par\smallskip
+\begin{adjustbox}{max width=\linewidth}
+\begin{minipage}{\textwidth}
+\begin{algorithmic}[1]
+\State $AccB_{N-1} \gets B_{N-1}$
+\For{$i=N-2,\ldots,0$}
+    \State $AccB_i \gets B_i+AccB_{i+1}$
+\EndFor
+\State $AccA_0 \gets A_0$
+\For{$i=1,\ldots,N-1$}
+    \State $AccA_i \gets A_i+AccA_{i-1}$
+\EndFor
+\For{$i=0,\ldots,N-1$}
+    \State \mbox{$Min_i \gets \min\{AccB_i,AccA_i\}$}
+\EndFor
+\end{algorithmic}
+\end{minipage}
+\end{adjustbox}
+\end{minipage}
+
+\medskip
+
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{(c) Polynomial evaluations}\par\smallskip
+\begin{adjustbox}{max width=\linewidth}
+$\displaystyle
+\begin{aligned}
+AccB(\omega^i) &= B(\omega^i)+AccB(\omega^{i+1})\\
+AccA(\omega^{i+1}) &= AccA(\omega^i)+A(\omega^{i+1})\\
+Min(\omega^i) &= \min\{AccB(\omega^i),AccA(\omega^i)\}
+\end{aligned}
+$
+\end{adjustbox}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{(d) Polynomial constraints}\par\smallskip
+\begin{adjustbox}{max width=\linewidth}
+$\displaystyle
+\begin{aligned}
+\mathrm{F5:}\quad &L_{n-1}(X)(AccB(X)-B(X))=0\\
+\mathrm{F6:}\quad &L_0(X)(AccA(X)-A(X))=0\\
+\mathrm{F7:}\quad &(X-\omega^{n-1})(AccB(X)-AccB(\omega X)-B(X))=0\\
+\mathrm{F8:}\quad &(X-\omega^{n-1})(AccA(\omega X)-AccA(X)-A(\omega X))=0\\
+\mathrm{F9:}\quad &SurpB(X)=AccB(X)-Min(X)\\
+\mathrm{F10:}\quad &SurpA(X)=AccA(X)-Min(X)\\
+\mathrm{F11:}\quad &SurpA(X)\cdot SurpB(X)=0\\
+\mathrm{F12:}\quad &SurpB_i\in[0,2^k)\\
+\mathrm{F13:}\quad &SurpA_i\in[0,2^k)
+\end{aligned}
+$
+\end{adjustbox}
+\end{minipage}
+

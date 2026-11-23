@@ -1061,7 +1061,16 @@ The following predicates express integrity for \((\mathsf{Bd},\mathsf{Rc},R)\).
 
 One published digest fixes the sequence by K6. For the start, the accepted opening gives a Schnorr proof for \(C_r\) and the pairing equation \(e(C_0 - C_r, [1]_2) = e(C_\rho, [Z_H(\tau)]_2)\). By K5 and K3, \(C_r\) carries no values, and the equation is then the identity that the polynomial behind \(C_0\) is a multiple of \(Z_H\): every tick of every column starts at zero. The last commitment of a column therefore commits, on \(H\), to the sum of that column\textquotesingle s contributions.
 
-\[\psi_1 \text{ (recorded as submitted)}:\quad \forall (\text{column}, \ell, q, \rho, C_{before}, C_{after}) \in \mathsf{Rc}:\ \text{the step } C_{after} - C_{before} \text{ has contribution } q \text{ at tick } \ell \text{ and } 0 \text{ elsewhere.}\]
+\[
+\begin{gathered}
+\psi_1\ \text{(recorded as submitted)}: \\
+\text{For every } (\text{column}, \ell, q, \rho, C_{before}, C_{after})
+  \in \mathsf{Rc}, \\
+\text{the step } C_{after} - C_{before} \text{ contributes } q
+  \text{ at tick } \ell \\
+\text{in the stated column and } 0 \text{ at every other tick.}
+\end{gathered}
+\]
 
 The trader\textquotesingle s check is the equation \(C_{after} - C_{before} = q\,[L_\ell(\tau)]_1 + \rho\,\Gamma\) between public commitments. By K3 the polynomial behind the step is \(q L_\ell\), up to blinding. The receipt is checked against consecutive entries of \(\mathsf{Bd}\), so the step is one of the \(\Phi_j\).
 

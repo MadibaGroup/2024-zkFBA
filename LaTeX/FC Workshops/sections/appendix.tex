@@ -671,17 +671,33 @@ Nasdaq Rule 4754(b)(2) first maximizes executed shares, then minimizes imbalance
 
 \textbf{Table 10.} The steps of the Closing Cross and of \(\mathsf{Clear}\).
 
-\begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\begin{longtable}{@{}
+  >{\raggedright\arraybackslash}p{\dimexpr0.32\linewidth-\tabcolsep\relax}
+  >{\raggedright\arraybackslash}p{\dimexpr0.36\linewidth-2\tabcolsep\relax}
+  >{\raggedright\arraybackslash}p{\dimexpr0.32\linewidth-\tabcolsep\relax}
+@{}}
+\toprule
 Closing Cross & \(\mathsf{Clear}\) & Difference \\
-\midrule\noalign{}
+\midrule
 \endhead
-\bottomrule\noalign{}
+\bottomrule
 \endlastfoot
-(A) maximize executed shares & \(V\) and the plateau \(\Pi\) & None \\
-(B) minimize the imbalance & \(v\) and the minimizers & None \\
-(C) the entered price at which shares remain unexecuted & Candidate: the long side\textquotesingle s volume at the tick covers the imbalance & We state the step as the inequality \(\lambda_i \ge v\) \\
-(D) closest to the bid-ask midpoint & The least candidate & A batch market has no continuous quote to refer to \\
+
+(A) maximize executed shares
+  & \(V\) and the plateau \(\Pi\)
+  & None \\
+
+(B) minimize the imbalance
+  & \(v\) and the minimizers
+  & None \\
+
+(C) the entered price at which shares remain unexecuted
+  & Candidate: the long side's volume at the tick covers the imbalance
+  & We state the step as the inequality \(\lambda_i \ge v\) \\
+
+(D) closest to the bid-ask midpoint
+  & The least candidate
+  & A batch market has no continuous quote to refer to \\
 \end{longtable}
 
 The Closing Cross can draw on the continuous book. Our batch contains only orders represented in its four columns. We admit IO orders after setting the price, so they affect execution volume alone. At the cross price, Nasdaq Rule 4754(b)(3) allocates by order type and time priority. We use pro rata allocation on the long side, consistent with the absence of time priority within an FBA batch \cite{budish2015}.

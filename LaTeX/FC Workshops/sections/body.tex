@@ -27,9 +27,9 @@ FBAs are different. Orders are collected over a short time window and executed t
 
 \section{Background}
 
-\paragraph{Related Work.} Budish, Cramton, and Shim popularized frequent batch auctions (FBAs) as an alternative to CLOBs to reduce the speed advantages of HFTs~\cite{BCS15}. That said, earlier trading systems employed similar designs without using the term FBA. One example from traditional markets is the now-defunct OptiMark trading system, launched in 1999, which used 90-second auctions to match complex trading orders~\cite{CW01}. Another example from decentralized finance (DeFi) was the ``Princeton'' prediction market~\cite{BCFKMN14}, which proposed having miners run a batch auction every block (approximately every 10 minutes) to mitigate front-running attacks, now recognized as a form of maximal extractable value (MEV).
+\paragraph{Related Work.} Budish, Cramton, and Shim popularized FBAs as an alternative to CLOBs to reduce the speed advantages of HFTs~\cite{BCS15}. That said, earlier trading systems employed similar designs without using the term FBA. One example from traditional markets is the now-defunct OptiMark trading system, launched in 1999, which used 90-second auctions to match complex trading orders~\cite{CW01}. Another example from decentralized finance (DeFi) was the ``Princeton'' prediction market~\cite{BCFKMN14}, which proposed having miners run a batch auction every block (approximately every 10 minutes) to mitigate front-running attacks, now recognized as a form of maximal extractable value (MEV).
 
-Zero-knowledge proofs have previously been applied to verifiable auctions~\cite{PRST06}, including periodic auctions~\cite{GY21}. On-chain blockchain-based batch auctions~\cite{MDFO22,MoCl23} use FBAs to mitigate MEV, while others propose hybrid designs~\cite{CC22}.
+Zero-knowledge proofs have previously been applied to verifiable auctions~\cite{PRST06}, including periodic auctions~\cite{GY21}, using Zokrates, a high-level ZKP language. On-chain blockchain-based batch auctions~\cite{MDFO22,MoCl23} use FBAs to mitigate MEV, while others propose hybrid designs~\cite{CC22}.
 
 Improving prover time in zk-SNARKs through custom arithmetization has been explored in other applications, including electronic voting~\cite{MEC26} and proofs of solvency~\cite{DC26}. Rather than expressing the computation as a general-purpose arithmetic circuit or zkVM program, custom arithmetization encodes the application directly into the polynomial constraints of the SNARK. The resulting zk-SNARK is specialized for that particular computation, sacrificing generality in exchange for faster proof generation.
 
@@ -92,6 +92,8 @@ Let $B$ and $A$ denote arrays containing the total buy and sell quantities, resp
 
 For each possible price, Algorithm~\ref{alg:phase-one} calculates total demand $D_i$ (shares buyers are willing to buy at that price, including orders with higher limits), supply $S_i$ (shares sellers are willing to sell at that price, including orders with lower limits), and executable volume $V_i=\min\{D_i,S_i\}$. These values appear in the ``Phase 1 Datastructure'' in Figure~\ref{fig:overview}, where the maximum executable volume is $V_{\max}=5$, attained at both \$100.00 and \$100.01. In general, the algorithm returns \textsc{No-Cross} if $V_{\max}=0$. Otherwise, $\mathcal{I}_V$ contains the indices achieving this maximum. Its first and last indices, $c_V$ and $d_V$, define the interval $\Pi_V=[\pi_{c_V},\pi_{d_V}]$, which is $[\$100.00,\$100.01]$ in our example. The two padding rows in the figure are not admissible prices and are excluded from Algorithm~\ref{alg:phase-one}.
 
+
+% % % % % %
 \begin{figure}[t]
 \centering
 \begin{minipage}[t]{0.47\textwidth}
@@ -99,73 +101,45 @@ For each possible price, Algorithm~\ref{alg:phase-one} calculates total demand $
 \textbf{(a) Algorithm}
 \begin{algorithmic}[1]
 \For{$i=0,\ldots,N-1$}
-    \State $D_i \gets \sum_{j=i}^{N-1} B_j$
-    \State $S_i \gets \sum_{j=0}^{i} A_j$
-    \State $V_i \gets \min\{D_i,S_i\}$
-\EndFor
-\end{algorithmic}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.47\textwidth}
-\footnotesize
-\textbf{(b) Recurrences}
-\begin{algorithmic}[1]
-\State $D_{N-1} \gets B_{N-1}$
-\For{$i=N-2,\ldots,0$}
-    \State $D_i \gets B_i+D_{i+1}$
-\EndFor
-\State $S_0 \gets A_0$
-\For{$i=1,\ldots,N-1$}
-    \State $S_i \gets A_i+S_{i-1}$
-\EndFor
-\For{$i=0,\ldots,N-1$}
-    \State $V_i \gets \min\{D_i,S_i\}$
-\EndFor
-\end{algorithmic}
-\end{minipage}
-\caption{Replacing cumulative sums with recurrences.}
-\label{fig:morph1}
-\end{figure}
-
-
-\subsubsection{Recurrence Formulation.}
-Our first transformation replaces the cumulative sums with recurrences. Figure~\ref{fig:morph1} shows the original computation alongside its recurrence-based equivalent. Rather than summing over multiple entries at each price, demand and supply are calculated using their values at adjacent prices. This produces the same results while expressing the computation as local relationships, which will be useful when introducing polynomial constraints.
-
-
-
-\begin{figure}[t]
-\centering
-\begin{minipage}[t]{0.38\textwidth}
-\footnotesize
-\textbf{(a) Recurrences}
-\begin{algorithmic}[1]
-\State $D_{N-1} \gets B_{N-1}$
-\For{$i=N-2,\ldots,0$}
-    \State $D_i \gets B_i+D_{i+1}$
-\EndFor
-\State $S_0 \gets A_0$
-\For{$i=1,\ldots,N-1$}
-    \State $S_i \gets A_i+S_{i-1}$
-\EndFor
-\For{$i=0,\ldots,N-1$}
-    \State $V_i \gets \min\{D_i,S_i\}$
+    \State $AccB_i \gets \sum_{j=i}^{N-1} B_j$
+    \State $AccA_i \gets \sum_{j=0}^{i} A_j$
+    \State $Min_i \gets \min\{AccB_i,AccA_i\}$
 \EndFor
 \end{algorithmic}
 \end{minipage}%
 \hfill%
-\begin{minipage}[t]{0.60\textwidth}
+\begin{minipage}[t]{0.47\textwidth}
 \footnotesize
-\textbf{(b) Polynomial constraints}
+\textbf{(b) Recurrences}
+\begin{algorithmic}[1]
+\State $AccB_{N-1} \gets B_{N-1}$
+\For{$i=N-2,\ldots,0$}
+    \State $AccB_i \gets B_i+AccB_{i+1}$
+\EndFor
+\State $AccA_0 \gets A_0$
+\For{$i=1,\ldots,N-1$}
+    \State $AccA_i \gets A_i+AccA_{i-1}$
+\EndFor
+\For{$i=0,\ldots,N-1$}
+    \State $Min_i \gets \min\{AccB_i,AccA_i\}$
+\EndFor
+\end{algorithmic}
+\end{minipage}
 
-\begin{adjustbox}{max width=\linewidth}
+\medskip
+\hrule
+\medskip
+
+\begin{minipage}{0.98\textwidth}
+\footnotesize
+\textbf{(c) Polynomial constraints}\\
+\begin{adjustbox}{max width=\linewidth,center}
 $\displaystyle
 \begin{aligned}
 \text{F5:}\quad &L_{n-1}(X)(AccB(X)-B(X))=0\\
-\text{F7:}\quad &(X-\omega^{n-1})\bigl(AccB(X)-AccB(\omega X)\\
-&\qquad -B(X)\bigr)=0\\[4pt]
+\text{F7:}\quad &(X-\omega^{n-1})(AccB(X)-AccB(\omega X)-B(X))=0\\[4pt]
 \text{F6:}\quad &L_0(X)(AccA(X)-A(X))=0\\
-\text{F8:}\quad &(X-\omega^{n-1})\bigl(AccA(\omega X)-AccA(X)\\
-&\qquad -A(\omega X)\bigr)=0\\[4pt]
+\text{F8:}\quad &(X-\omega^{n-1})(AccA(\omega X)-AccA(X)-A(\omega X))=0\\[4pt]
 \text{F9:}\quad &SurpB(X)=AccB(X)-Min(X)\\
 \text{F10:}\quad &SurpA(X)=AccA(X)-Min(X)\\
 \text{F11:}\quad &SurpA(X)\cdot SurpB(X)=0\\
@@ -174,14 +148,23 @@ $\displaystyle
 $
 \end{adjustbox}
 \end{minipage}
-\caption{Transforming cumulative demand, supply, and executable volume into polynomial constraints. The F-numbers refer to the complete constraint system introduced below; F12--F13 summarize the range checks on surplus values.}
-\label{fig:morph2}
+
+\caption{Three representations of cumulative demand, supply, and executable volume: (a) the original algorithm, (b) equivalent recurrences, and (c) polynomial constraints. The F-numbers refer to the complete constraint system introduced below; F12--F13 abbreviate range checks.}
+\label{fig:arithmetization}
 \end{figure}
+% % % % % %
+
+\subsubsection{Recurrence Formulation.}
+Our first transformation replaces the cumulative sums with recurrences. Figure~\ref{fig:morph1} shows the original computation alongside its recurrence-based equivalent. Rather than summing over multiple entries at each price, demand and supply are calculated using their values at adjacent prices. This produces the same results while expressing the computation as local relationships, which will be useful when introducing polynomial constraints.
+
+
+
+
 
 
 
 \subsubsection{Polynomial Formulation.}
-We now express the recurrences as polynomial relationships. First, we pad the arrays with zeros to a power-of-two length $n\geq N$. In Figure~\ref{fig:overview}, the six possible prices become eight rows. These extra rows do not represent additional prices; they simply accommodate the polynomial representation.
+We now express the recurrences as univariate polynomial relationships. First, we pad the arrays with zeros to a power-of-two length $n\geq N$. In Figure~\ref{fig:overview}, the six possible prices become eight rows. These extra rows do not represent additional prices; they simply accommodate the polynomial representation.
 
 Let $\mathbb{F}$ be a finite field and $H=\{1,\omega,\ldots,\omega^{n-1}\}$ an evaluation domain, where $\omega$ is a primitive $n$-th root of unity. We represent each array by a polynomial whose evaluations at these points equal the array entries. For example, $B(\omega^i)=B_i$. Following the notation of our implementation, we use $AccB(X)$ and $AccA(X)$ for the polynomials representing cumulative demand and supply, and $Min(X)$ for executable volume. Thus, $AccB(\omega^i)=D_i$, $AccA(\omega^i)=S_i$, and $Min(\omega^i)=V_i$.
 
@@ -289,10 +272,22 @@ Constraint F18 obtains absolute imbalance from the two surplus values, only one 
 Constraints F24--F31 encode eligible IO quantities using the same cumulative-sum construction as ordinary orders. F32--F33 bind the long-side volume at the clearing price and the eligible IO volume on the short side. These quantities determine how much additional volume can execute and the partial-fill ratios for orders on the long side.
 
 
-\subsection{Committing to the Order Book}
-\subsection{Recording an Order}
-\subsection{Trader Receipts}
-\subsection{Update Validity}
+
+\section{Order Submission and Trader Receipts}
+\label{sec:order-receipts}
+
+The clearing proof establishes that the market was correctly cleared against a committed order book. We must also establish that this book contains the orders traders actually submitted. The top of Figure~\ref{fig:overview} illustrates this process, following individual orders as they update the aggregated book. The exchange begins each batch by publishing commitments to four empty columns ($B$, $A$, $IOB$, $IOA$), together with a proof that they are empty. Each subsequent order updates these commitments, with the changes recorded on an append-only public board.
+
+\paragraph{Order Submission.}
+Suppose a trader submits an order of quantity $q$ at price index $\ell$. Using the additive homomorphism of KZG commitments~\cite{KZG10}, the exchange updates the commitment to the corresponding column:
+\[
+C_{\mathrm{after}}=C_{\mathrm{before}}+q[L_\ell(\tau)]_1+\rho\Gamma,
+\]
+where $L_\ell$ selects the order's price index and $\rho\Gamma$ provides fresh blinding. The other three commitments are also reblinded, concealing which column was updated. The exchange publishes all four updated commitments and returns a receipt $(\mathrm{column},\ell,q,\rho,C_{\mathrm{before}},C_{\mathrm{after}})$. The trader verifies the equation above and checks that the commitments are consecutive entries in the public log. Figure~\ref{fig:overview} illustrates this process for the eighth order.
+
+\paragraph{Update Validity.}
+A valid receipt proves that an order was recorded, but does not prevent the exchange from subsequently cancelling it with a negative update. At batch close, the exchange therefore produces an additional zero-knowledge proof that every logged update adds a nonnegative quantity at a single valid price index (or adds zero for a blinding-only update). The construction uses randomized aggregation and a lookup argument to verify all updates without revealing their contents. A verifier checks this proof alongside the clearing proof, which is bound to the final commitments. The complete construction, including the empty-book proof and public-log consistency checks, is given in Appendix~\ref{app:committed-book}.
+
 
 
 

@@ -102,7 +102,7 @@ Y(X)-\sum_{j=0}^{m-1}2^{wj}\ell_j(X)=0.
 \]
 Each limb must belong to the public range table. We use \(w=8\) when \(n\ge256\), and narrower limbs for smaller domains. If \(b\) is not divisible by \(w\), we also check that \(2^{w-r}\ell_{m-1}\) lies in the table, for \(r=b\bmod w\); this restricts the top limb to \(r\) bits.
 
-We check table membership with a logarithmic-derivative lookup~\cite{habock2022}. Let \(f_1,\ldots,f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\); after challenge \(\beta\), it supplies pair helpers \(h_j\), a table helper \(U\), and a running-sum column \(S\), satisfying
+We check table membership with a logarithmic-derivative lookup. Let \(f_1,\ldots,f_E\) be the looked-up columns and \(T\) the table column. The prover commits to a multiplicity column \(Mult\); after challenge \(\beta\), it supplies pair helpers \(h_j\), a table helper \(U\), and a running-sum column \(S\), satisfying
 \[
 \begin{aligned}
 h_j&=\frac{1}{\beta-f_{2j-1}}+\frac{1}{\beta-f_{2j}},&
@@ -119,6 +119,7 @@ U(\beta-T)-Mult&=0,\\
 S(\omega X)-S(X)-\sum_j h_j(X)+U(X)&=0.
 \end{aligned}\tag{F23}
 \]
+If \(E\) is odd, the final lookup input has its own helper, with \(h_{\lceil E/2\rceil}(\beta-f_E)=1\). In the 1,024-row configuration, the 46 limb values and five scaled top-limb values give 51 lookup inputs, handled by 25 paired helpers and one single-input helper.
 Summing the last identity over the cyclic domain cancels the running-sum terms and gives equality between the rational lookup sums and table multiplicities. Since the looked-up columns and multiplicities are committed before \(\beta\), an invalid membership claim is detected with high probability. The running sum needs no initial condition.
 
 \subsection{Proving the Constraints with a PIOP}
@@ -126,11 +127,11 @@ Summing the last identity over the cyclic domain cancels the running-sum terms a
 
 We follow a PLONK-style polynomial interactive oracle proof \cite{GWC19}, with an additional lookup round. The main steps are:
 \begin{enumerate}
-\item Commit to the value columns, range-check limbs, and \(Mult\). The four book-column commitments already appear on the public board.
+\item Reuse the four final book commitments from the public log. Commit to the nine derived value columns, the range-check limbs, and \(Mult\).
 \item After challenge \(\beta\), commit to the lookup-helper columns.
-\item After challenge \(\alpha\), combine constraints into \(F(X)=\sum_t\alpha^tF_t(X)\), commit to the quotient \(Q(X)=F(X)/Z_H(X)\), where \(Z_H(X)=X^n-1\).
-\item After challenge \(\zeta\), open the columns at \(\zeta\). Shifted openings at \(\omega\zeta\) are also required for the four depth accumulators, \(A\), \(IOA\), and \(S\).
-\item Reconstruct \(F(\zeta)\) from the openings and check \(F(\zeta)=Q(\zeta)Z_H(\zeta)\).
+\item After challenge \(\alpha\), form \(F(X)=\sum_t\alpha^t F_t(X)\) and commit to the quotient \(Q(X)=F(X)/Z_H(X)\), where \(Z_H(X)=X^n-1\).
+\item After challenge \(\zeta\), open all witness columns and \(Q\) at \(\zeta\). Also open the four depth accumulators, \(A\), \(IOA\), and \(S\) at \(\omega\zeta\).
+\item The verifier checks the openings, evaluates the public polynomials at \(\zeta\), and reconstructs \(F(\zeta)\). It then checks \(F(\zeta)=Q(\zeta)Z_H(\zeta)\).
 \end{enumerate}
 We use hiding KZG commitments \cite{KZG10} over BN254, aggregate openings at each point, and apply Fiat--Shamir using a SHA-256 transcript bound to the parameters, receipt, and commitments. Random multiples of \(Z_H\) mask witness columns without changing their values on \(H\). For the 1,024-row, 32-bit configuration, the clearing proof occupies 6,124 bytes; the reference string supports degrees through \(2n+8\). The public selector evaluations can depend on plateau width, even though the number of commitments and opening points is fixed.
 

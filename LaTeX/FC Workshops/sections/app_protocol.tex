@@ -133,14 +133,14 @@ We follow a PLONK-style polynomial interactive oracle proof \cite{GWC19}, with a
 \item After challenge \(\zeta\), open all witness columns and \(Q\) at \(\zeta\). Also open the four depth accumulators, \(A\), \(IOA\), and \(S\) at \(\omega\zeta\).
 \item The verifier checks the openings, evaluates the public polynomials at \(\zeta\), and reconstructs \(F(\zeta)\). It then checks \(F(\zeta)=Q(\zeta)Z_H(\zeta)\).
 \end{enumerate}
-We use hiding KZG commitments \cite{KZG10} over BN254, aggregate openings at each point, and apply Fiat--Shamir using a SHA-256 transcript bound to the parameters, receipt, and commitments. Random multiples of \(Z_H\) mask witness columns without changing their values on \(H\). For the 1,024-row, 32-bit configuration, the clearing proof occupies 6,124 bytes; the reference string supports degrees through \(2n+8\). The public selector evaluations can depend on plateau width, even though the number of commitments and opening points is fixed.
+We use hiding KZG commitments \cite{KZG10} over BN254, aggregate openings at each point, and apply Fiat--Shamir using a SHA-256 transcript bound to the parameters, receipt, and commitments. Random multiples of \(Z_H\) mask witness columns without changing their values on \(H\). For 1,024 rows and 32-bit input volumes, our Rust implementation produces a 6,124-byte clearing proof and uses a reference string supporting degrees through \(2n+8\). The number of commitments and opening points is fixed for this configuration. The cost of evaluating \(Mask_P(\zeta)\) depends on the plateau width because the verifier sums one Lagrange term per tick from \(c\) through \(d\).
 
 \subsection{Committed Book and Trader Checks}
 \label{app:committed-book}
 
-The clearing proof is tied to the final commitments of an append-only order log. Trader receipts establish inclusion of acknowledged orders; an additional update-validity proof prevents logged negative updates from removing them.
+Our protocol records book commitments in a public append-only log. The exchange uses the final four commitments as inputs to the clearing proof. A trader uses their private receipt to check that the log contains the update for their order. The update-validity proof establishes that subsequent logged steps add nonnegative quantities, so a later step cannot subtract the acknowledged volume.
 
-\subsubsection{Commitment and Opening}
+\subsubsection{Committing to an Empty Book}
 
 Let \([x]_1\) denote a scalar multiple of the first pairing-group generator, and let \(\Gamma=[\gamma]_1\) denote the blinding generator. A book column is committed as
 \[
@@ -168,14 +168,14 @@ and checks that the two commitments are consecutive entries for that column in t
 \subsubsection{Update Validity}
 \label{app:zq-update-validity}
 
-A valid receipt alone would not stop the exchange from cancelling the order with a subsequent negative update. Let \(\Phi_0,\ldots,\Phi_{\mu-1}\) be the logged commitment differences, four per order. The update-validity proof establishes that each step adds a quantity \(q_j\in[0,2^{k_{in}})\) at one valid tick \(\ell_j\), or adds zero.
+Let \(\Phi_0,\ldots,\Phi_{\mu-1}\) be the logged commitment differences, four per recorded order. The update-validity proof establishes that each step either adds zero or adds a quantity \(0<q_j<2^{k_{in}}\) at a single point of the book domain \(H\). Our Rust implementation checks \(\ell_j<N\) when preparing an order. The weighted lookup ranges over all \(n\) points of \(H\), including padding rows.
 
-Use a second domain \(K\) of size \(M\), with \(K\supseteq H\), and one row per logged step. The prover commits to \(Qty[j]=q_j\) and \(Tick[j]=\omega^{\ell_j}\), along with an empty masking commitment \(\Phi_{mask}\), certified as above. After challenge \(\eta\), both sides form the aggregate commitment \(C_W\) and its underlying polynomial evaluations
+Let \(K\supseteq H\) be a second evaluation domain of size \(M\), with one row for each logged step and padding as needed. The prover commits to \(Qty[j]=q_j\) and \(Tick[j]=\omega^{\ell_j}\) and certifies that \(\Phi_{mask}\) commits to an empty column. Once these commitments and the logged differences are fixed, the transcript determines the challenge \(\eta\). The aggregate commitment and its evaluations on \(H\) are
 \[
 C_W=\Phi_{mask}+\sum_{j<\mu}\eta^j\Phi_j,
 \qquad w[i]=\sum_{j:\ell_j=i}\eta^j q_j.
 \]
-The verifier computes \(C_W\) from the log, while the prover supplies the committed polynomial \(W(X)\) with evaluations \(w[i]\). A weighted lookup, with challenge \(\beta\) drawn after commitments, establishes
+The verifier computes \(C_W\) from \(\Phi_{mask}\) and the public log. The prover computes \(w[i]\) from the private quantities and ticks. Using \(C_W\) as the commitment to \(W\), the prover establishes the following weighted lookup identity at a fresh challenge \(\beta\):
 \[
 \sum_{j<\mu}\frac{\eta^j q_j}{\beta-Tick[j]}
 =\sum_{i<n}\frac{w[i]}{\beta-\omega^i}.
@@ -189,5 +189,7 @@ U_H(X)(\beta-X_H(X))-S_H(X)W(X)&=0, &&\text{(U3)}\\
 S_2(\kappa X)-S_2(X)-G(X)+U_H(X)&=0. &&\text{(U4)}
 \end{aligned}
 \]
-The quantity limbs in U1 also undergo the table lookup. Cyclic summation of U4 gives the weighted lookup identity. Because \(\eta\) is sampled after the logged steps are fixed, a false aggregate would require a coincidental cancellation. Zero-quantity steps permit the three blinding-only updates per order. For 32-bit quantities, this proof has 17 commitments and occupies 1,700 bytes. With one row per logged step, the domain accommodates up to \(M/4\) orders.
+The range lookup also checks the quantity limbs in U1. Summing U4 over \(K\) cancels the running-sum terms and yields the weighted lookup identity. The logged differences and the commitments to quantities and ticks are fixed before \(\eta\) is drawn, so inconsistent steps can cancel in the aggregate only with small probability.
+
+When recording an order, the exchange uses three zero-quantity steps to reblind the other columns. Each order thus occupies four step rows, giving a capacity of \(\lfloor M/4\rfloor\) orders. In the benchmark with 32-bit quantities and eight-bit limbs, our Rust implementation produces an update-validity proof with 17 commitments and a serialized size of 1,700 bytes.
 
